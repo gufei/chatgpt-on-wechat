@@ -1,0 +1,153 @@
+import json
+
+import requests
+import web
+
+from bridge.context import Context, ContextType
+from channel.chat_channel import ChatChannel
+from channel.wechat.wxhook_message import WxHookMessage
+from common.expired_dict import ExpiredDict
+from common.log import logger
+from common.singleton import singleton
+from config import conf
+from bridge.reply import Reply, ReplyType
+
+
+def wx_hook_request(path, data):
+    try:
+        url = f"http://{conf().get('wx_hook_ip')}:{conf().get('wx_hook_port')}{path}"
+        headers = {
+            "Content-Type": "application/json",
+        }
+        res = requests.post(url, headers=headers, json=data, timeout=(5, 10))
+        return res.json()
+    except Exception as e:
+        logger.error(f"[wx_hook] send message failed, error: {e}")
+        return None
+
+
+@singleton
+class WxHookChannel(ChatChannel):
+    wx_hook_ip = conf().get('wx_hook_ip')
+    wx_hook_port = conf().get('wx_hook_port')
+    wx_hook_admin_port = conf().get('wx_hook_admin_port')
+    wx_hook_callback_port = conf().get('wx_hook_callback_port')
+
+    groups = dict()
+    nickNames = dict()
+    users = dict()
+
+    def __init__(self):
+        super().__init__()
+        # 历史消息id暂存，用于幂等控制
+        self.receivedMsgs = ExpiredDict(60 * 60 * 7.1)
+        logger.info("[WxHook] ip={}, port={} admin_port={} callback_port={}".format(
+            self.wx_hook_ip, self.wx_hook_port, self.wx_hook_admin_port, self.wx_hook_callback_port))
+
+    def getNickName(self, user_id, group_id=""):
+        if not self.nickNames.get(group_id + "_" + user_id):
+            data = {
+                "gid": group_id,
+                "wxid": user_id
+            }
+            res = wx_hook_request("/QueryChatRoomMemberNickName", data)
+            if res:
+                self.nickNames[group_id + "_" + user_id] = res.get("nickname")
+        return self.nickNames[group_id + "_" + user_id]
+
+    def getGroup(self, group_id):
+        if not self.groups.get(group_id):
+            data = {
+                "wxidorgid": group_id
+            }
+            res = wx_hook_request("/GetFriendOrChatroomDetailInfo", data)
+            if res:
+                self.groups[group_id] = res
+        return self.groups[group_id]
+
+    def startup(self):
+
+        selfInfo = wx_hook_request("/GetSelfLoginInfo", {})
+        self.name = selfInfo.get("nickname")
+        self.user_id = selfInfo.get("wxid")
+        urls = (
+            '/robot-api/webot/receiveChatBotMsg', 'channel.wechat.wxhook_channel.WxHookController'
+        )
+        app = web.application(urls, globals(), autoreload=False)
+        port = conf().get("wx_hook_callback_port", 9001)
+        web.httpserver.runsimple(app.wsgifunc(), ("0.0.0.0", port))
+
+    def send(self, reply: Reply, context: Context):
+        is_group = context["isgroup"]
+        if reply.type == ReplyType.TEXT:
+            data = {
+                "wxid": context["receiver"],
+                "msg": reply.content
+            }
+            res = wx_hook_request("/SendTextMsg", data)
+            if res.get("SendTextMsg") == "1":
+                logger.info(f"[wx_hook] send message success")
+            else:
+                logger.error(f"[wx_hook] send message failed")
+        elif reply.type == ReplyType.IMAGE:
+            data = {
+                "wxid": context["receiver"],
+                "picpath": reply.content
+            }
+            res = wx_hook_request("/SendPicMsg", data)
+            if res.get("SendImageMsg") == "1":
+                logger.info(f"[wx_hook] send image success")
+            else:
+                logger.error(f"[wx_hook] send image failed")
+
+
+class WxHookController:
+    FAILED_MSG = '{"success": false}'
+    SUCCESS_MSG = '{"success": true}'
+
+    def POST(self):
+        data = json.loads(web.data().decode("utf-8"))
+        logger.info(f"[wx_hook] receive request: {data}")
+
+        # 只接收 30001 端口的消息
+        if data.get("ServerPort") != "30001":
+            return "not a specified port"
+
+        # 只处理接收消息
+        if data.get("sendorrecv") != "2":
+            return "not a receive message"
+
+        # 没有消息
+        if data.get("msgnumber") == 0:
+            return "no message"
+
+        channel = WxHookChannel()
+
+        # 循环处理每一条消息 data.get("msglist")
+        for msg in data.get("msglist"):
+            # 过滤自己的消息
+            if data.get("selfwxid") == msg.get("fromid"):
+                continue
+
+            # 只处理文本类型的消息
+            if msg.get("msgtype") != "1":
+                continue
+
+            if channel.receivedMsgs.get(msg.get("msgsvrid")):
+                logger.warning(f"[wx_hook] repeat msg filtered, msgsvrid={msg.get('msgsvrid')}")
+                return self.SUCCESS_MSG
+            channel.receivedMsgs[msg.get("msgsvrid")] = True
+
+            wx_hook_msg = WxHookMessage(msg, channel, data.get("selfwxid"))
+
+            logger.debug("[wx_hook] wx_hook_msg message: {}".format(wx_hook_msg))
+
+            context = channel._compose_context(ContextType.TEXT, wx_hook_msg.content, isgroup=wx_hook_msg.is_group,
+                                               msg=wx_hook_msg)
+
+            logger.debug(f"[wx_hook] context is {context}")
+            if context:
+                logger.debug(f"[wx_hook] context session_id is {context['session_id']}")
+                channel.produce(context)
+
+        return "success"

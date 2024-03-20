@@ -40,7 +40,7 @@ available_setting = {
     "image_create_prefix": ["画", "看", "找"],  # 开启图片回复的前缀
     "concurrency_in_session": 1,  # 同一会话最多有多少条消息在处理中，大于1可能乱序
     "image_create_size": "256x256",  # 图片大小,可选有 256x256, 512x512, 1024x1024 (dall-e-3默认为1024x1024)
-    "group_chat_exit_group": False, 
+    "group_chat_exit_group": False,
     # chatgpt会话参数
     "expires_in_seconds": 3600,  # 无操作会话的过期时间
     # 人格描述
@@ -96,8 +96,8 @@ available_setting = {
     "azure_voice_api_key": "",
     "azure_voice_region": "japaneast",
     # elevenlabs 语音api配置
-    "xi_api_key": "",    #获取ap的方法可以参考https://docs.elevenlabs.io/api-reference/quick-start/authentication
-    "xi_voice_id": "",   #ElevenLabs提供了9种英式、美式等英语发音id，分别是“Adam/Antoni/Arnold/Bella/Domi/Elli/Josh/Rachel/Sam”
+    "xi_api_key": "",  # 获取ap的方法可以参考https://docs.elevenlabs.io/api-reference/quick-start/authentication
+    "xi_voice_id": "",  # ElevenLabs提供了9种英式、美式等英语发音id，分别是“Adam/Antoni/Arnold/Bella/Domi/Elli/Josh/Rachel/Sam”
     # 服务时间限制，目前支持itchat
     "chat_time_module": False,  # 是否开启服务时间限制
     "chat_start_time": "00:00",  # 服务开始时间
@@ -132,11 +132,11 @@ available_setting = {
     "feishu_app_secret": "",  # 飞书机器人APP secret
     "feishu_token": "",  # 飞书 verification token
     "feishu_bot_name": "",  # 飞书机器人的名字
-    
+
     # 钉钉配置
     "dingtalk_client_id": "",  # 钉钉机器人Client ID 
     "dingtalk_client_secret": "",  # 钉钉机器人Client Secret 
-    
+
     # chatgpt指令自定义触发词
     "clear_memory_commands": ["#清除记忆"],  # 重置会话指令，必须以#开头
     # channel配置
@@ -148,7 +148,7 @@ available_setting = {
     "plugin_trigger_prefix": "$",  # 规范插件提供聊天相关指令的前缀，建议不要和管理员指令前缀"#"冲突
     # 是否使用全局插件配置
     "use_global_plugin_config": False,
-    "max_media_send_count": 3,     # 单次最大发送媒体资源的个数
+    "max_media_send_count": 3,  # 单次最大发送媒体资源的个数
     "media_send_interval": 1,  # 发送图片的事件间隔，单位秒
     # 智谱AI 平台配置
     "zhipu_ai_api_key": "",
@@ -158,6 +158,11 @@ available_setting = {
     "linkai_api_key": "",
     "linkai_app_code": "",
     "linkai_api_base": "https://api.link-ai.chat",  # linkAI服务地址，若国内无法访问或延迟较高可改为 https://api.link-ai.tech
+
+    "wx_hook_ip": "",
+    "wx_hook_port": 30001,
+    "wx_hook_admin_port": 29999,
+    "wx_hook_callback_port": 9001
 }
 
 
