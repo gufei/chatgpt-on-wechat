@@ -1,4 +1,5 @@
 import json
+from time import sleep
 
 import requests
 import web
@@ -12,9 +13,25 @@ from common.singleton import singleton
 from config import conf
 from bridge.reply import Reply, ReplyType
 
+def wx_hook_admin_request(path, data):
+    try:
+        if not path.startswith("/"):
+            path = "/" + path
+        url = f"http://{conf().get('wx_hook_ip')}:{conf().get('wx_hook_admin_port')}{path}"
+        headers = {
+            "Content-Type": "application/json",
+        }
+        res = requests.post(url, headers=headers, json=data, timeout=(5, 10))
+        return res.json()
+    except Exception as e:
+        logger.error(f"[wx_hook] send message failed, error: {e}")
+        return None
 
 def wx_hook_request(path, data):
     try:
+        # path判断是不是/开头
+        if not path.startswith("/"):
+            path = "/" + path
         url = f"http://{conf().get('wx_hook_ip')}:{conf().get('wx_hook_port')}{path}"
         headers = {
             "Content-Type": "application/json",
@@ -66,6 +83,23 @@ class WxHookChannel(ChatChannel):
         return self.groups[group_id]
 
     def startup(self):
+        while True:
+            status = wx_hook_request("IsLoginStatus", {})
+        #     判断status 不是 None
+            if status is None or status.get("onlinestatus") != "3":
+                logger.info(f"[wx_hook] check status: {status},please scan the QR code to login http://127.0.0.1:5000/checkStatus")
+                sleep(5)
+                continue
+            else:
+                break
+
+        # 设置回调
+        setCallBack = wx_hook_request("ConfigureMsgRecive", {"isEnable": "1","url":conf().get("wx_hook_callback_url")})
+        if setCallBack.get("ConfigureMsgRecive") == "1":
+            logger.info(f"[wx_hook] set callback success")
+        else:
+            logger.error(f"[wx_hook] set callback failed")
+
 
         selfInfo = wx_hook_request("/GetSelfLoginInfo", {})
         self.name = selfInfo.get("nickname")
@@ -92,13 +126,24 @@ class WxHookChannel(ChatChannel):
         elif reply.type == ReplyType.IMAGE:
             data = {
                 "wxid": context["receiver"],
-                "picpath": reply.content
+                "picpath": "C:\\Users\\Administrator\\Desktop\\"+reply.content
             }
             res = wx_hook_request("/SendPicMsg", data)
             if res.get("SendImageMsg") == "1":
                 logger.info(f"[wx_hook] send image success")
             else:
                 logger.error(f"[wx_hook] send image failed")
+        elif reply.type == ReplyType.FILE:
+            data = {
+                "wxid": context["receiver"],
+                "filepath": "C:\\Users\\Administrator\\Desktop\\" + reply.content
+            }
+            res = wx_hook_request("/SendPicMsg", data)
+            if res.get("success") == "1":
+                logger.info(f"[wx_hook] send file success")
+            else:
+                logger.error(f"[wx_hook] send file failed")
+
 
 
 class WxHookController:

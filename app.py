@@ -5,18 +5,14 @@ import signal
 import sys
 import time
 
-from flask import Flask
-from starlette.applications import Starlette
-from starlette.responses import PlainTextResponse
-from starlette.routing import Route
-
+from flask import Flask, request
 from channel import channel_factory
+from channel.wechat.wxhook_channel import wx_hook_request, wx_hook_admin_request
 from common import const
 from config import load_config
 from plugins import *
 import threading
-from typing import Union
-from fastapi import FastAPI
+
 from lib.itchat import *
 
 from PIL import Image
@@ -31,13 +27,14 @@ def sigterm_handler_wrap(_signo):
         if callable(old_handler):  # check old_handler
             return old_handler(_signo, _stack_frame)
         sys.exit(0)
+        os.exit()
 
     signal.signal(_signo, func)
 
 
 def start_channel(channel_name: str):
     channel = channel_factory.create_channel(channel_name)
-    if channel_name in ["wx", "wxy", "terminal", "wechatmp", "wechatmp_service", "wechatcom_app", "wework",
+    if channel_name in ["wx", "wxy", "wx_hook", "terminal", "wechatmp", "wechatmp_service", "wechatcom_app", "wework",
                         const.FEISHU, const.DINGTALK]:
         PluginManager().load_plugins()
 
@@ -62,8 +59,8 @@ def run(app: Flask):
         # create channel
         channel_name = conf().get("channel_type", "wx")
 
-        if channel_name == "wx":
-            threading.Thread(target=app.run).start()
+        if channel_name == "wx" or channel_name == "wx_hook":
+            threading.Thread(target=app.run, daemon=True).start()
 
         if "--cmd" in sys.argv:
             channel_name = "terminal"
@@ -81,8 +78,66 @@ def run(app: Flask):
 
 
 app = Flask(__name__)
+
+
+@app.route('/checkStatus')
+def checkStatus():
+
+    if conf().get("channel_type") != "wx_hook":
+        return "当前不是微信HOOK模式"
+
+    status = wx_hook_request("IsLoginStatus", {})
+    logger.info(f"[wx_hook] check status: {status}")
+
+    if status is None:
+        # wx_hook_port int转字符串
+        protStatus = wx_hook_admin_request("Get_PortOccupiedInfo", {"CheckPort": conf().get("wx_hook_port")})
+        if protStatus.get("Occupied") == "0":
+            wx_hook_admin_request("StartWechat", {"StartPort": conf().get("wx_hook_port")})
+            return "<head><meta http-equiv='refresh' content='5'></head>正在启动微信，请过5秒后再次刷新页面......" + "<div><input type='button' onclick='javascript:location.reload();' value='刷新当前页面'></div>"
+        else:
+            return "<head><meta http-equiv='refresh' content='5'>获取微信状态失败，请5秒后再次刷新页面......" + "<div><input type='button' onclick='javascript:location.reload();' value='刷新当前页面'></div>"
+
+    # 请扫码登陆
+    if status.get("onlinestatus") == "0":
+        qrcode = wx_hook_request("GetLoginQRCode", {})
+        return "<img src='" + qrcode.get(
+            "base64") + "' width='300px' height='300px'><p><div>扫码登陆完成后3秒刷新本页面~</div>" + "<div><input type='button' onclick='javascript:location.reload();' value='刷新当前页面'></div>"
+
+    # 需在手机上完成操作
+    if status.get("onlinestatus") == "1":
+        return status.get("msg")
+
+    if status.get("onlinestatus") == "2":
+        return status.get("msg") + " 当前登陆进度：" + status.get(
+            "login_loading") + "<div><input type='button' onclick='javascript:location.reload();' value='刷新当前页面'></div>"
+
+    # 已登陆状态
+    if status.get("onlinestatus") == "3":
+        return status.get("msg") + " 当前登陆用户：" + status.get(
+            "nickname") + "<div><input type='button' onclick='javascript:location.reload();' value='刷新当前页面'></div>"
+
+    # 正在退出微信
+    if status.get("onlinestatus") == "4":
+        return status.get("msg")
+
+    # 让点击登陆，这时刷新二维码，仍使用二维码登陆
+    if status.get("onlinestatus") == "5":
+        wx_hook_request("RefreshLoginQRCode", {})
+        qrcode = wx_hook_request("GetLoginQRCode", {})
+        return "<img src='" + qrcode.get(
+            "base64") + "' width='300px' height='300px'><p><div>扫码登陆完成后3秒刷新本页面~</div>" + "<div><input type='button' onclick='javascript:location.reload();' value='刷新当前页面'></div>"
+
+
 @app.route('/wxlogin')
 async def wxlogin():
+
+    if conf().get("channel_type") != "wx":
+        if conf().get("channel_type") == "wx_hook":
+            return "已经启用新的登陆页，请使用 <a href=\"/checkStatus\">检查状态</a> 进行登陆"
+        else:
+            return "当前不是微信登陆模式"
+
     logger.info("当前是否正在进行登陆？ %s", str(instance.isLogging))
 
     if instance.isLogging == False and instance.loginInfo.get("User") != None:
