@@ -13,6 +13,7 @@ from common.singleton import singleton
 from config import conf
 from bridge.reply import Reply, ReplyType
 
+
 def wx_hook_admin_request(path, data):
     try:
         if not path.startswith("/"):
@@ -26,6 +27,7 @@ def wx_hook_admin_request(path, data):
     except Exception as e:
         logger.error(f"[wx_hook] send message failed, error: {e}")
         return None
+
 
 def wx_hook_request(path, data):
     try:
@@ -85,21 +87,22 @@ class WxHookChannel(ChatChannel):
     def startup(self):
         while True:
             status = wx_hook_request("IsLoginStatus", {})
-        #     判断status 不是 None
+            #     判断status 不是 None
             if status is None or status.get("onlinestatus") != "3":
-                logger.info(f"[wx_hook] check status: {status},please scan the QR code to login http://127.0.0.1:5000/checkStatus")
+                logger.info(
+                    f"[wx_hook] check status: {status},please scan the QR code to login http://127.0.0.1:5000/checkStatus")
                 sleep(5)
                 continue
             else:
                 break
 
         # 设置回调
-        setCallBack = wx_hook_request("ConfigureMsgRecive", {"isEnable": "1","url":conf().get("wx_hook_callback_url")})
+        setCallBack = wx_hook_request("ConfigureMsgRecive",
+                                      {"isEnable": "1", "url": conf().get("wx_hook_callback_url")})
         if setCallBack.get("ConfigureMsgRecive") == "1":
             logger.info(f"[wx_hook] set callback success")
         else:
             logger.error(f"[wx_hook] set callback failed")
-
 
         selfInfo = wx_hook_request("/GetSelfLoginInfo", {})
         self.name = selfInfo.get("nickname")
@@ -126,7 +129,7 @@ class WxHookChannel(ChatChannel):
         elif reply.type == ReplyType.IMAGE:
             data = {
                 "wxid": context["receiver"],
-                "picpath": "C:\\Users\\Administrator\\Desktop\\"+reply.content
+                "picpath": "C:\\Users\\Administrator\\Desktop\\" + reply.content
             }
             res = wx_hook_request("/SendPicMsg", data)
             if res.get("SendImageMsg") == "1":
@@ -145,7 +148,6 @@ class WxHookChannel(ChatChannel):
                 logger.error(f"[wx_hook] send file failed")
 
 
-
 class WxHookController:
     FAILED_MSG = '{"success": false}'
     SUCCESS_MSG = '{"success": true}'
@@ -154,8 +156,8 @@ class WxHookController:
         data = json.loads(web.data().decode("utf-8"))
         logger.info(f"[wx_hook] receive request: {data}")
 
-        # 只接收 30001、30002、30003、30004、30005 端口的消息
-        if data.get("port") not in ["30001", "30002", "30003", "30004", "30005"]:
+        # 只接收 30001、30002、30003、30004、30005 和配置的 端口的消息
+        if data.get("port") not in ["30001", "30002", "30003", "30004", "30005", conf().get("wx_hook_port")]:
             return "not a specified port"
 
         # 只处理接收消息
