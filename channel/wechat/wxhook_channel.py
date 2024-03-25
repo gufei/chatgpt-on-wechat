@@ -154,8 +154,8 @@ class WxHookController:
         data = json.loads(web.data().decode("utf-8"))
         logger.info(f"[wx_hook] receive request: {data}")
 
-        # 只接收 30001 端口的消息
-        if data.get("ServerPort") != "30001":
+        # 只接收 30001、30002、30003、30004、30005 端口的消息
+        if data.get("port") not in ["30001", "30002", "30003", "30004", "30005"]:
             return "not a specified port"
 
         # 只处理接收消息
