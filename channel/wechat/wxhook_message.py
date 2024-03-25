@@ -4,11 +4,14 @@ from common.log import logger
 
 
 class WxHookMessage(ChatMessage):
-    def __init__(self, msg, channel,selfwxid):
+    def __init__(self, msg, channel, selfwxid):
         super().__init__(msg)
         self.msg_id = msg.get("msgsvrid")
         self.create_time = msg.get("time")
         self.is_group = msg.get("fromtype") == "2"
+
+
+
 
         if msg.get("msgtype") == "1":
             self.ctype = ContextType.TEXT
@@ -47,8 +50,15 @@ class WxHookMessage(ChatMessage):
         msgsource = msg.get("msgsource")
         self.is_at = False
 
-        # 解析xml格式，获取 atuserlist 判断是否有自己 selfwxid
-        if msgsource:
+        if self.is_group:
+            selfnickName = channel.getNickName(selfwxid, msg.get("fromgid"))
+        else:
+            selfnickName = channel.getNickName(selfwxid)
+
+        if selfnickName != "" and "@"+selfnickName in self.content:
+            self.is_at = True
+        elif msgsource:
+            # 解析xml格式，获取 atuserlist 判断是否有自己 selfwxid
             xmlstr = msgsource.replace('\\n', '').replace('\\t', '')
             logger.debug(f"[wx_hook] xmlstr is {xmlstr}")
             from xml.etree import ElementTree
