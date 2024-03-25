@@ -158,14 +158,17 @@ class WxHookController:
 
         # 只接收 30001、30002、30003、30004、30005 和配置的 端口的消息
         if data.get("port") not in ["30001", "30002", "30003", "30004", "30005", conf().get("wx_hook_port")]:
+            logger.debug(f"[wx_hook] not a specified port, port={data.get('port')}")
             return "not a specified port"
 
         # 只处理接收消息
         if data.get("sendorrecv") != "2":
+            logger.debug(f"[wx_hook] not a receive message")
             return "not a receive message"
 
         # 没有消息
         if data.get("msgnumber") == 0:
+            logger.debug(f"[wx_hook] no message")
             return "no message"
 
         channel = WxHookChannel()
@@ -174,14 +177,17 @@ class WxHookController:
         for msg in data.get("msglist"):
             # 过滤自己的消息
             if data.get("selfwxid") == msg.get("fromid"):
+                logger.debug(f"[wx_hook] self message filtered, fromid={msg.get('fromid')}")
                 continue
 
             # 只处理文本类型的消息
             if msg.get("msgtype") != "1":
+                logger.debug(f"[wx_hook] not a text message, msgtype={msg.get('msgtype')}")
                 continue
 
             if channel.receivedMsgs.get(msg.get("msgsvrid")):
                 logger.warning(f"[wx_hook] repeat msg filtered, msgsvrid={msg.get('msgsvrid')}")
+                logger.debug(f"[wx_hook] repeat msg filtered, msg={msg}")
                 return self.SUCCESS_MSG
             channel.receivedMsgs[msg.get("msgsvrid")] = True
 
