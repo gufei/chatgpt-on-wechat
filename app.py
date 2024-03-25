@@ -60,7 +60,7 @@ def run(app: Flask):
         channel_name = conf().get("channel_type", "wx")
 
         if channel_name == "wx" or channel_name == "wx_hook":
-            threading.Thread(target=app.run, daemon=True).start()
+            threading.Thread(target=app.run, args=("0.0.0.0", 5000), daemon=True).start()
 
         if "--cmd" in sys.argv:
             channel_name = "terminal"
@@ -82,7 +82,6 @@ app = Flask(__name__)
 
 @app.route('/checkStatus')
 def checkStatus():
-
     if conf().get("channel_type") != "wx_hook":
         return "当前不是微信HOOK模式"
 
@@ -131,7 +130,6 @@ def checkStatus():
 
 @app.route('/wxlogin')
 async def wxlogin():
-
     if conf().get("channel_type") != "wx":
         if conf().get("channel_type") == "wx_hook":
             return "已经启用新的登陆页，请使用 <a href=\"/checkStatus\">检查状态</a> 进行登陆"
