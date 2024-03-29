@@ -129,7 +129,8 @@ class WxHookChannel(ChatChannel):
         elif reply.type == ReplyType.IMAGE_URL:  # 从网络下载图片
             data = {
                 "wxid": context["receiver"],
-                "picpath": reply.content
+                "picpath": reply.content,
+                "diyfilename": "ok.jpg"
             }
             res = wx_hook_request("/SendPicMsg", data)
             if res.get("SendPicMsg") == "1":
