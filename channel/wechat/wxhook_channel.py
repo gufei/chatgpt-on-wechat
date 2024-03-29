@@ -116,7 +116,7 @@ class WxHookChannel(ChatChannel):
 
     def send(self, reply: Reply, context: Context):
         is_group = context["isgroup"]
-        if reply.type == ReplyType.TEXT:
+        if reply.type == ReplyType.TEXT or reply.type == ReplyType.INFO or reply.type == ReplyType.ERROR or reply.type == ReplyType.TEXT_:
             data = {
                 "wxid": context["receiver"],
                 "msg": reply.content
