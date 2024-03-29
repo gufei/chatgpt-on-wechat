@@ -163,7 +163,9 @@ available_setting = {
     "wx_hook_port": 30001,
     "wx_hook_admin_port": 29999,
     "wx_hook_callback_port": 9001,
-    "wx_hook_callback_url": "http://localhost:9001/robot-api/webot/receiveChatBotMsg"
+    "wx_hook_callback_url": "http://localhost:9001/robot-api/webot/receiveChatBotMsg",
+
+    "single_name_white_list": [""],  # 用户昵称白名单
 }
 
 
