@@ -59,8 +59,8 @@ def run(app: Flask):
         # create channel
         channel_name = conf().get("channel_type", "wx")
 
-        if channel_name == "wx" or channel_name == "wx_hook":
-            threading.Thread(target=app.run, args=("0.0.0.0", 5000), daemon=True).start()
+        # if channel_name == "wx" or channel_name == "wx_hook":
+        #     threading.Thread(target=app.run, args=("0.0.0.0", 5000), daemon=True).start()
 
         if "--cmd" in sys.argv:
             channel_name = "terminal"
