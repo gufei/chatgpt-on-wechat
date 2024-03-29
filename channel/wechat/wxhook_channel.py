@@ -130,13 +130,14 @@ class WxHookChannel(ChatChannel):
             data = {
                 "wxid": context["receiver"],
                 "picpath": reply.content,
-                "diyfilename": "ok.jpg"
+                "diyfilename": "1.jpg"
             }
+            logger.debug(f"[wx_hook] send image data: {data}")
             res = wx_hook_request("/SendPicMsg", data)
             if res.get("SendPicMsg") == "1":
-                logger.info(f"[wx_hook] send image success")
+                logger.info(f"[wx_hook] send url image success")
             else:
-                logger.error(f"[wx_hook] send image failed")
+                logger.error(f"[wx_hook] send url image failed")
         elif reply.type == ReplyType.IMAGE:
             data = {
                 "wxid": context["receiver"],
