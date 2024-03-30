@@ -140,7 +140,7 @@ class ChatChannel(Channel):
                     logger.warning(f"[WX] Nickname '{nick_name}' in In BlackList, ignore")
                     return None
 
-                single_name_white_list = config.get("single_name_white_list", [])
+                single_name_white_list = conf().get("single_name_white_list", [])
                 match_prefix = check_prefix(content, conf().get("single_chat_prefix", [""]))
                 if len(single_name_white_list) > 0 and nick_name in single_name_white_list:  # 如果在白名单中，不需要前缀
                     pass
