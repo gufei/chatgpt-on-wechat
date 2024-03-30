@@ -1,6 +1,8 @@
 import shutil
 import wave
 
+import pilk
+
 from common.log import logger
 
 try:
@@ -102,12 +104,13 @@ def any_to_amr(any_path, amr_path):
 
 
 def sil_to_wav(silk_path, wav_path, rate: int = 24000):
+    pilk.silk_to_wav(silk_path, wav_path)
     """
     silk 文件转 wav
     """
-    wav_data = pysilk.decode_file(silk_path, to_wav=True, sample_rate=rate)
-    with open(wav_path, "wb") as f:
-        f.write(wav_data)
+    # wav_data = pysilk.decode_file(silk_path, to_wav=True, sample_rate=rate)
+    # with open(wav_path, "wb") as f:
+    #     f.write(wav_data)
 
 
 def split_audio(file_path, max_segment_length_ms=60000):
