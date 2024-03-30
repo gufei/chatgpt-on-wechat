@@ -130,8 +130,8 @@ class ChatChannel(Channel):
                             subtract_res = re.sub(pattern, r"", content)
                         content = subtract_res
                 if not flag:
-                    if context["origin_ctype"] == ContextType.VOICE:
-                        logger.info("[WX]receive group voice, but checkprefix didn't match")
+                    if context["origin_ctype"] != ContextType.VOICE:
+                        logger.info("[WX]receive group not voice, but checkprefix didn't match")
                     return None
             else:  # 单聊
                 nick_name = context["msg"].from_user_nickname
