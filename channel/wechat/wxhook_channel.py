@@ -193,7 +193,7 @@ class WxHookController:
                 continue
 
             # 只处理文本类型的消息
-            if msg.get("msgtype") != "1":
+            if msg.get("msgtype") not in ["1", "34"]:
                 logger.debug(f"[wx_hook] not a text message, msgtype={msg.get('msgtype')}")
                 continue
 
@@ -207,7 +207,7 @@ class WxHookController:
 
             logger.debug("[wx_hook] wx_hook_msg message: {}".format(wx_hook_msg))
 
-            context = channel._compose_context(ContextType.TEXT, wx_hook_msg.content, isgroup=wx_hook_msg.is_group,
+            context = channel._compose_context(wx_hook_msg.ctype, wx_hook_msg.content, isgroup=wx_hook_msg.is_group,
                                                msg=wx_hook_msg)
 
             logger.debug(f"[wx_hook] context is {context}")
