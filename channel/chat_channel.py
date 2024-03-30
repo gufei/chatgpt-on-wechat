@@ -16,6 +16,7 @@ from plugins import *
 try:
     from voice.audio_convert import any_to_wav
 except Exception as e:
+    logger.warning("import any_to_wav failed. " + str(e))
     pass
 
 handler_pool = ThreadPoolExecutor(max_workers=8)  # 处理消息的线程池
