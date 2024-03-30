@@ -129,7 +129,7 @@ class ChatChannel(Channel):
                             pattern = f"@{re.escape(context['msg'].self_display_name)}(\u2005|\u0020)"
                             subtract_res = re.sub(pattern, r"", content)
                         content = subtract_res
-                if not flag:
+                if not flag and context["origin_ctype"] != ContextType.VOICE:
                     if context["origin_ctype"] != ContextType.VOICE:
                         logger.info("[WX]receive group not voice, but checkprefix didn't match")
                     return None
