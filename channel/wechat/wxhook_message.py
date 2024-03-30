@@ -8,6 +8,7 @@ from bridge.context import ContextType
 from channel.chat_message import ChatMessage
 from common.log import logger
 from config import conf
+from xml.etree import ElementTree as ET
 
 
 class WxHookMessage(ChatMessage):
@@ -22,7 +23,19 @@ class WxHookMessage(ChatMessage):
             self.content = msg.get("msg")
         elif msg.get("msgtype") == "34":
             self.ctype = ContextType.VOICE
-            voice_hex = msg.get("voice_hex")
+            if self.is_group:
+                msgsvrid = msg.get("msgsvrid")
+
+                msgroot = ET.fromstring(msg.get("msg"))
+                voicemsg = msgroot.find('voicemsg')
+                length = voicemsg.get('length')
+                clientmsgid = voicemsg.get('clientmsgid')
+
+                voiceinfo = channel.getVoice(clientmsgid, length, msg.get("fromgid"), msgsvrid)
+                voice_hex = voiceinfo.get("voice_data_hex")
+            else:
+                voice_hex = msg.get("voice_hex")
+
             voice = binascii.unhexlify(voice_hex)
             temp = NamedTemporaryFile(dir="/tmp", prefix="silk_", suffix=".silk", delete=False)
             temp.write(voice)

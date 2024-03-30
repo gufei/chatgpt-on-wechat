@@ -84,6 +84,17 @@ class WxHookChannel(ChatChannel):
                 self.groups[group_id] = res
         return self.groups[group_id]
 
+    def getVoice(self, clientmsgid, length, fromgid, msgsvrid):
+        data = {
+            "clientmsgid": clientmsgid,
+            "length": length,
+            "fromgid": fromgid,
+            "msgsvrid": msgsvrid
+        }
+
+        res = wx_hook_request("/DownloadVoice", data)
+        return res
+
     def startup(self):
         while True:
             status = wx_hook_request("IsLoginStatus", {})
