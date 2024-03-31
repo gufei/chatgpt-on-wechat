@@ -30,6 +30,7 @@ class OpenaiVoice(Voice):
         try:
             file = open(voice_file, "rb")
             result = openai.Audio.transcribe("whisper-1", file)
+            logger.debug("[Openai] voiceToText result={}".format(result))
             text = result["text"]
             reply = Reply(ReplyType.TEXT, text)
             logger.info("[Openai] voiceToText text={} voice file name={}".format(text, voice_file))
