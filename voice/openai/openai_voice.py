@@ -13,29 +13,27 @@ import requests
 from common import const
 import datetime, random
 
+
 class OpenaiVoice(Voice):
     def __init__(self):
-        if conf().get("open_voice_api_key") != "":
-            openai.api_key = conf().get("open_voice_api_key")
+        openai.api_key = conf().get("open_ai_api_key")
+        if conf().get("open_voice_api_key"):
+            self.api_key = conf().get("open_voice_api_key")
         else:
-            openai.api_key = conf().get("open_ai_api_key")
+            self.api_key = conf().get("open_ai_api_key")
 
         if conf().get("open_voice_api_base") != "":
-            openai.api_base = conf().get("open_voice_api_base")
+            self.api_base = conf().get("open_voice_api_base")
         else:
-            openai.api_base = conf().get("open_ai_api_base")
+            self.api_base = conf().get("open_ai_api_base")
 
     def voiceToText(self, voice_file):
         logger.debug("[Openai] voice file name={}".format(voice_file))
         try:
             file = open(voice_file, "rb")
-
-            logger.debug("[Openai] openai api_key={},api_base={}".format(openai.api_key,openai.api_base))
-            result = openai.Audio.transcribe("whisper-1", file)
+            logger.debug("[Openai] openai api_key={},api_base={}".format(openai.api_key, openai.api_base))
+            result = openai.Audio.transcribe("whisper-1", file, api_key=self.api_key, api_base=self.api_base)
             logger.debug("[Openai] voiceToText result={}".format(result))
-
-
-
             text = result["text"]
             reply = Reply(ReplyType.TEXT, text)
             logger.info("[Openai] voiceToText text={} voice file name={}".format(text, voice_file))
@@ -44,7 +42,6 @@ class OpenaiVoice(Voice):
             reply = Reply(ReplyType.ERROR, "我暂时还无法听清您的语音，请稍后再试吧~")
         finally:
             return reply
-
 
     def textToVoice(self, text):
         try:
@@ -60,7 +57,8 @@ class OpenaiVoice(Voice):
                 'voice': conf().get("tts_voice_id") or "alloy"
             }
             response = requests.post(url, headers=headers, json=data)
-            file_name = "tmp/" + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + str(random.randint(0, 1000)) + ".mp3"
+            file_name = "tmp/" + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + str(
+                random.randint(0, 1000)) + ".mp3"
             logger.debug(f"[OPENAI] text_to_Voice file_name={file_name}, input={text}")
             with open(file_name, 'wb') as f:
                 f.write(response.content)
