@@ -76,6 +76,7 @@ class ChatChannel(Channel):
                     ):
                         session_id = group_id
                 else:
+                    logger.debug(f"[WX]group name {group_name} not in white list, ignore")
                     return None
                 context["session_id"] = session_id
                 context["receiver"] = group_id
@@ -149,6 +150,7 @@ class ChatChannel(Channel):
                 elif context["origin_ctype"] == ContextType.VOICE:  # 如果源消息是私聊的语音消息，允许不匹配前缀，放宽条件
                     pass
                 else:
+                    logger.debug("[WX]receive single not voice, but check prefix didn't match")
                     return None
             content = content.strip()
             img_match_prefix = check_prefix(content, conf().get("image_create_prefix"))
