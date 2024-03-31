@@ -166,6 +166,10 @@ available_setting = {
     "wx_hook_callback_url": "http://localhost:9001/robot-api/webot/receiveChatBotMsg",
 
     "single_name_white_list": [],  # 用户昵称白名单
+
+
+    "open_voice_api_key": "",  # openai api key
+    "open_voice_api_base": "https://api.openai.com/v1",
 }
 
 
