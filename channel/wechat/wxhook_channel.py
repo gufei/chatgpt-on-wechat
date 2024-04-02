@@ -164,7 +164,7 @@ class WxHookChannel(ChatChannel):
                 "wxid": context["receiver"],
                 "filepath": "C:\\Users\\Administrator\\Desktop\\files\\" + reply.content
             }
-            res = wx_hook_request("/SendPicMsg", data)
+            res = wx_hook_request("/SendFileMsg", data)
             if res.get("success") == "1":
                 logger.info(f"[wx_hook] send file success")
             else:
