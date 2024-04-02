@@ -236,9 +236,7 @@ def load_config():
 
     args = parser.parse_args()
 
-    if args.help:
-        parser.print_help()
-        exit()
+    parser.print_help()
 
     if args.config:
         config_path = args.config
