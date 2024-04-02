@@ -152,7 +152,7 @@ class WxHookChannel(ChatChannel):
         elif reply.type == ReplyType.IMAGE:
             data = {
                 "wxid": context["receiver"],
-                "picpath": "C:\\Users\\Administrator\\Desktop\\" + reply.content
+                "picpath": "C:\\Users\\Administrator\\Desktop\\files\\" + reply.content
             }
             res = wx_hook_request("/SendPicMsg", data)
             if res.get("SendPicMsg") == "1":
@@ -162,7 +162,7 @@ class WxHookChannel(ChatChannel):
         elif reply.type == ReplyType.FILE:
             data = {
                 "wxid": context["receiver"],
-                "filepath": "C:\\Users\\Administrator\\Desktop\\" + reply.content
+                "filepath": "C:\\Users\\Administrator\\Desktop\\files\\" + reply.content
             }
             res = wx_hook_request("/SendPicMsg", data)
             if res.get("success") == "1":
