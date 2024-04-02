@@ -1,11 +1,12 @@
 # encoding:utf-8
+import argparse
 import base64
 import os
 import signal
 import sys
 import time
 
-from flask import Flask, request
+from flask import Flask
 from channel import channel_factory
 from channel.wechat.wxhook_channel import wx_hook_request, wx_hook_admin_request
 from common import const
@@ -149,3 +150,16 @@ async def wxlogin():
 
 if __name__ == "__main__":
     run(app)
+    # parser = argparse.ArgumentParser(description='消息中间处理程序')
+    # parser.add_argument('-c', '--config', help='设置配置文件，默认值是 ./config.json')
+    # args = parser.parse_args()
+    #
+    # if args.config:
+    #     configfile = args.config
+    # else:
+    #     configfile = "./config.json"
+    #
+    # if args.help:
+    #     parser.print_help()
+    # else:
+    #     run(app)

@@ -1,5 +1,5 @@
 # encoding:utf-8
-
+import argparse
 import json
 import logging
 import os
@@ -167,7 +167,6 @@ available_setting = {
 
     "single_name_white_list": [],  # 用户昵称白名单
 
-
     "open_voice_api_key": "",  # openai api key
     "open_voice_api_base": "https://api.openai.com/v1",
 }
@@ -228,11 +227,23 @@ class Config(dict):
 
 
 config = Config()
+parser = argparse.ArgumentParser(description='消息中间处理程序')
+parser.add_argument('-c', '--config', help='设置配置文件，默认值是 ./config.json')
 
 
 def load_config():
-    global config
-    config_path = "./config.json"
+    global config, parser
+
+    args = parser.parse_args()
+
+    if args.help:
+        parser.print_help()
+        exit()
+
+    if args.config:
+        config_path = args.config
+    else:
+        config_path = "./config.json"
     if not os.path.exists(config_path):
         logger.info("配置文件不存在，将使用config-template.json模板")
         config_path = "./config-template.json"
