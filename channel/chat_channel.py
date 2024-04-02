@@ -272,7 +272,7 @@ class ChatChannel(Channel):
                         reply_text = conf().get("group_chat_reply_prefix", "") + reply_text + conf().get("group_chat_reply_suffix", "")
                     else:
                         reply_text = conf().get("single_chat_reply_prefix", "") + reply_text + conf().get("single_chat_reply_suffix", "")
-                    reply.content = reply_text
+                    reply.content = re.sub('\n+', '\n', reply_text)
                 elif reply.type == ReplyType.ERROR or reply.type == ReplyType.INFO:
                     reply.content = "[" + str(reply.type) + "]\n" + reply.content
                 elif reply.type == ReplyType.IMAGE_URL or reply.type == ReplyType.VOICE or reply.type == ReplyType.IMAGE or reply.type == ReplyType.FILE or reply.type == ReplyType.VIDEO or reply.type == ReplyType.VIDEO_URL or reply.type == ReplyType.CARD or reply.type == ReplyType.INVITE_ROOM or reply.type == ReplyType.MINIAPP or reply.type == ReplyType.JSON_MULTIPLE_RESP:
