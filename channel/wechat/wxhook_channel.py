@@ -69,7 +69,7 @@ class WxHookChannel(ChatChannel):
                 "gid": group_id,
                 "wxid": user_id
             }
-            res = wx_hook_request("/QueryChatRoomMemberNickName", data)
+            res = wx_hook_request("/GetChatroomMemberDetailInfo", data)
             if res:
                 self.nickNames[group_id + "_" + user_id] = res.get("nickname")
         return self.nickNames[group_id + "_" + user_id]
