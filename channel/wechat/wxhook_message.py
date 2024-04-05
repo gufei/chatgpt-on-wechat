@@ -82,6 +82,8 @@ class WxHookMessage(ChatMessage):
         else:
             selfnickName = channel.getNickName(selfwxid)
 
+        logger.debug(f"[wx_hook] selfnickName is {selfnickName}")
+
         if selfnickName != "" and "@" + selfnickName in self.content:
             self.is_at = True
         elif msgsource:
