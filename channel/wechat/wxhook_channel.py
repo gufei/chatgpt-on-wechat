@@ -65,10 +65,13 @@ class WxHookChannel(ChatChannel):
 
     def getNickName(self, user_id, group_id=""):
         if not self.nickNames.get(group_id + "_" + user_id):
-            data = {
-                "gid": group_id,
-                "wxid": user_id
-            }
+            if group_id == "":
+                data = {"wxid": user_id}
+            else:
+                data = {
+                    "gid": group_id,
+                    "wxid": user_id
+                }
             res = wx_hook_request("/GetChatroomMemberDetailInfo", data)
             if res:
                 self.nickNames[group_id + "_" + user_id] = res.get("nickname")
