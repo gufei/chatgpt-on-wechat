@@ -201,8 +201,20 @@ class WxHookController:
 
         # 循环处理每一条消息 data.get("msglist")
         for msg in data.get("msglist"):
+            selfwxid = ""
+
             # 过滤自己的消息
-            if data.get("selfwxid") == msg.get("fromid"):
+            if data.get("selfwxid") != "":
+                selfwxid = data.get("selfwxid")
+            elif msg.get("toid"):
+                selfwxid = msg.get("toid")
+
+            if selfwxid  == "":
+                logger.debug(f"[wx_hook] selfwxid is empty")
+                continue
+
+
+            if selfwxid == msg.get("fromid"):
                 logger.debug(f"[wx_hook] self message filtered, fromid={msg.get('fromid')}")
                 continue
 
@@ -217,7 +229,7 @@ class WxHookController:
                 return self.SUCCESS_MSG
             channel.receivedMsgs[msg.get("msgsvrid")] = True
 
-            wx_hook_msg = WxHookMessage(msg, channel, data.get("selfwxid"))
+            wx_hook_msg = WxHookMessage(msg, channel, selfwxid)
 
             logger.debug("[wx_hook] wx_hook_msg message: {}".format(wx_hook_msg))
 
