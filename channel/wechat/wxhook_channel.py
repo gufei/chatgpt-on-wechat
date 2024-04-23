@@ -75,6 +75,9 @@ class WxHookChannel(ChatChannel):
             res = wx_hook_request("/GetChatroomMemberDetailInfo", data)
             if res:
                 self.nickNames[group_id + "_" + user_id] = res.get("nickname")
+            else:
+                logger.error(f"[wx_hook] get nickname failed, user_id={user_id}, group_id={group_id}")
+                return ""
         return self.nickNames[group_id + "_" + user_id]
 
     def getGroup(self, group_id):
