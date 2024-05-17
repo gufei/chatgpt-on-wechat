@@ -59,13 +59,20 @@ class WxHookMessage(ChatMessage):
         self.actual_user_id = self.from_user_id
         self.actual_user_nickname = self.from_user_nickname
 
-        if self.is_group and "fromgid" in msg:
-            group = channel.getGroup(msg.get("fromgid"))
-            self.other_user_id = msg.get("fromgid")
-            self.other_user_nickname = group.get("gname")
+        if self.is_group:
 
-            self.group_id = msg.get("fromgid")
-            self.group_name = group.get("gname")
+            if "fromgid" in msg:
+                group = channel.getGroup(msg.get("fromgid"))
+                self.other_user_id = msg.get("fromgid")
+                self.other_user_nickname = group.get("gname")
+                self.group_id = msg.get("fromgid")
+                self.group_name = group.get("gname")
+            else:
+                group = channel.getGroup(msg.get("fromid"))
+                self.other_user_id = msg.get("fromid")
+                self.other_user_nickname = group.get("gname")
+                self.group_id = msg.get("fromid")
+                self.group_name = group.get("gname")
         else:
             if self.from_user_id != selfwxid:
                 self.other_user_id = self.from_user_id
