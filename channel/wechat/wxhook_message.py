@@ -46,7 +46,7 @@ class WxHookMessage(ChatMessage):
         else:
             raise NotImplementedError("Unsupported message type: {}".format(msg.get("msgtype")))
 
-        if self.is_group and msg.has_key("fromgid"):
+        if self.is_group and "fromgid" in msg:
             self.from_user_nickname = channel.getNickName(msg.get("fromid"), msg.get("fromgid"))
             self.to_user_nickname = channel.getNickName(msg.get("toid"), msg.get("fromgid"))
         else:
@@ -59,7 +59,7 @@ class WxHookMessage(ChatMessage):
         self.actual_user_id = self.from_user_id
         self.actual_user_nickname = self.from_user_nickname
 
-        if self.is_group and msg.has_key("fromgid"):
+        if self.is_group and "fromgid" in msg:
             group = channel.getGroup(msg.get("fromgid"))
             self.other_user_id = msg.get("fromgid")
             self.other_user_nickname = group.get("gname")
@@ -77,7 +77,7 @@ class WxHookMessage(ChatMessage):
         msgsource = msg.get("msgsource")
         self.is_at = False
 
-        if self.is_group and msg.has_key("fromgid"):
+        if self.is_group and "fromgid" in msg:
             selfnickName = channel.getNickName(selfwxid, msg.get("fromgid"))
         else:
             selfnickName = channel.getNickName(selfwxid)
