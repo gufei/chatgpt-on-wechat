@@ -23,7 +23,7 @@ def wx_hook_admin_request(path, data):
             "Content-Type": "application/json",
         }
         res = requests.post(url, headers=headers, json=data, timeout=(5, 10))
-        return res.json()
+        return res.json(strict=False)
     except Exception as e:
         logger.error(f"[wx_hook] send message failed, error: {e}")
         return None
@@ -40,7 +40,7 @@ def wx_hook_request(path, data):
         }
         res = requests.post(url, headers=headers, json=data, timeout=(5, 10))
         logger.debug(f"[wx_hook] send message success, res: {res}")
-        return res.json()
+        return res.json(strict=False)
     except Exception as e:
         logger.error(f"[wx_hook] send message failed, error: {e}")
         return None
@@ -179,7 +179,7 @@ class WxHookController:
     SUCCESS_MSG = '{"success": true}'
 
     def POST(self):
-        data = json.loads(web.data().decode("utf-8"))
+        data = json.loads(web.data().decode("utf-8"),strict=False)
         logger.info(f"[wx_hook] receive request: {data}")
 
         # 只接收 30001、30002、30003、30004、30005 和配置的 端口的消息
