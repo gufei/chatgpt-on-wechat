@@ -206,8 +206,6 @@ class WxHookController:
             # 过滤自己的消息
             if data.get("selfwxid") != "":
                 selfwxid = data.get("selfwxid")
-            elif msg.get("toid"):
-                selfwxid = msg.get("toid")
 
             if selfwxid  == "":
                 logger.debug(f"[wx_hook] selfwxid is empty")
