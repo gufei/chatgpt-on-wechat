@@ -81,7 +81,6 @@ class WxHookMessage(ChatMessage):
         self.actual_user_nickname = self.from_user_nickname
 
         if self.is_group:
-
             if "fromgid" in msg:
                 group = channel.getGroup(msg.get("fromgid"))
                 self.other_user_id = msg.get("fromgid")
@@ -105,6 +104,7 @@ class WxHookMessage(ChatMessage):
         msgsource = msg.get("msgsource")
         self.is_at = False
 
+        selfnickName = ""
         if self.is_group and "fromgid" in msg:
             selfnickName = channel.getNickName(selfwxid, msg.get("fromgid"))
         else:
