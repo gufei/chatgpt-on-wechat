@@ -64,21 +64,17 @@ class WxHookChannel(ChatChannel):
             self.wx_hook_ip, self.wx_hook_port, self.wx_hook_admin_port, self.wx_hook_callback_port))
 
     def getNickName(self, user_id, group_id=""):
-        if not self.nickNames.get(group_id + "_" + user_id):
-            if group_id == "":
-                data = {"wxid": user_id}
-            else:
-                data = {
-                    "gid": group_id,
-                    "wxid": user_id
-                }
-            res = wx_hook_request("/GetChatroomMemberDetailInfo", data)
+        if not self.nickNames.get(user_id):
+            data = {
+                "wxidorgid": user_id
+            }
+            res = wx_hook_request("/GetFriendOrChatroomDetailInfo", data)
             if res:
-                self.nickNames[group_id + "_" + user_id] = res.get("nickname")
+                self.nickNames[user_id] = res.get("nickname")
             else:
                 logger.error(f"[wx_hook] get nickname failed, user_id={user_id}, group_id={group_id}")
                 return ""
-        return self.nickNames[group_id + "_" + user_id]
+        return self.nickNames[user_id]
 
     def getGroup(self, group_id):
         if not self.groups.get(group_id):
