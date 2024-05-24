@@ -39,6 +39,7 @@ def wx_hook_request(path, data):
             "Content-Type": "application/json",
         }
         res = requests.post(url, headers=headers, json=data, timeout=(5, 10))
+        logger.debug(f"[wx_hook] send message success, res: {res}")
         return res.json()
     except Exception as e:
         logger.error(f"[wx_hook] send message failed, error: {e}")
