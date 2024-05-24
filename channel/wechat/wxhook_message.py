@@ -16,7 +16,18 @@ class WxHookMessage(ChatMessage):
         super().__init__(msg)
         self.msg_id = msg.get("msgsvrid")
         self.create_time = msg.get("time")
+
         self.is_group = msg.get("fromtype") == "2" or "@chatroom" in msg.get("fromid")
+
+
+        if self.is_group and "@chatroom" in msg.get("fromid") and "fromgin" not in msg:
+            msg.set("fromgid", msg.get("fromid"))
+            msg.set("fromid", msg.get("toid"))
+
+        if self.is_group and msg.get("fromtype") != "2":
+            msg.set("fromtype", "2")
+
+
 
         if msg.get("msgtype") == "1":
             self.ctype = ContextType.TEXT
