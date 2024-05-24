@@ -14,6 +14,10 @@ from xml.etree import ElementTree as ET
 class WxHookMessage(ChatMessage):
     def __init__(self, msg, channel, selfwxid):
         super().__init__(msg)
+
+        logger.debug(f"[wx_hook] msg is {msg}")
+
+
         self.msg_id = msg.get("msgsvrid")
         self.create_time = msg.get("time")
 
