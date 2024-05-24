@@ -179,7 +179,7 @@ class WxHookController:
     SUCCESS_MSG = '{"success": true}'
 
     def POST(self):
-        data = json.loads(web.data().decode("utf-8"),strict=False)
+        data = json.loads(web.data().decode("utf-8"), strict=False)
         logger.info(f"[wx_hook] receive request: {data}")
 
         # 只接收 30001、30002、30003、30004、30005 和配置的 端口的消息
@@ -201,16 +201,19 @@ class WxHookController:
 
         # 循环处理每一条消息 data.get("msglist")
         for msg in data.get("msglist"):
+
+            if "cmdId" in msg:
+                return "this is a cmd message"
+
             selfwxid = ""
 
             # 过滤自己的消息
             if data.get("selfwxid") != "":
                 selfwxid = data.get("selfwxid")
 
-            if selfwxid  == "":
+            if selfwxid == "":
                 logger.debug(f"[wx_hook] selfwxid is empty")
                 continue
-
 
             if selfwxid == msg.get("fromid"):
                 logger.debug(f"[wx_hook] self message filtered, fromid={msg.get('fromid')}")
