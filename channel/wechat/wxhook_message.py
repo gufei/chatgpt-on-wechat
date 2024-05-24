@@ -30,8 +30,8 @@ class WxHookMessage(ChatMessage):
 
         if self.is_group and "@chatroom" in msg.get("fromid") and "fromgin" not in msg:
             msg["fromgid"] = msg.get("fromid")
-            msg["fromid"] = msg.get("toid")
-            msg["toid"] = msg.get("fromid")
+            # msg["fromid"] = msg.get("toid")
+            # msg["toid"] = msg.get("fromgid")
 
         if self.is_group and msg.get("fromtype") != "2":
             msg["fromtype"] = "2"
@@ -67,11 +67,11 @@ class WxHookMessage(ChatMessage):
         self.from_user_id = msg.get("fromid")
         self.from_user_nickname = channel.getNickName(msg.get("fromid"))
         self.to_user_id = msg.get("toid")
-        self.to_user_nickname = channel.getNickName(msg.get("toid"), msg.get("fromgid"))
+        self.to_user_nickname = channel.getNickName(msg.get("toid"))
 
         if self.is_group:
-            self.actual_user_id = self.from_user_id
-            self.actual_user_nickname = self.from_user_nickname
+            self.actual_user_id = self.to_user_id
+            self.actual_user_nickname = self.to_user_nickname
 
         if self.is_group:
             if "fromgid" in msg:
