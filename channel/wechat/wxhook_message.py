@@ -31,6 +31,7 @@ class WxHookMessage(ChatMessage):
         if self.is_group and "@chatroom" in msg.get("fromid") and "fromgin" not in msg:
             msg["fromgid"] = msg.get("fromid")
             msg["fromid"] = msg.get("toid")
+            msg["toid"] = msg.get("fromid")
 
         if self.is_group and msg.get("fromtype") != "2":
             msg["fromtype"] = "2"
@@ -63,22 +64,14 @@ class WxHookMessage(ChatMessage):
         else:
             raise NotImplementedError("Unsupported message type: {}".format(msg.get("msgtype")))
 
-        if self.is_group:
-            if "fromgid" in msg:
-                self.from_user_nickname = channel.getNickName(msg.get("fromid"), msg.get("fromgid"))
-                self.to_user_nickname = channel.getNickName(msg.get("toid"), msg.get("fromgid"))
-            else:
-                self.from_user_nickname = ""
-                self.to_user_nickname = ""
-        else:
-            self.from_user_nickname = channel.getNickName(msg.get("fromid"))
-            self.to_user_nickname = channel.getNickName(msg.get("toid"))
-
         self.from_user_id = msg.get("fromid")
+        self.from_user_nickname = channel.getNickName(msg.get("fromid"))
         self.to_user_id = msg.get("toid")
+        self.to_user_nickname = channel.getNickName(msg.get("toid"), msg.get("fromgid"))
 
-        self.actual_user_id = self.from_user_id
-        self.actual_user_nickname = self.from_user_nickname
+        if self.is_group:
+            self.actual_user_id = self.from_user_id
+            self.actual_user_nickname = self.from_user_nickname
 
         if self.is_group:
             if "fromgid" in msg:
@@ -104,12 +97,7 @@ class WxHookMessage(ChatMessage):
         msgsource = msg.get("msgsource")
         self.is_at = False
 
-        selfnickName = ""
-        if self.is_group and "fromgid" in msg:
-            selfnickName = channel.getNickName(selfwxid, msg.get("fromgid"))
-        else:
-            selfnickName = channel.getNickName(selfwxid)
-
+        selfnickName = channel.getNickName(selfwxid)
         logger.debug(f"[wx_hook] selfnickName is {selfnickName}")
 
         if selfnickName != "" and "@" + selfnickName in self.content:
