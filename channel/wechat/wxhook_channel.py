@@ -1,6 +1,5 @@
 import json
 from time import sleep
-from urllib.parse import unquote
 
 import requests
 import web
@@ -149,7 +148,7 @@ class WxHookChannel(ChatChannel):
         elif reply.type == ReplyType.IMAGE_URL:  # 从网络下载图片
             data = {
                 "wxid": context["receiver"],
-                "picpath": unquote(reply.content),
+                "picpath": reply.content,
                 "diyfilename": "1.jpg"
             }
             logger.debug(f"[wx_hook] send image data: {data}")
@@ -158,6 +157,13 @@ class WxHookChannel(ChatChannel):
                 logger.info(f"[wx_hook] send url image success")
             else:
                 logger.error(f"[wx_hook] send url image failed")
+
+            data = {
+                "wxid": context["receiver"],
+                "msg": reply.content
+            }
+            # 补偿发送图片链接
+            wx_hook_request("/SendTextMsg", data)
         elif reply.type == ReplyType.IMAGE:
             data = {
                 "wxid": context["receiver"],
