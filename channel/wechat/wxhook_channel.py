@@ -158,12 +158,12 @@ class WxHookChannel(ChatChannel):
             else:
                 logger.error(f"[wx_hook] send url image failed")
 
-            data = {
-                "wxid": context["receiver"],
-                "msg": reply.content
-            }
-            # 补偿发送图片链接
-            wx_hook_request("/SendTextMsg", data)
+            # data = {
+            #     "wxid": context["receiver"],
+            #     "msg": reply.content
+            # }
+            # # 补偿发送图片链接
+            # wx_hook_request("/SendTextMsg", data)
         elif reply.type == ReplyType.IMAGE:
             data = {
                 "wxid": context["receiver"],
