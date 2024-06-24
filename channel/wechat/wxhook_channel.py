@@ -30,6 +30,16 @@ def wx_hook_admin_request(path, data):
 
 
 def wx_hook_request(path, data):
+    # 添加字典
+    # ports = {
+    #     "wxid_77au928zeb2p12": 30001,
+    #     "wxid_vxb2yrhrxsqs12": 30002,
+    #     "wxid_l52egy9jtfu922": 30003,
+    #     "wxid_0u13zxhwsxsu12": 30004,
+    #     "wxid_wmz7m9nqrdg612": 30005,
+    #     "bowen1116": 30006,
+    #     "wxid_edc0mvp188ms22": 30007
+    # }
     try:
         # path判断是不是/开头
         if not path.startswith("/"):
@@ -130,17 +140,23 @@ class WxHookChannel(ChatChannel):
             '/robot-api/webot/receiveChatBotMsg', 'channel.wechat.wxhook_channel.WxHookController'
         )
         app = web.application(urls, globals(), autoreload=False)
-        port = conf().get("wx_hook_callback_port", 9001)
+        port = conf().get("wx_hook_callback_port", 9007)
         web.httpserver.runsimple(app.wsgifunc(), ("0.0.0.0", port))
 
     def send(self, reply: Reply, context: Context):
+        # logger.debug(f"[WxHookChannel] Context: {vars(Context)}")
         is_group = context["isgroup"]
         if reply.type == ReplyType.TEXT or reply.type == ReplyType.INFO or reply.type == ReplyType.ERROR or reply.type == ReplyType.TEXT_:
+            # logger.debug(f"[wx_hook] send context: {context}")
+            # logger.debug(f"[wx_hook] send context msg: {vars(context.kwargs['msg'])}")
+            # logger.debug(f"[wx_hook] send context channel: {vars(context.kwargs['channel'])}")
+            # logger.debug(f"[wx_hook] send context channel: {vars(context.kwargs['channel']['user_id'])}")
             data = {
                 "wxid": context["receiver"],
                 "msg": reply.content
             }
             res = wx_hook_request("/SendTextMsg", data)
+            context["is_success"] = res.get("SendTextMsg")
             if res.get("SendTextMsg") == "1":
                 logger.info(f"[wx_hook] send message success")
             else:
@@ -153,6 +169,7 @@ class WxHookChannel(ChatChannel):
             }
             logger.debug(f"[wx_hook] send image data: {data}")
             res = wx_hook_request("/SendPicMsg", data)
+            context["is_success"] = res.get("SendPicMsg")
             if res.get("SendPicMsg") == "1":
                 logger.info(f"[wx_hook] send url image success")
             else:
@@ -170,6 +187,7 @@ class WxHookChannel(ChatChannel):
                 "picpath": "C:\\Users\\Administrator\\Desktop\\files\\" + reply.content
             }
             res = wx_hook_request("/SendPicMsg", data)
+            context["is_success"] = res.get("SendPicMsg")
             if res.get("SendPicMsg") == "1":
                 logger.info(f"[wx_hook] send image success")
             else:
@@ -180,6 +198,7 @@ class WxHookChannel(ChatChannel):
                 "filepath": "C:\\Users\\Administrator\\Desktop\\files\\" + reply.content
             }
             res = wx_hook_request("/SendFileMsg", data)
+            context["is_success"] = res.get("SendFileMsg")
             if res.get("success") == "1":
                 logger.info(f"[wx_hook] send file success")
             else:
