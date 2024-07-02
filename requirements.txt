@@ -4,9 +4,9 @@ PyQRCode>=1.2.1
 qrcode>=7.4.2
 requests>=2.28.2
 chardet>=5.1.0
-Pillow
+Pillow~=10.3.0
 pre-commit
-web.py
+web.py~=0.62
 
 tiktoken>=0.3.2 # openai calculate token
 
@@ -19,14 +19,14 @@ baidu_aip>=4.16.10 # baidu voice
 azure-cognitiveservices-speech # azure voice
 edge-tts # edge-tts
 numpy<=1.24.2
-langid # language detect
+langid~=1.1.6
 
 #install plugin
 dulwich
 
 # wechatmp && wechatcom
 web.py
-wechatpy
+wechatpy~=1.8.18
 
 # chatgpt-tool-hub plugin
 chatgpt_tool_hub==0.5.0
@@ -37,7 +37,7 @@ websocket-client==1.2.0
 # claude bot
 curl_cffi
 # claude API
-anthropic
+anthropic~=0.29.0
 
 # tongyi qwen
 broadscope_bailian
@@ -53,3 +53,9 @@ dingtalk_stream
 
 # zhipuai
 zhipuai>=2.0.1
+
+dashscope~=1.20.0
+pilk~=0.2.4
+flask~=3.0.3
+pip~=23.2.1
+DBUtils~=1.3

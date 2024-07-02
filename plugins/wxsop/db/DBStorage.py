@@ -3,6 +3,8 @@ from typing import Optional
 import mysql.connector
 from mysql.connector import Error
 from DBUtils.PooledDB import PooledDB
+
+from common.log import logger
 from config import conf
 
 
@@ -40,17 +42,20 @@ class DBStorage:
         conn = self._mysql.connection()
         try:
             # 在message_records表中，查询bot_wxid == selfwxid and contact_wxid == fromid contact_type == 1 source_type == 3 status == 1 的最新一条记录，按created_at字段排序
-            sql_query = "SELECT * FROM message_records WHERE bot_wxid = %s AND contact_wxid = %s AND contact_type = %s AND source_type = 3 AND status = 3 ORDER BY created_at DESC LIMIT 1"
+            sql_query = "SELECT * FROM message_records WHERE bot_wxid = %s AND contact_wxid = %s AND contact_type = %s AND (source_type = 3 OR source_type = 4) AND status = 3 ORDER BY created_at DESC LIMIT 1"
             record_tuple = (bot_wxid, contact_wxid, contact_type)
 
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
                 message_record = cursor.fetchone()
-
             if message_record:
                 # 在sop_node表中，查询 id == message_record['sub_source_id'] stage_id == message_record['source_id'] 的记录
-                sql_query = "SELECT * FROM sop_node WHERE parent_id = %s AND stage_id = %s"
-                sop_node_tuple = (message_record['sub_source_id'], message_record['source_id'])
+                if message_record['source_type'] == 3:
+                    sql_query = "SELECT * FROM sop_node WHERE deleted_at IS NULL AND parent_id = %s AND stage_id = %s"
+                    sop_node_tuple = (0, message_record['source_id'])
+                else:
+                    sql_query = "SELECT * FROM sop_node WHERE deleted_at IS NULL AND parent_id = %s"
+                    sop_node_tuple = (message_record['source_id'],)
 
                 with conn.cursor(dictionary=True) as cursor:
                     cursor.execute(sql_query, sop_node_tuple)
@@ -109,25 +114,25 @@ class DBStorage:
         conn = self._mysql.connection()
         try:
             # 从 label_relationship 表中查询 contact_id == contact_id 的记录
-            sql_query = "SELECT * FROM label_relationship WHERE contact_id = %s"
+            sql_query = "SELECT * FROM label_relationship WHERE deleted_at IS NULL AND contact_id = %s"
             record_tuple = (contact_id,)
 
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
                 label_relationships = cursor.fetchall()
-
+                logger.debug("[wxsop] label_relationships: %s" % label_relationships)
+                add_label_ids = []
                 if label_relationships:
                     contact_label_ids = [label_relationship['label_id'] for label_relationship in label_relationships]
-                    add_label_ids = []
                     for label_id in label_ids:
                         if label_id not in contact_label_ids:
                             add_label_ids.append(label_id)
-                    if add_label_ids:
-                        return contact_label_ids
+                    # if add_label_ids:
+                    #     return contact_label_ids
                 else:
                     add_label_ids = label_ids
                     contact_label_ids = []
-
+                logger.debug("[wxsop] add_label_ids: %s" % add_label_ids)
                 for label_id in add_label_ids:
                     sql_insert = "INSERT INTO label_relationship (status, contact_id, label_id, created_at, updated_at) VALUES (%s, %s, %s, NOW(), NOW())"
                     record_tuple = (1, contact_id, label_id)
@@ -146,11 +151,20 @@ class DBStorage:
     def get_stage(self):
         conn = self._mysql.connection()
         try:
-            sql_query = "SELECT * FROM sop_stage WHERE deleted_at IS NULL AND status = 1"
-
+            task_query = "SELECT * FROM sop_task WHERE deleted_at IS NULL AND status = 3"
             with conn.cursor(dictionary=True) as cursor:
-                cursor.execute(sql_query)
-                stages = cursor.fetchall()
+                cursor.execute(task_query)
+                tasks = cursor.fetchall()
+
+            # 遍历tasks，查询每个task下的stage
+            stages = []
+            for task in tasks:
+                sql_query = "SELECT * FROM sop_stage WHERE task_id = %s AND deleted_at IS NULL AND status = 1"
+                stage_tuple = (task['id'],)
+
+                with conn.cursor(dictionary=True) as cursor:
+                    cursor.execute(sql_query, stage_tuple)
+                    stages += cursor.fetchall()
 
             return stages
         except Error as e:
@@ -160,7 +174,7 @@ class DBStorage:
             conn.close()
 
     # 判断发送记录是否已存在
-    def check_message_record(self, contact_wxid: str, source_type: int, source_id: str, sub_source_id: str) -> bool:
+    def check_message_record(self, contact_wxid: str, source_type: int, source_id: int, sub_source_id: int) -> bool:
         conn = self._mysql.connection()
         try:
             sql_query = "SELECT * FROM message_records WHERE contact_wxid = %s AND source_type = %s AND source_id = %s AND sub_source_id = %s"

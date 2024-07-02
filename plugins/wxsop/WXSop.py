@@ -71,14 +71,14 @@ class WXSop(Plugin):
             for index, sop_node in enumerate(sop_nodes):
                 if sop_node['condition_list']:
                     prompt += f"""node_order: {index}
-命中条件：{sop_node['condition_list']}
+命中语义：{sop_node['condition_list']}
 """
                 else:
                     prompt += f"""node_order: {index}
-命中条件：用户发送任意内容
+命中语义：用户发送任意内容
 """
             prompt += f"""# 判断方式：
-用户发送的内容与节点命中条件语义相同既算命中
+用户发送的内容与节点命中语义相似即算命中
 
 # 回复要求
 - 如果有命中的节点：则仅回复 node_order 的值（如命中多个节点，则仅回复最小值），例如回复 0
@@ -91,7 +91,7 @@ class WXSop(Plugin):
                 # sop_nodes[node_order]['action_message']的值为 json str ，将其转换为字典
                 action_messages = json.loads(sop_nodes[node_order]['action_message'])
 
-                for message in action_messages:
+                for index, message in enumerate(action_messages):
                     type = int(message['type'])
 
                     reply = Reply()
@@ -103,8 +103,8 @@ class WXSop(Plugin):
                     status = 3 if e_context.econtext.get('context', {}).get('is_success') else 4
 
                     _ = self.db.create_message_record(status, bot_wxid, message_record["contact_id"], contact_type,
-                                                      contact_wxid, type, message['content'], 3,
-                                                      message_record["source_id"], sop_nodes[node_order]["id"])
+                                                      contact_wxid, type, message['content'], 4,
+                                                      sop_nodes[node_order]["id"], index)
 
                 action_label = json.loads(sop_nodes[node_order]['action_label'])
                 if action_label:
@@ -115,6 +115,7 @@ class WXSop(Plugin):
 
     # 为联系人添加标签
     def add_tag(self, bot_wxid, contact_id, contact_type, contact_wxid, label_ids, stages, context):
+        logger.debug("[wxsop] label_ids: %s" % label_ids)
         contact_label_ids = self.db.add_contact_label(contact_id, label_ids)
         match_stages = []
         logger.debug("[wxsop] contact_label_ids: %s" % contact_label_ids)
@@ -131,11 +132,11 @@ class WXSop(Plugin):
                 continue
             if stage["action_message"]:
                 action_message = json.loads(stage['action_message'])
-                for message in action_message:
+                for index, message in enumerate(action_message):
                     type = int(message['type'])
 
                     lastrowid = self.db.create_message_record(2, bot_wxid, contact_id, contact_type, contact_wxid,
-                                                      type, message['content'], 3, stage["id"], 0)
+                                                      type, message['content'], 3, stage["id"], index)
                     if lastrowid:
                         reply = Reply()
                         reply.type = ReplyType.TEXT if type == 1 else ReplyType.FILE
