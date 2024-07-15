@@ -60,27 +60,29 @@ class WXSop(Plugin):
         # 调用 chatgpt 接口
         if message_record and sop_nodes:
             prompt = f"""# 任务
-你好，请根据用户发送的内容，判断命中了哪个 SOP 节点。
+请根据 用户发送内容，判断命中了 节点列表 中的哪个 节点。
 
 # 用户发送内容：{content}
 
-# 节点列表
-            """
+# 节点列表："""
             for index, sop_node in enumerate(sop_nodes):
                 if sop_node['condition_list']:
-                    prompt += f"""node_order: {index}
-命中语义：{sop_node['condition_list']}
+                    prompt += f"""
+节点 id: {index}
+命中条件：{sop_node['condition_list']}
 """
                 else:
-                    prompt += f"""node_order: {index}
-命中语义：用户发送任意内容
+                    prompt += f"""
+节点 id: {index}
+命中条件：用户发送任意内容
 """
-            prompt += f"""# 判断方式：
-用户发送的内容与节点命中语义相似即算命中
+            prompt += f"""
+# 判断方式：
+「用户发送内容」与「节点命中条件」的意图相同即算命中节点，如都为肯定或否定等。而意图不同则不算命中
 
 # 回复要求
-- 如果用户发送内容与节点命中语义相似：则仅回复 node_order 的值（如命中多个节点，则仅回复最小值），例如回复 0
-- 如果用户发送内容与节点命中语义没有相似的：则仅回复一个单词 None"""
+- 如果命中节点：则仅回复节点 id 数字（如命中多个节点，则仅回复最小值）
+- 如果未命中节点：则仅回复一个单词: None"""
             reply = self.bot.reply(prompt, e_context.econtext['context'])
             logger.debug("[wxsop] reply: %s" % reply)
             if reply.content != "None":
@@ -117,9 +119,12 @@ class WXSop(Plugin):
                     self.add_tag(bot_wxid, message_record["contact_id"], contact_type, contact_wxid, action_label, stages, e_context.econtext)
 
                 e_context.action = EventAction.BREAK_PASS
-
-        if not self.continue_on_miss:
-            e_context.action = EventAction.BREAK_PASS
+            else:
+                if not self.continue_on_miss:
+                    e_context.action = EventAction.BREAK_PASS
+        else:
+            if not self.continue_on_miss:
+                e_context.action = EventAction.BREAK_PASS
 
     # 为联系人添加标签
     def add_tag(self, bot_wxid, contact_id, contact_type, contact_wxid, label_ids, stages, context):
