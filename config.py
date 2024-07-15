@@ -166,17 +166,16 @@ available_setting = {
     "linkai_api_base": "https://api.link-ai.chat",  # linkAI服务地址，若国内无法访问或延迟较高可改为 https://api.link-ai.tech
 
 
-    "wx_hook_ip": "",
-    "wx_hook_port": 30001,
+    "wx_hook_ip": "172.23.24.97",
+    "wx_hook_port": 30006,
     "wx_hook_admin_port": 29999,
-    "wx_hook_callback_port": 9001,
-    "wx_hook_callback_url": "http://localhost:9001/robot-api/webot/receiveChatBotMsg",
+    "wx_hook_callback_port": 9006,
+    "wx_hook_callback_url": "http://172.23.20.164:9006/robot-api/webot/receiveChatBotMsg",
 
     "single_name_white_list": [],  # 用户昵称白名单
 
     "open_voice_api_key": "",  # openai api key
-    "open_voice_api_base": "https://api.openai.com/v1",
-
+    "open_voice_api_base": "https://api.openai.com/v1"
 }
 
 

@@ -34,3 +34,4 @@ plugins/banwords/lib/__pycache__
 !plugins/wxsop/db/
 !plugins/wxsop/config.json
 client_config.json
+dockervenv

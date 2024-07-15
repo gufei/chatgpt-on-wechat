@@ -3,5 +3,6 @@
   "port": 3306,
   "user": "root",
   "password": "simple-admin.",
-  "database": "wechat"
+  "database": "wechat",
+  "continue_on_miss": true
 }

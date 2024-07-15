@@ -195,7 +195,8 @@ class WxHookChannel(ChatChannel):
         elif reply.type == ReplyType.FILE:
             data = {
                 "wxid": context["receiver"],
-                "filepath": "C:\\Users\\Administrator\\Desktop\\files\\" + reply.content
+                "filepath": reply.content,
+                "diyfilename": context["diyfilename"]
             }
             res = wx_hook_request("/SendFileMsg", data)
             context["is_success"] = res.get("SendFileMsg")

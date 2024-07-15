@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 
 import mysql.connector
@@ -70,11 +71,12 @@ class DBStorage:
             conn.close()
 
     # 创建一条消息记录
-    def create_message_record(self, status: int, bot_wxid: str, contact_id: int, contact_type: int, contact_wxid: str, content_type: int, content: str, source_type: int, source_id: int, sub_source_id: int) -> Optional[int]:
+    def create_message_record(self, status: int, bot_wxid: str, contact_id: int, contact_type: int, contact_wxid: str, content_type: int, content: str, meta: dict, source_type: int, source_id: int, sub_source_id: int) -> Optional[int]:
         conn = self._mysql.connection()
         try:
-            sql_insert = "INSERT INTO message_records (status, bot_wxid, contact_id, contact_type, contact_wxid, content_type, content, source_type, source_id, sub_source_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())"
-            record_tuple = (status, bot_wxid, contact_id, contact_type, contact_wxid, content_type, content, source_type, source_id, sub_source_id)
+            meta_str = json.dumps(meta) if isinstance(meta, dict) else meta
+            sql_insert = "INSERT INTO message_records (status, bot_wxid, contact_id, contact_type, contact_wxid, content_type, content, meta, source_type, source_id, sub_source_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())"
+            record_tuple = (status, bot_wxid, contact_id, contact_type, contact_wxid, content_type, content, meta_str, source_type, source_id, sub_source_id)
 
             with conn.cursor() as cursor:
                 cursor.execute(sql_insert, record_tuple)

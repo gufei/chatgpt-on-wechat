@@ -296,6 +296,7 @@ class PluginManager:
         if name in [
             "HELLO",
             "GODCMD",
+            "WXSOP",
             "ROLE",
             "TOOL",
             "BDUNIT",

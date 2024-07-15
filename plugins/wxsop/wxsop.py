@@ -1,13 +1,10 @@
 # encoding:utf-8
 
-import requests
 import plugins
-from bot.bot_factory import create_bot
-from bridge.bridge import Bridge
-from bridge.context import ContextType, Context
+from bridge.context import ContextType
 from bridge.reply import Reply, ReplyType
-from channel.wechat.wxhook_channel import wx_hook_request
 from plugins import *
+from plugins.wxsop.chat_gpt_bot import ChatGPTBot
 from plugins.wxsop.db.DBStorage import DBStorage
 
 
@@ -15,7 +12,7 @@ from plugins.wxsop.db.DBStorage import DBStorage
     name="WXSop",
     desire_priority=901,
     hidden=True,
-    desc="SOP 匹配过滤",
+    desc="SOP",
     version="0.1",
     author="gooki.com",
 )
@@ -34,8 +31,9 @@ class WXSop(Plugin):
                     conf = json.load(f)
             # 创建数据库对象
             self.db = DBStorage(conf["host"], conf["port"], conf["user"], conf["password"], conf["database"])
-            self.bot = create_bot("chatGPT")
+            self.bot = ChatGPTBot()
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
+            self.continue_on_miss = conf["continue_on_miss"]
             logger.info("[wxsop] inited.")
         except Exception as e:
             logger.warn("[wxsop] init failed.")
@@ -81,8 +79,8 @@ class WXSop(Plugin):
 用户发送的内容与节点命中语义相似即算命中
 
 # 回复要求
-- 如果有命中的节点：则仅回复 node_order 的值（如命中多个节点，则仅回复最小值），例如回复 0
-- 如果没命中的节点：则仅回复一个单词 None"""
+- 如果用户发送内容与节点命中语义相似：则仅回复 node_order 的值（如命中多个节点，则仅回复最小值），例如回复 0
+- 如果用户发送内容与节点命中语义没有相似的：则仅回复一个单词 None"""
             reply = self.bot.reply(prompt, e_context.econtext['context'])
             logger.debug("[wxsop] reply: %s" % reply)
             if reply.content != "None":
@@ -97,13 +95,20 @@ class WXSop(Plugin):
                     reply = Reply()
                     reply.type = ReplyType.TEXT if type == 1 else ReplyType.FILE
                     reply.content = message['content']
+                    if type == 2:
+                        e_context.econtext.get('context', {})["diyfilename"] = message['meta']['filename']
+                        meta = {
+                            "filename": message['meta']['filename']
+                        }
+                    else:
+                        meta = {}
                     reply = e_context.econtext['channel']._decorate_reply(e_context.econtext['context'], reply)
                     e_context.econtext['channel']._send_reply(e_context.econtext.get('context', {}), reply)
 
                     status = 3 if e_context.econtext.get('context', {}).get('is_success') else 4
 
                     _ = self.db.create_message_record(status, bot_wxid, message_record["contact_id"], contact_type,
-                                                      contact_wxid, type, message['content'], 4,
+                                                      contact_wxid, type, message['content'], meta,4,
                                                       sop_nodes[node_order]["id"], index)
 
                 action_label = json.loads(sop_nodes[node_order]['action_label'])
@@ -112,6 +117,9 @@ class WXSop(Plugin):
                     self.add_tag(bot_wxid, message_record["contact_id"], contact_type, contact_wxid, action_label, stages, e_context.econtext)
 
                 e_context.action = EventAction.BREAK_PASS
+
+        if not self.continue_on_miss:
+            e_context.action = EventAction.BREAK_PASS
 
     # 为联系人添加标签
     def add_tag(self, bot_wxid, contact_id, contact_type, contact_wxid, label_ids, stages, context):
@@ -135,13 +143,23 @@ class WXSop(Plugin):
                 for index, message in enumerate(action_message):
                     type = int(message['type'])
 
+                    if type == 2:
+                        meta = {
+                            "filename": message['meta']['filename']
+                        }
+                    else:
+                        meta = {}
+
                     lastrowid = self.db.create_message_record(2, bot_wxid, contact_id, contact_type, contact_wxid,
-                                                      type, message['content'], 3, stage["id"], index)
+                                                      type, message['content'], meta, 3, stage["id"], index)
                     if lastrowid:
                         reply = Reply()
                         reply.type = ReplyType.TEXT if type == 1 else ReplyType.FILE
                         reply.content = message['content']
                         reply = context['channel']._decorate_reply(context['context'], reply)
+                        if type == 2:
+                            context.get('context', {})["diyfilename"] = message['meta']['filename']
+                        logger.debug("[wxsop] context: %s" % context.get('context', {}))
                         context['channel']._send_reply(context.get('context', {}), reply)
 
                         if context.get('context', {}).get('is_success'):

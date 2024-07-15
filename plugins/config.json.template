@@ -3,6 +3,15 @@
         "password": "",
         "admin_users": []
     },
+    "wxsop": {
+        {
+            "host": "localhost",
+            "port": 3306,
+            "user": "root",
+            "password": "simple-admin.",
+            "database": "wechat"
+        }
+    },
     "banwords": {
         "action": "replace",
         "reply_filter": true,

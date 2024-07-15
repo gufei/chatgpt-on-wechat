@@ -1,1 +1,1 @@
-from .WXSop import *
+from .wxsop import *
