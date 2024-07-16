@@ -17,13 +17,17 @@ from config import conf, load_config
 
 
 # OpenAI对话模型API (可用)
-class ChatGPTBot(Bot, OpenAIImage):
-    def __init__(self):
+class OpenaiBot(Bot, OpenAIImage):
+    def __init__(self,
+                 open_ai_api_base: str,
+                 open_ai_api_key: str):
         super().__init__()
         # set the default api_key
-        openai.api_key = conf().get("open_voice_api_key")
-        if conf().get("open_voice_api_base"):
-            openai.api_base = conf().get("open_voice_api_base")
+        # openai.api_key = conf().get("open_voice_api_key")
+        # if conf().get("open_voice_api_base"):
+        #     openai.api_base = conf().get("open_voice_api_base")
+        self.open_ai_api_base = open_ai_api_base
+        self.open_ai_api_key = open_ai_api_key
         proxy = conf().get("proxy")
         if proxy:
             openai.proxy = proxy
@@ -113,13 +117,17 @@ class ChatGPTBot(Bot, OpenAIImage):
         :param retry_count: retry count
         :return: {}
         """
+        original_api_key = openai.api_key
+        original_api_base = openai.api_base
         try:
             if conf().get("rate_limit_chatgpt") and not self.tb4chatgpt.get_token():
                 raise openai.error.RateLimitError("RateLimitError: rate limit exceeded")
             # if api_key == None, the default openai.api_key will be used
             if args is None:
                 args = self.args
-            response = openai.ChatCompletion.create(api_key=api_key, messages=session.messages, **args)
+            openai.api_key = self.open_ai_api_key
+            openai.api_base = self.open_ai_api_base
+            response = openai.ChatCompletion.create(messages=session.messages, **args)
             # logger.debug("[CHATGPT] response={}".format(response))
             # logger.info("[ChatGPT] reply={}, total_tokens={}".format(response.choices[0]['message']['content'], response["usage"]["total_tokens"]))
             return {
@@ -160,3 +168,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                 return self.reply_text(session, api_key, args, retry_count + 1)
             else:
                 return result
+        finally:
+            # 恢复原来的 api_base
+            openai.api_key = original_api_key
+            openai.api_base = original_api_base

@@ -1,4 +1,6 @@
 {
+   "open_ai_api_base": "https://api.openai.com/v1",
+   "open_ai_api_key": "",
   "host": "127.0.0.1",
   "port": 3306,
   "user": "root",

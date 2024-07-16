@@ -4,7 +4,7 @@ import plugins
 from bridge.context import ContextType
 from bridge.reply import Reply, ReplyType
 from plugins import *
-from plugins.wxsop.chat_gpt_bot import ChatGPTBot
+from plugins.wxsop.chat_gpt_bot import OpenaiBot
 from plugins.wxsop.db.DBStorage import DBStorage
 
 
@@ -31,7 +31,7 @@ class WXSop(Plugin):
                     conf = json.load(f)
             # 创建数据库对象
             self.db = DBStorage(conf["host"], conf["port"], conf["user"], conf["password"], conf["database"])
-            self.bot = ChatGPTBot()
+            self.bot = OpenaiBot(conf["open_ai_api_base"], conf["open_ai_api_key"])
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
             self.continue_on_miss = conf["continue_on_miss"]
             logger.info("[wxsop] inited.")
