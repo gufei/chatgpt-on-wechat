@@ -59,6 +59,7 @@ class WXSop(Plugin):
 
         # 调用 chatgpt 接口
         if message_record and sop_nodes:
+            organization_id = message_record["organization_id"]
             prompt = f"""# 任务
 请根据 用户发送内容，判断命中了 节点列表 中的哪个 节点。
 
@@ -111,12 +112,12 @@ class WXSop(Plugin):
 
                     _ = self.db.create_message_record(status, bot_wxid, message_record["contact_id"], contact_type,
                                                       contact_wxid, type, message['content'], meta,4,
-                                                      sop_nodes[node_order]["id"], index)
+                                                      sop_nodes[node_order]["id"], index, organization_id)
 
                 action_label = json.loads(sop_nodes[node_order]['action_label'])
                 if action_label:
-                    stages = self.db.get_stage()
-                    self.add_tag(bot_wxid, message_record["contact_id"], contact_type, contact_wxid, action_label, stages, e_context.econtext)
+                    stages = self.db.get_stage(organization_id)
+                    self.add_tag(bot_wxid, message_record["contact_id"], contact_type, contact_wxid, action_label, stages, e_context.econtext, organization_id)
 
                 e_context.action = EventAction.BREAK_PASS
             else:
@@ -127,9 +128,9 @@ class WXSop(Plugin):
                 e_context.action = EventAction.BREAK_PASS
 
     # 为联系人添加标签
-    def add_tag(self, bot_wxid, contact_id, contact_type, contact_wxid, label_ids, stages, context):
+    def add_tag(self, bot_wxid, contact_id, contact_type, contact_wxid, label_ids, stages, context, organization_id: int):
         logger.debug("[wxsop] label_ids: %s" % label_ids)
-        contact_label_ids = self.db.add_contact_label(contact_id, label_ids)
+        contact_label_ids = self.db.add_contact_label(contact_id, label_ids, organization_id)
         match_stages = []
         logger.debug("[wxsop] contact_label_ids: %s" % contact_label_ids)
         logger.debug("[wxsop] stages: %s" % stages)
@@ -156,7 +157,7 @@ class WXSop(Plugin):
                         meta = {}
 
                     lastrowid = self.db.create_message_record(2, bot_wxid, contact_id, contact_type, contact_wxid,
-                                                      type, message['content'], meta, 3, stage["id"], index)
+                                                      type, message['content'], meta, 3, stage["id"], index, organization_id)
                     if lastrowid:
                         reply = Reply()
                         reply.type = ReplyType.TEXT if type == 1 else ReplyType.FILE
@@ -174,7 +175,7 @@ class WXSop(Plugin):
 
             if stage["action_label"]:
                 action_label = json.loads(stage['action_label'])
-                self.add_tag(bot_wxid, contact_id, contact_type, contact_wxid, action_label, stages, context)
+                self.add_tag(bot_wxid, contact_id, contact_type, contact_wxid, action_label, stages, context, organization_id)
 
     def get_help_text(self, **kwargs):
         help_text = "SOP 过滤"

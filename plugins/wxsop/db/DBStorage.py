@@ -71,12 +71,12 @@ class DBStorage:
             conn.close()
 
     # 创建一条消息记录
-    def create_message_record(self, status: int, bot_wxid: str, contact_id: int, contact_type: int, contact_wxid: str, content_type: int, content: str, meta: dict, source_type: int, source_id: int, sub_source_id: int) -> Optional[int]:
+    def create_message_record(self, status: int, bot_wxid: str, contact_id: int, contact_type: int, contact_wxid: str, content_type: int, content: str, meta: dict, source_type: int, source_id: int, sub_source_id: int, organization_id: int) -> Optional[int]:
         conn = self._mysql.connection()
         try:
             meta_str = json.dumps(meta) if isinstance(meta, dict) else meta
-            sql_insert = "INSERT INTO message_records (status, bot_wxid, contact_id, contact_type, contact_wxid, content_type, content, meta, source_type, source_id, sub_source_id, send_time, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW(), NOW())"
-            record_tuple = (status, bot_wxid, contact_id, contact_type, contact_wxid, content_type, content, meta_str, source_type, source_id, sub_source_id)
+            sql_insert = "INSERT INTO message_records (status, bot_wxid, contact_id, contact_type, contact_wxid, content_type, content, meta, source_type, source_id, sub_source_id, organization_id, send_time, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW(), NOW())"
+            record_tuple = (status, bot_wxid, contact_id, contact_type, contact_wxid, content_type, content, meta_str, source_type, source_id, sub_source_id, organization_id)
 
             with conn.cursor() as cursor:
                 cursor.execute(sql_insert, record_tuple)
@@ -112,7 +112,7 @@ class DBStorage:
             conn.close()
 
     # 追加联系人标签
-    def add_contact_label(self, contact_id: int, label_ids: list[int]):
+    def add_contact_label(self, contact_id: int, label_ids: list[int], organization_id: int):
         conn = self._mysql.connection()
         try:
             # 从 label_relationship 表中查询 contact_id == contact_id 的记录
@@ -136,8 +136,8 @@ class DBStorage:
                     contact_label_ids = []
                 logger.debug("[wxsop] add_label_ids: %s" % add_label_ids)
                 for label_id in add_label_ids:
-                    sql_insert = "INSERT INTO label_relationship (status, contact_id, label_id, created_at, updated_at) VALUES (%s, %s, %s, NOW(), NOW())"
-                    record_tuple = (1, contact_id, label_id)
+                    sql_insert = "INSERT INTO label_relationship (status, contact_id, label_id, organization_id, created_at, updated_at) VALUES (%s, %s, %s, %s, NOW(), NOW())"
+                    record_tuple = (1, contact_id, label_id, organization_id)
                     cursor.execute(sql_insert, record_tuple)
                     contact_label_ids.append(label_id)
                 conn.commit()
@@ -150,12 +150,13 @@ class DBStorage:
             conn.close()
 
     # 获取阶段记录
-    def get_stage(self):
+    def get_stage(self, organization_id: int):
         conn = self._mysql.connection()
         try:
-            task_query = "SELECT * FROM sop_task WHERE deleted_at IS NULL AND status = 3"
+            task_query = "SELECT * FROM sop_task WHERE deleted_at IS NULL AND status = 3 AND organization_id = %s"
+            task_tuple = (organization_id,)
             with conn.cursor(dictionary=True) as cursor:
-                cursor.execute(task_query)
+                cursor.execute(task_query, task_tuple)
                 tasks = cursor.fetchall()
 
             # 遍历tasks，查询每个task下的stage
