@@ -298,6 +298,7 @@ class ChatChannel(Channel):
                     elif item["type"] == "IMAGE":
                         self._send_reply(context, Reply(ReplyType.IMAGE, item["content"]))
                     elif item["type"] == "FILE":
+                        context['diyfilename'] = item["diyfilename"]
                         self._send_reply(context, Reply(ReplyType.FILE, item["content"]))
                     elif item["type"] == "VIDEO_URL":
                         self._send_reply(context, Reply(ReplyType.VIDEO_URL, item["content"]))
