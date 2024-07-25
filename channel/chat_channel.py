@@ -302,6 +302,8 @@ class ChatChannel(Channel):
                         self._send_reply(context, Reply(ReplyType.FILE, item["content"]))
                     elif item["type"] == "VIDEO_URL":
                         self._send_reply(context, Reply(ReplyType.VIDEO_URL, item["content"]))
+                    elif item["type"] == "LOCATION":
+                        self._send_reply(context, Reply(ReplyType.LOCATION, item["content"]))
                     else:
                         logger.warning("[WX] unknown reply type: {}, content: {}".format(item["type"], item["content"]))
                 return

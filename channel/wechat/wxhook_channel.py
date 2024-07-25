@@ -192,6 +192,17 @@ class WxHookChannel(ChatChannel):
                 logger.info(f"[wx_hook] send image success")
             else:
                 logger.error(f"[wx_hook] send image failed")
+        elif reply.type == ReplyType.LOCATION:
+            data = {
+                "wxid": context["receiver"],
+                "msg": reply.content
+            }
+            res = wx_hook_request("/SendLocationMsg", data)
+            context["is_success"] = res.get("SendLocationMsg")
+            if res.get("success") == "1":
+                logger.info(f"[wx_hook] send location success")
+            else:
+                logger.error(f"[wx_hook] send location failed")
         elif reply.type == ReplyType.FILE:
             data = {
                 "wxid": context["receiver"],
