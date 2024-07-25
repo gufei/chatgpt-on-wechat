@@ -18,7 +18,7 @@ class ReplyType(Enum):
     VIDEO = 12
     MINIAPP = 13  # 小程序
     JSON_MULTIPLE_RESP = 14  # JSON多条回复数据
-    LOCATION = 15 # 位置消息
+    LOCATION = 48 # 位置消息
 
     def __str__(self):
         return self.name
