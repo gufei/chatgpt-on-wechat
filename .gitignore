@@ -31,6 +31,7 @@ plugins/banwords/lib/__pycache__
 !plugins/keyword
 !plugins/linkai
 !plugins/wxsop
+!plugins/wxagent
 !plugins/wxsop/config.json
 client_config.json
 dockervenv
