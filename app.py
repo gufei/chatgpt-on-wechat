@@ -11,6 +11,7 @@ from channel import channel_factory
 from channel.wechat.wxhook_channel import wx_hook_request, wx_hook_admin_request
 from common import const
 from config import load_config
+from db.DBStorage import DBStorage
 from plugins import *
 import threading
 
@@ -46,6 +47,9 @@ def start_channel(channel_name: str):
         except Exception as e:
             pass
     channel.startup()
+
+
+db_storage = DBStorage()
 
 
 def run(app: Flask):

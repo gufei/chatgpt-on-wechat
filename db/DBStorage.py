@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Optional
 
 import mysql.connector
@@ -10,12 +11,16 @@ from config import conf
 
 
 class DBStorage:
-    def __init__(self,
-                 host: str,
-                 port: int,
-                 user: str,
-                 password: str,
-                 database: str):
+    def __init__(self):
+        curdir = os.path.dirname(__file__)
+        config_path = os.path.join(curdir, "config.json")
+        conf = None
+        if not os.path.exists(config_path):
+            logger.debug(f"[wxsop]不存在配置文件{config_path}")
+        else:
+            logger.debug(f"[wxsop]加载配置文件{config_path}")
+            with open(config_path, "r", encoding="utf-8") as f:
+                conf = json.load(f)
         self._mysql = PooledDB(
             creator=mysql.connector,  # 使用链接数据库的模块
             maxconnections=10,  # 连接池允许的最大连接数，0和None表示不限制连接数
@@ -30,11 +35,11 @@ class DBStorage:
             ping=0,
             # ping MySQL服务端，检查是否服务可用。如：0 = None = never, 1 = default = whenever it is requested,
             # 2 = when a cursor is created, 4 = when a query is executed, 7 = always
-            host=host,
-            port=port,
-            user=user,
-            password=password,
-            database=database,
+            host=conf["host"],
+            port=conf["port"],
+            user=conf["user"],
+            password=conf["password"],
+            database=conf["database"],
             charset='utf8'
         )
 
@@ -188,6 +193,34 @@ class DBStorage:
                 message_record = cursor.fetchone()
 
             return True if message_record else False
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
+    def get_agent_info(self, bot_wxid: str):
+        conn = self._mysql.connection()
+        try:
+            # 在message_records表中，查询bot_wxid == selfwxid and contact_wxid == fromid contact_type == 1 source_type == 3 status == 1 的最新一条记录，按created_at字段排序
+            sql_query = "SELECT * FROM wx WHERE deleted_at IS NULL AND wxid = %s ORDER BY created_at DESC LIMIT 1"
+            record_tuple = (bot_wxid,)
+
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(sql_query, record_tuple)
+                wx_info = cursor.fetchone()
+                logger.debug("[wxagent] wx_info: %s" % wx_info)
+            if wx_info['agent_id'] != 0:
+                sql_query = "SELECT * FROM agent WHERE deleted_at IS NULL AND id = %s AND status = 1"
+                sop_node_tuple = (wx_info['agent_id'], )
+
+                with conn.cursor(dictionary=True) as cursor:
+                    cursor.execute(sql_query, sop_node_tuple)
+                    agent_info = cursor.fetchone()
+                    logger.debug("[wxagent] agent_info: %s" % agent_info)
+                    return agent_info
+            else:
+                return None
         except Error as e:
             print(f"Error while connecting to MySQL: {e}")
             conn.rollback()

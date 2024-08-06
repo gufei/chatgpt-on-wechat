@@ -297,6 +297,7 @@ class PluginManager:
             "HELLO",
             "GODCMD",
             "WXSOP",
+            "WXAGENT",
             "ROLE",
             "TOOL",
             "BDUNIT",

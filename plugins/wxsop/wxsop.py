@@ -1,11 +1,11 @@
 # encoding:utf-8
 
 import plugins
+from app import db_storage
 from bridge.context import ContextType
 from bridge.reply import Reply, ReplyType
 from plugins import *
 from plugins.wxsop.chat_gpt_bot import OpenaiBot
-from plugins.wxsop.db.DBStorage import DBStorage
 
 
 @plugins.register(
@@ -29,8 +29,6 @@ class WXSop(Plugin):
                 logger.debug(f"[wxsop]加载配置文件{config_path}")
                 with open(config_path, "r", encoding="utf-8") as f:
                     conf = json.load(f)
-            # 创建数据库对象
-            self.db = DBStorage(conf["host"], conf["port"], conf["user"], conf["password"], conf["database"])
             self.bot = OpenaiBot(conf["open_ai_api_base"], conf["open_ai_api_key"])
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
             self.continue_on_miss = conf["continue_on_miss"]
@@ -53,7 +51,7 @@ class WXSop(Plugin):
         else:
             contact_type = 2
 
-        message_record, sop_nodes = self.db.get_next_answers(bot_wxid, contact_wxid, contact_type)
+        message_record, sop_nodes = db_storage.get_next_answers(bot_wxid, contact_wxid, contact_type)
         logger.debug("[wxsop] on_handle_context. message_record: %s" % message_record)
         logger.debug("[wxsop] on_handle_context. sop_nodes: %s" % sop_nodes)
 
@@ -67,7 +65,7 @@ class WXSop(Plugin):
 
 # 节点列表："""
             for index, sop_node in enumerate(sop_nodes):
-                if sop_node['condition_list']:
+                if sop_node['condition_list'][0] == "":
                     prompt += f"""
 节点 id: {index}
 命中条件：{sop_node['condition_list']}
@@ -105,18 +103,19 @@ class WXSop(Plugin):
                         }
                     else:
                         meta = {}
+                    logger.debug("[wxsop] reply: %s" % reply)
                     reply = e_context.econtext['channel']._decorate_reply(e_context.econtext['context'], reply)
                     e_context.econtext['channel']._send_reply(e_context.econtext.get('context', {}), reply)
 
                     status = 3 if e_context.econtext.get('context', {}).get('is_success') else 4
 
-                    _ = self.db.create_message_record(status, bot_wxid, message_record["contact_id"], contact_type,
+                    _ = db_storage.create_message_record(status, bot_wxid, message_record["contact_id"], contact_type,
                                                       contact_wxid, type, message['content'], meta,4,
                                                       sop_nodes[node_order]["id"], index, organization_id)
 
                 action_label = json.loads(sop_nodes[node_order]['action_label'])
                 if action_label:
-                    stages = self.db.get_stage(organization_id)
+                    stages = db_storage.get_stage(organization_id)
                     self.add_tag(bot_wxid, message_record["contact_id"], contact_type, contact_wxid, action_label, stages, e_context.econtext, organization_id)
 
                 e_context.action = EventAction.BREAK_PASS
@@ -130,7 +129,7 @@ class WXSop(Plugin):
     # 为联系人添加标签
     def add_tag(self, bot_wxid, contact_id, contact_type, contact_wxid, label_ids, stages, context, organization_id: int):
         logger.debug("[wxsop] label_ids: %s" % label_ids)
-        contact_label_ids = self.db.add_contact_label(contact_id, label_ids, organization_id)
+        contact_label_ids = db_storage.add_contact_label(contact_id, label_ids, organization_id)
         match_stages = []
         logger.debug("[wxsop] contact_label_ids: %s" % contact_label_ids)
         logger.debug("[wxsop] stages: %s" % stages)
@@ -141,7 +140,7 @@ class WXSop(Plugin):
                     logger.debug("[wxsop] check_filter")
                     match_stages.append(stage)
         for stage in match_stages:
-            is_message_send = self.db.check_message_record(contact_wxid, 3, stage["id"], 0)
+            is_message_send = db_storage.check_message_record(contact_wxid, 3, stage["id"], 0)
             if is_message_send:
                 continue
             if stage["action_message"]:
@@ -156,7 +155,7 @@ class WXSop(Plugin):
                     else:
                         meta = {}
 
-                    lastrowid = self.db.create_message_record(2, bot_wxid, contact_id, contact_type, contact_wxid,
+                    lastrowid = db_storage.create_message_record(2, bot_wxid, contact_id, contact_type, contact_wxid,
                                                       type, message['content'], meta, 3, stage["id"], index, organization_id)
                     if lastrowid:
                         reply = Reply()
@@ -169,9 +168,9 @@ class WXSop(Plugin):
                         context['channel']._send_reply(context.get('context', {}), reply)
 
                         if context.get('context', {}).get('is_success'):
-                            self.db.update_message_record(lastrowid, 3)
+                            db_storage.update_message_record(lastrowid, 3)
                         else:
-                            self.db.update_message_record(lastrowid, 4, "SOP send failed")
+                            db_storage.update_message_record(lastrowid, 4, "SOP send failed")
 
             if stage["action_label"]:
                 action_label = json.loads(stage['action_label'])
