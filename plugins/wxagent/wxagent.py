@@ -68,7 +68,10 @@ class WXAgent(Plugin):
 # 历史对话记录：
 {agent_info['examples']}
 
-# 回复要求：直接以角色设定的角度回答问题，并以第一人称口语化输出。"""
+# 回复要求：
+1. 直接以角色设定的角度回答问题，并以第一人称输出。
+2. 不要在回复前加角色、姓名。
+3. 回复要正式"""
             bot_reply = self.bot.reply(prompt, e_context.econtext['context'])
             logger.debug("[wxagent] reply: %s" % bot_reply)
 
