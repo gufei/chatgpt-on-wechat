@@ -57,14 +57,18 @@ class WXAgent(Plugin):
         logger.debug("[wxagent] bot_wxid: %s" % bot_wxid)
         # 调用 chatgpt 接口
         if agent_info:
-            prompt = f"""# 角色信息
+            prompt = f"""# 用户发送内容：{content}
+
+# 角色
 {agent_info['role']}
 
-# 背景信息：
+# 背景：
 {agent_info['background']}
 
-# 对话示例：
-{agent_info['examples']}"""
+# 历史对话记录：
+{agent_info['examples']}
+
+# 回复要求：直接以角色设定的角度回答问题，并以第一人称口语化输出。"""
             bot_reply = self.bot.reply(prompt, e_context.econtext['context'])
             logger.debug("[wxagent] reply: %s" % bot_reply)
 
