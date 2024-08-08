@@ -43,6 +43,45 @@ class DBStorage:
             charset='utf8'
         )
 
+    def get_server_by_id(self,id: int):
+        conn = self._mysql.connection()
+        try:
+            sql_query = "SELECT * FROM server WHERE id = %s LIMIT 1"
+            record_tuple = (id)
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(sql_query, record_tuple)
+                message_record = cursor.fetchone()
+            if message_record:
+                return message_record
+            else:
+                return None
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+    
+    # 查询微信账号信息
+    def get_info_by_wxid(self, wxid: str):
+        conn = self._mysql.connection()
+        try:
+            sql_query = "SELECT * FROM wx WHERE wxid = %s ORDER BY id DESC LIMIT 1"
+            record_tuple = (wxid)
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(sql_query, record_tuple)
+                message_record = cursor.fetchone()
+            if message_record:
+                return message_record
+            else:
+                return None
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
+
+
     # 查询接下来带匹配的回答
     def get_next_answers(self, bot_wxid: str, contact_wxid: str, contact_type: int):
         conn = self._mysql.connection()

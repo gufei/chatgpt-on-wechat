@@ -12,6 +12,7 @@ from common.log import logger
 from common.singleton import singleton
 from config import conf
 from bridge.reply import Reply, ReplyType
+from app import db_storage
 
 
 def wx_hook_admin_request(path, data):
@@ -114,28 +115,33 @@ class WxHookChannel(ChatChannel):
         return res
 
     def startup(self):
-        while True:
-            status = wx_hook_request("IsLoginStatus", {})
-            #     判断status 不是 None
-            if status is None or status.get("onlinestatus") != "3":
-                logger.info(
-                    f"[wx_hook] check status: {status},please scan the QR code to login http://127.0.0.1:5000/checkStatus")
-                sleep(5)
-                continue
-            else:
-                break
 
-        # 设置回调
-        setCallBack = wx_hook_request("ConfigureMsgRecive",
-                                      {"isEnable": "1", "url": conf().get("wx_hook_callback_url")})
-        if setCallBack.get("ConfigureMsgRecive") == "1":
-            logger.info(f"[wx_hook] set callback success")
-        else:
-            logger.error(f"[wx_hook] set callback failed")
+        # wxhook的时候不检测是否登录
+        # while True:
+        #     status = wx_hook_request("IsLoginStatus", {})
+        #     #     判断status 不是 None
+        #     if status is None or status.get("onlinestatus") != "3":
+        #         logger.info(
+        #             f"[wx_hook] check status: {status},please scan the QR code to login http://127.0.0.1:5000/checkStatus")
+        #         sleep(5)
+        #         continue
+        #     else:
+        #         break
 
-        selfInfo = wx_hook_request("/GetSelfLoginInfo", {})
-        self.name = selfInfo.get("nickname")
-        self.user_id = selfInfo.get("wxid")
+        # wxhook的时候不设置回调
+        # setCallBack = wx_hook_request("ConfigureMsgRecive",
+        #                               {"isEnable": "1", "url": conf().get("wx_hook_callback_url")})
+        # if setCallBack.get("ConfigureMsgRecive") == "1":
+        #     logger.info(f"[wx_hook] set callback success")
+        # else:
+        #     logger.error(f"[wx_hook] set callback failed")
+
+        # wxhook的时候不请求信息
+        # selfInfo = wx_hook_request("/GetSelfLoginInfo", {})
+        # self.name = selfInfo.get("nickname")
+        # self.user_id = selfInfo.get("wxid")
+
+        # 启动回调监听
         urls = (
             '/robot-api/webot/receiveChatBotMsg', 'channel.wechat.wxhook_channel.WxHookController'
         )
@@ -221,6 +227,27 @@ class WxHookController:
     FAILED_MSG = '{"success": false}'
     SUCCESS_MSG = '{"success": true}'
 
+    wxinfos = dict()
+    servers = dict()
+
+    def get_wxinfo_by_wxid(self, wxid):
+        if not self.wxinfos.get(wxid):
+            wxinfo = db_storage.get_info_by_wxid(wxid)
+            if wxinfo is None:
+                return None
+            else:
+                self.wxinfos[wxid] = wxinfo
+        return self.wxinfos.get(wxid)
+    
+    def get_serverinfo(self,server_id):
+        if not self.servers.get(server_id):
+            server = db_storage.get_server_by_id(server_id)
+            if server is None:
+                return None
+            else:
+                self.servers[server_id] = server
+        return self.servers.get(server_id)
+
     def POST(self):
         data = json.loads(web.data().decode("utf-8"), strict=False)
         logger.info(f"[wx_hook] receive request: {data}")
@@ -241,6 +268,23 @@ class WxHookController:
             return "no message"
 
         channel = WxHookChannel()
+
+        # 更正连接信息
+        wxinfo = self.get_wxinfo_by_wxid(data.get("selfwxid"))
+
+        channel.user_id = data.get("selfwxid")
+
+        if wxinfo is not None:
+            channel.name = wxinfo['nickname']
+            server = self.get_serverinfo(wxinfo['server_id'])
+            if server is not None:
+                conf().update("wx_hook_ip", server['private_ip'])
+                conf().update("wx_hook_port", wxinfo['port'])
+                conf().update("wx_hook_admin_port", server['admin_port'])
+
+                channel.wx_hook_ip = server['private_ip']
+                channel.wx_hook_port = wxinfo['port']
+                channel.wx_hook_admin_port = server['admin_port']
 
         # 循环处理每一条消息 data.get("msglist")
         for msg in data.get("msglist"):
