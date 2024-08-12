@@ -12,7 +12,6 @@ from common.log import logger
 from common.singleton import singleton
 from config import conf
 from bridge.reply import Reply, ReplyType
-from app import db_storage
 
 
 def wx_hook_admin_request(path, data):
@@ -232,6 +231,7 @@ class WxHookController:
 
     def get_wxinfo_by_wxid(self, wxid):
         if not self.wxinfos.get(wxid):
+            from app import db_storage
             wxinfo = db_storage.get_info_by_wxid(wxid)
             if wxinfo is None:
                 return None
@@ -241,6 +241,7 @@ class WxHookController:
     
     def get_serverinfo(self,server_id):
         if not self.servers.get(server_id):
+            from app import db_storage
             server = db_storage.get_server_by_id(server_id)
             if server is None:
                 return None
