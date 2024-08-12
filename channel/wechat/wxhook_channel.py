@@ -75,6 +75,33 @@ class WxHookChannel(ChatChannel):
         logger.info("[WxHook] ip={}, port={} admin_port={} callback_port={}".format(
             self.wx_hook_ip, self.wx_hook_port, self.wx_hook_admin_port, self.wx_hook_callback_port))
 
+    def wx_hook_request(path, data):
+        # 添加字典
+        # ports = {
+        #     "wxid_77au928zeb2p12": 30001,
+        #     "wxid_vxb2yrhrxsqs12": 30002,
+        #     "wxid_l52egy9jtfu922": 30003,
+        #     "wxid_0u13zxhwsxsu12": 30004,
+        #     "wxid_wmz7m9nqrdg612": 30005,
+        #     "bowen1116": 30006,
+        #     "wxid_edc0mvp188ms22": 30007
+        # }
+        try:
+            # path判断是不是/开头
+            if not path.startswith("/"):
+                path = "/" + path
+            url = f"http://{self.wx_hook_ip}:{self.wx_hook_port}{path}"
+            headers = {
+                "Content-Type": "application/json",
+            }
+            res = requests.post(url, headers=headers, json=data, timeout=(5, 10))
+            logger.debug(f"[wx_hook] send message success, res: {res}")
+            return res.json(strict=False)
+        except Exception as e:
+            logger.error(f"[wx_hook] send message failed, error: {e}")
+            return None
+
+
     def getNickName(self, user_id, group_id=""):
         if not self.nickNames.get(user_id):
             data = {
@@ -278,10 +305,6 @@ class WxHookController:
             channel.name = wxinfo['nickname']
             server = self.get_serverinfo(wxinfo['server_id'])
             if server is not None:
-                conf().update("wx_hook_ip", server['private_ip'])
-                conf().update("wx_hook_port", wxinfo['port'])
-                conf().update("wx_hook_admin_port", server['admin_port'])
-
                 channel.wx_hook_ip = server['private_ip']
                 channel.wx_hook_port = wxinfo['port']
                 channel.wx_hook_admin_port = server['admin_port']
@@ -323,6 +346,11 @@ class WxHookController:
 
             context = channel._compose_context(wx_hook_msg.ctype, wx_hook_msg.content, isgroup=wx_hook_msg.is_group,
                                                msg=wx_hook_msg)
+            
+            if wxinfo['api_base']:
+                context['open_ai_api_base'] = wxinfo['api_base']
+                context['open_ai_api_key'] = wxinfo['api_key']
+
 
             logger.debug(f"[wx_hook] context is {context}")
             if context:
