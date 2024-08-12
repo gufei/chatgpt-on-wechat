@@ -73,7 +73,7 @@ class WxHookChannel(ChatChannel):
         logger.info("[WxHook] ip={}, port={} admin_port={} callback_port={}".format(
             self.wx_hook_ip, self.wx_hook_port, self.wx_hook_admin_port, self.wx_hook_callback_port))
 
-    def wx_hook_request(path, data):
+    def wx_hook_request(self, path, data):
         # 添加字典
         # ports = {
         #     "wxid_77au928zeb2p12": 30001,
@@ -105,7 +105,7 @@ class WxHookChannel(ChatChannel):
             data = {
                 "wxidorgid": user_id
             }
-            res = wx_hook_request("/GetFriendOrChatroomDetailInfo", data)
+            res = self.wx_hook_request("/GetFriendOrChatroomDetailInfo", data)
             if res:
                 if "nickname" in res:
                     self.nickNames[user_id] = res.get("nickname")
@@ -123,7 +123,7 @@ class WxHookChannel(ChatChannel):
             data = {
                 "wxidorgid": group_id
             }
-            res = wx_hook_request("/GetFriendOrChatroomDetailInfo", data)
+            res = self.wx_hook_request("/GetFriendOrChatroomDetailInfo", data)
             if res:
                 self.groups[group_id] = res
         return self.groups[group_id]
@@ -136,7 +136,7 @@ class WxHookChannel(ChatChannel):
             "msgsvrid": msgsvrid
         }
 
-        res = wx_hook_request("/DownloadVoice", data)
+        res = self.wx_hook_request("/DownloadVoice", data)
         return res
 
     def startup(self):
@@ -186,7 +186,7 @@ class WxHookChannel(ChatChannel):
                 "wxid": context["receiver"],
                 "msg": reply.content
             }
-            res = wx_hook_request("/SendTextMsg", data)
+            res = self.wx_hook_request("/SendTextMsg", data)
             context["is_success"] = res.get("SendTextMsg")
             if res.get("SendTextMsg") == "1":
                 logger.info(f"[wx_hook] send message success")
@@ -199,7 +199,7 @@ class WxHookChannel(ChatChannel):
                 "diyfilename": "1.jpg"
             }
             logger.debug(f"[wx_hook] send image data: {data}")
-            res = wx_hook_request("/SendPicMsg", data)
+            res = self.wx_hook_request("/SendPicMsg", data)
             context["is_success"] = res.get("SendPicMsg")
             if res.get("SendPicMsg") == "1":
                 logger.info(f"[wx_hook] send url image success")
@@ -217,7 +217,7 @@ class WxHookChannel(ChatChannel):
                 "wxid": context["receiver"],
                 "picpath": "C:\\Users\\Administrator\\Desktop\\files\\" + reply.content
             }
-            res = wx_hook_request("/SendPicMsg", data)
+            res = self.wx_hook_request("/SendPicMsg", data)
             context["is_success"] = res.get("SendPicMsg")
             if res.get("SendPicMsg") == "1":
                 logger.info(f"[wx_hook] send image success")
@@ -228,7 +228,7 @@ class WxHookChannel(ChatChannel):
                 "wxid": context["receiver"],
                 "msg": reply.content
             }
-            res = wx_hook_request("/SendLocationMsg", data)
+            res = self.wx_hook_request("/SendLocationMsg", data)
             context["is_success"] = res.get("SendLocationMsg")
             if res.get("success") == "1":
                 logger.info(f"[wx_hook] send location success")
@@ -240,7 +240,7 @@ class WxHookChannel(ChatChannel):
                 "filepath": reply.content,
                 "diyfilename": context["diyfilename"]
             }
-            res = wx_hook_request("/SendFileMsg", data)
+            res = self.wx_hook_request("/SendFileMsg", data)
             context["is_success"] = res.get("SendFileMsg")
             if res.get("success") == "1":
                 logger.info(f"[wx_hook] send file success")
@@ -298,6 +298,7 @@ class WxHookController:
 
         # 更正连接信息
         wxinfo = self.get_wxinfo_by_wxid(data.get("selfwxid"))
+        logger.debug(f"[wx_hook] --------------------api_base-----------------, msg={wxinfo}")
 
         channel.user_id = data.get("selfwxid")
 
@@ -346,10 +347,12 @@ class WxHookController:
 
             context = channel._compose_context(wx_hook_msg.ctype, wx_hook_msg.content, isgroup=wx_hook_msg.is_group,
                                                msg=wx_hook_msg)
-            
+
             if wxinfo['api_base']:
                 context['open_ai_api_base'] = wxinfo['api_base']
                 context['open_ai_api_key'] = wxinfo['api_key']
+                logger.debug(f"[wx_hook] open_ai_api_base, msg={wxinfo['api_base']}")
+                logger.debug(f"[wx_hook] open_ai_api_key, msg={wxinfo['api_key']}")
 
 
             logger.debug(f"[wx_hook] context is {context}")
