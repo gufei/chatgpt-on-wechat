@@ -57,7 +57,6 @@ def wx_hook_request(path, data):
         return None
 
 
-@singleton
 class WxHookChannel(ChatChannel):
     wx_hook_ip = conf().get('wx_hook_ip')
     wx_hook_port = conf().get('wx_hook_port')
