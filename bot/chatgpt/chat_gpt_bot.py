@@ -65,26 +65,28 @@ class ChatGPTBot(Bot, OpenAIImage):
             session = self.sessions.session_query(query, session_id)
             logger.debug("[CHATGPT] session query={}".format(session.messages))
 
-            
-            if context.get("openai_api_key"):
-                api_key = context.get("openai_api_key")
-            if context.get("api_base"):
-                api_base = context.get("api_base")
+            logger.debug(f"[wx_hook] --------------------open_ai_api_key-----------------, msg={context.get('open_ai_api_key')}")
+            logger.debug(
+                f"[wx_hook] --------------------open_ai_api_base-----------------, msg={context.get('open_ai_api_base')}")
+            if context.get("open_ai_api_key"):
+                api_key = context.get("open_ai_api_key")
+            if context.get("open_ai_api_base"):
+                api_base = context.get("open_ai_api_base")
             if context.get("api_key"):
                 api_key = context.get("api_key")
 
             
 
-            model = context.get("gpt_model")
-            new_args = None
-            if model:
-                new_args = self.args.copy()
-                new_args["model"] = model
+            # model = context.get("gpt_model")
+            # new_args = None
+            # if model:
+            #     new_args = self.args.copy()
+            #     new_args["model"] = model
             # if context.get('stream'):
             #     # reply in stream
             #     return self.reply_text_stream(query, new_query, session_id)
 
-
+            new_args = self.args.copy()
             new_args['api_base'] = api_base
             reply_content = self.reply_text(session, api_key, args=new_args)
             logger.debug(

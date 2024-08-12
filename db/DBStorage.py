@@ -47,7 +47,7 @@ class DBStorage:
         conn = self._mysql.connection()
         try:
             sql_query = "SELECT * FROM server WHERE id = %s LIMIT 1"
-            record_tuple = (id)
+            record_tuple = (id, )
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
                 message_record = cursor.fetchone()
@@ -66,7 +66,7 @@ class DBStorage:
         conn = self._mysql.connection()
         try:
             sql_query = "SELECT * FROM wx WHERE wxid = %s ORDER BY id DESC LIMIT 1"
-            record_tuple = (wxid)
+            record_tuple = (wxid, )
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
                 message_record = cursor.fetchone()
@@ -239,6 +239,7 @@ class DBStorage:
             conn.close()
 
     def get_agent_info(self, bot_wxid: str):
+        logger.debug(f"[wx_hook] --------------------bot_wxid-----------------, msg={bot_wxid}")
         conn = self._mysql.connection()
         try:
             # 在message_records表中，查询bot_wxid == selfwxid and contact_wxid == fromid contact_type == 1 source_type == 3 status == 1 的最新一条记录，按created_at字段排序
