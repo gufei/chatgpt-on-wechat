@@ -73,7 +73,7 @@ class WxHookChannel(ChatChannel):
         logger.info("[WxHook] ip={}, port={} admin_port={} callback_port={}".format(
             self.wx_hook_ip, self.wx_hook_port, self.wx_hook_admin_port, self.wx_hook_callback_port))
 
-    def wx_hook_request(self, path, data):
+    def wx_hook_request(self, path, data, private_ip, port):
         # 添加字典
         # ports = {
         #     "wxid_77au928zeb2p12": 30001,
@@ -88,7 +88,7 @@ class WxHookChannel(ChatChannel):
             # path判断是不是/开头
             if not path.startswith("/"):
                 path = "/" + path
-            url = f"http://{self.wx_hook_ip}:{self.wx_hook_port}{path}"
+            url = f"http://{private_ip}:{port}{path}"
             headers = {
                 "Content-Type": "application/json",
             }
@@ -99,13 +99,12 @@ class WxHookChannel(ChatChannel):
             logger.error(f"[wx_hook] send message failed, error: {e}")
             return None
 
-
-    def getNickName(self, user_id, group_id=""):
+    def getNickName(self, user_id, private_ip, port, group_id=""):
         if not self.nickNames.get(user_id):
             data = {
                 "wxidorgid": user_id
             }
-            res = self.wx_hook_request("/GetFriendOrChatroomDetailInfo", data)
+            res = self.wx_hook_request("/GetFriendOrChatroomDetailInfo", data, private_ip, port)
             if res:
                 if "nickname" in res:
                     self.nickNames[user_id] = res.get("nickname")
@@ -118,17 +117,17 @@ class WxHookChannel(ChatChannel):
                 return ""
         return self.nickNames[user_id]
 
-    def getGroup(self, group_id):
+    def getGroup(self, group_id, private_ip, port):
         if not self.groups.get(group_id):
             data = {
                 "wxidorgid": group_id
             }
-            res = self.wx_hook_request("/GetFriendOrChatroomDetailInfo", data)
+            res = self.wx_hook_request("/GetFriendOrChatroomDetailInfo", data, private_ip, port)
             if res:
                 self.groups[group_id] = res
         return self.groups[group_id]
 
-    def getVoice(self, clientmsgid, length, fromgid, msgsvrid):
+    def getVoice(self, clientmsgid, length, fromgid, msgsvrid, private_ip, port):
         data = {
             "clientmsgid": clientmsgid,
             "length": length,
@@ -136,7 +135,7 @@ class WxHookChannel(ChatChannel):
             "msgsvrid": msgsvrid
         }
 
-        res = self.wx_hook_request("/DownloadVoice", data)
+        res = self.wx_hook_request("/DownloadVoice", data, private_ip, port)
         return res
 
     def startup(self):
@@ -182,11 +181,13 @@ class WxHookChannel(ChatChannel):
             # logger.debug(f"[wx_hook] send context msg: {vars(context.kwargs['msg'])}")
             # logger.debug(f"[wx_hook] send context channel: {vars(context.kwargs['channel'])}")
             # logger.debug(f"[wx_hook] send context channel: {vars(context.kwargs['channel']['user_id'])}")
+            private_ip = context["private_ip"]
+            port = context["port"]
             data = {
                 "wxid": context["receiver"],
                 "msg": reply.content
             }
-            res = self.wx_hook_request("/SendTextMsg", data)
+            res = self.wx_hook_request("/SendTextMsg", data, private_ip, port)
             context["is_success"] = res.get("SendTextMsg")
             if res.get("SendTextMsg") == "1":
                 logger.info(f"[wx_hook] send message success")
@@ -199,7 +200,7 @@ class WxHookChannel(ChatChannel):
                 "diyfilename": "1.jpg"
             }
             logger.debug(f"[wx_hook] send image data: {data}")
-            res = self.wx_hook_request("/SendPicMsg", data)
+            res = self.wx_hook_request("/SendPicMsg", data, private_ip, port)
             context["is_success"] = res.get("SendPicMsg")
             if res.get("SendPicMsg") == "1":
                 logger.info(f"[wx_hook] send url image success")
@@ -217,7 +218,7 @@ class WxHookChannel(ChatChannel):
                 "wxid": context["receiver"],
                 "picpath": "C:\\Users\\Administrator\\Desktop\\files\\" + reply.content
             }
-            res = self.wx_hook_request("/SendPicMsg", data)
+            res = self.wx_hook_request("/SendPicMsg", data, private_ip, port)
             context["is_success"] = res.get("SendPicMsg")
             if res.get("SendPicMsg") == "1":
                 logger.info(f"[wx_hook] send image success")
@@ -228,7 +229,7 @@ class WxHookChannel(ChatChannel):
                 "wxid": context["receiver"],
                 "msg": reply.content
             }
-            res = self.wx_hook_request("/SendLocationMsg", data)
+            res = self.wx_hook_request("/SendLocationMsg", data, private_ip, port)
             context["is_success"] = res.get("SendLocationMsg")
             if res.get("success") == "1":
                 logger.info(f"[wx_hook] send location success")
@@ -240,7 +241,7 @@ class WxHookChannel(ChatChannel):
                 "filepath": reply.content,
                 "diyfilename": context["diyfilename"]
             }
-            res = self.wx_hook_request("/SendFileMsg", data)
+            res = self.wx_hook_request("/SendFileMsg", data, private_ip, port)
             context["is_success"] = res.get("SendFileMsg")
             if res.get("success") == "1":
                 logger.info(f"[wx_hook] send file success")
@@ -264,8 +265,8 @@ class WxHookController:
             else:
                 self.wxinfos[wxid] = wxinfo
         return self.wxinfos.get(wxid)
-    
-    def get_serverinfo(self,server_id):
+
+    def get_serverinfo(self, server_id):
         if not self.servers.get(server_id):
             from app import db_storage
             server = db_storage.get_server_by_id(server_id)
@@ -295,7 +296,6 @@ class WxHookController:
             return "no message"
 
         channel = WxHookChannel()
-
         # 更正连接信息
         wxinfo = self.get_wxinfo_by_wxid(data.get("selfwxid"))
         logger.debug(f"[wx_hook] --------------------api_base-----------------, msg={wxinfo}")
@@ -309,7 +309,6 @@ class WxHookController:
                 channel.wx_hook_ip = server['private_ip']
                 channel.wx_hook_port = wxinfo['port']
                 channel.wx_hook_admin_port = server['admin_port']
-
         # 循环处理每一条消息 data.get("msglist")
         for msg in data.get("msglist"):
 
@@ -341,19 +340,21 @@ class WxHookController:
                 return self.SUCCESS_MSG
             channel.receivedMsgs[msg.get("msgsvrid")] = True
 
-            wx_hook_msg = WxHookMessage(msg, channel, selfwxid)
+            wx_hook_msg = WxHookMessage(msg, channel, selfwxid, server['private_ip'], wxinfo['port'])
 
             logger.debug("[wx_hook] wx_hook_msg message: {}".format(wx_hook_msg))
 
             context = channel._compose_context(wx_hook_msg.ctype, wx_hook_msg.content, isgroup=wx_hook_msg.is_group,
                                                msg=wx_hook_msg)
 
-            if wxinfo['api_base']:
+            if wxinfo and wxinfo['api_base']:
                 context['open_ai_api_base'] = wxinfo['api_base']
                 context['open_ai_api_key'] = wxinfo['api_key']
+                context['wxid'] = wxinfo['wxid']
+                context['private_ip'] = server['private_ip']
+                context['port'] = wxinfo['port']
                 logger.debug(f"[wx_hook] open_ai_api_base, msg={wxinfo['api_base']}")
                 logger.debug(f"[wx_hook] open_ai_api_key, msg={wxinfo['api_key']}")
-
 
             logger.debug(f"[wx_hook] context is {context}")
             if context:

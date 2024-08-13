@@ -12,7 +12,7 @@ from xml.etree import ElementTree as ET
 
 
 class WxHookMessage(ChatMessage):
-    def __init__(self, msg, channel, selfwxid):
+    def __init__(self, msg, channel, selfwxid, private_ip, port):
         super().__init__(msg)
 
         logger.debug(f"[wx_hook] msg is {msg}")
@@ -49,7 +49,7 @@ class WxHookMessage(ChatMessage):
                 length = voicemsg.get('length')
                 clientmsgid = voicemsg.get('clientmsgid')
 
-                voiceinfo = channel.getVoice(clientmsgid, length, msg.get("fromgid"), msgsvrid)
+                voiceinfo = channel.getVoice(clientmsgid, length, msg.get("fromgid"), msgsvrid, private_ip, port)
                 voice_hex = voiceinfo.get("voice_data_hex")
             else:
                 voice_hex = msg.get("voice_hex")
@@ -66,27 +66,27 @@ class WxHookMessage(ChatMessage):
 
         if self.is_group:
             self.from_user_id = msg.get("toid")
-            self.from_user_nickname = channel.getNickName(msg.get("toid"))
+            self.from_user_nickname = channel.getNickName(msg.get("toid"), private_ip, port)
             self.to_user_id = msg.get("fromid")
-            self.to_user_nickname = channel.getNickName(msg.get("fromid"))
+            self.to_user_nickname = channel.getNickName(msg.get("fromid"), private_ip, port)
         else:
             self.from_user_id = msg.get("fromid")
-            self.from_user_nickname = channel.getNickName(msg.get("fromid"))
+            self.from_user_nickname = channel.getNickName(msg.get("fromid"), private_ip, port)
             self.to_user_id = msg.get("toid")
-            self.to_user_nickname = channel.getNickName(msg.get("toid"))
+            self.to_user_nickname = channel.getNickName(msg.get("toid"), private_ip, port)
 
         self.actual_user_id = self.from_user_id
         self.actual_user_nickname = self.from_user_nickname
 
         if self.is_group:
             if "fromgid" in msg:
-                group = channel.getGroup(msg.get("fromgid"))
+                group = channel.getGroup(msg.get("fromgid"), private_ip, port)
                 self.other_user_id = msg.get("fromgid")
                 self.other_user_nickname = group.get("gname")
                 self.group_id = msg.get("fromgid")
                 self.group_name = group.get("gname")
             else:
-                group = channel.getGroup(msg.get("fromid"))
+                group = channel.getGroup(msg.get("fromid"), private_ip, port)
                 self.other_user_id = msg.get("fromid")
                 self.other_user_nickname = group.get("gname")
                 self.group_id = msg.get("fromid")
@@ -102,7 +102,7 @@ class WxHookMessage(ChatMessage):
         msgsource = msg.get("msgsource")
         self.is_at = False
 
-        selfnickName = channel.getNickName(selfwxid)
+        selfnickName = channel.getNickName(selfwxid, private_ip, port)
         logger.debug(f"[wx_hook] selfnickName is {selfnickName}")
 
         if selfnickName != "" and "@" + selfnickName in self.content:

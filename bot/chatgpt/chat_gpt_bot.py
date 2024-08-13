@@ -87,6 +87,7 @@ class ChatGPTBot(Bot, OpenAIImage):
             #     return self.reply_text_stream(query, new_query, session_id)
 
             new_args = self.args.copy()
+            new_args["chatId"] = "chatId-{}".format(context["wxid"] + "_" +  format(session.session_id))
             new_args['api_base'] = api_base
             reply_content = self.reply_text(session, api_key, args=new_args)
             logger.debug(

@@ -250,7 +250,7 @@ class DBStorage:
                 cursor.execute(sql_query, record_tuple)
                 wx_info = cursor.fetchone()
                 logger.debug("[wxagent] wx_info: %s" % wx_info)
-            if wx_info['agent_id'] != 0:
+            if wx_info and wx_info['agent_id'] != 0:
                 sql_query = "SELECT * FROM agent WHERE deleted_at IS NULL AND id = %s AND status = 1"
                 sop_node_tuple = (wx_info['agent_id'], )
 
