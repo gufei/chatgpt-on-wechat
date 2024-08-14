@@ -90,7 +90,7 @@ class ChatGPTBot(Bot, OpenAIImage):
             
             new_args['api_base'] = api_base
 
-            if "fastgpt" in api_base:
+            if "fastgpt" in api_base or "fastgpt" in api_key:
                 new_args["chatId"] = "chatId-{}".format(context["wxid"] + "_" +  format(session.session_id))
 
 
