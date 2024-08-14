@@ -76,6 +76,9 @@ class WxHookMessage(ChatMessage):
             self.to_user_nickname = channel.getNickName(msg.get("toid"), private_ip, port)
 
         self.actual_user_id = self.from_user_id
+
+
+        logger.debug(f"[wx_hook] actual_user_nickname is {self.from_user_nickname}")
         self.actual_user_nickname = self.from_user_nickname
 
         if self.is_group:
