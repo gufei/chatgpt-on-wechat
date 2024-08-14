@@ -175,14 +175,14 @@ class WxHookChannel(ChatChannel):
 
     def send(self, reply: Reply, context: Context):
         # logger.debug(f"[WxHookChannel] Context: {vars(Context)}")
+        private_ip = context["private_ip"]
+        port = context["port"]
         is_group = context["isgroup"]
         if reply.type == ReplyType.TEXT or reply.type == ReplyType.INFO or reply.type == ReplyType.ERROR or reply.type == ReplyType.TEXT_:
             # logger.debug(f"[wx_hook] send context: {context}")
             # logger.debug(f"[wx_hook] send context msg: {vars(context.kwargs['msg'])}")
             # logger.debug(f"[wx_hook] send context channel: {vars(context.kwargs['channel'])}")
             # logger.debug(f"[wx_hook] send context channel: {vars(context.kwargs['channel']['user_id'])}")
-            private_ip = context["private_ip"]
-            port = context["port"]
             data = {
                 "wxid": context["receiver"],
                 "msg": reply.content
@@ -298,7 +298,6 @@ class WxHookController:
         channel = WxHookChannel()
         # 更正连接信息
         wxinfo = self.get_wxinfo_by_wxid(data.get("selfwxid"))
-        logger.debug(f"[wx_hook] --------------------api_base-----------------, msg={wxinfo}")
 
         channel.user_id = data.get("selfwxid")
 
@@ -311,10 +310,8 @@ class WxHookController:
                 channel.wx_hook_admin_port = server['admin_port']
         # 循环处理每一条消息 data.get("msglist")
         for msg in data.get("msglist"):
-
             if "cmdId" in msg:
                 return "this is a cmd message"
-
             selfwxid = ""
 
             # 过滤自己的消息
