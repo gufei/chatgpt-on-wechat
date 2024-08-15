@@ -231,7 +231,7 @@ class WxHookChannel(ChatChannel):
             }
             res = self.wx_hook_request("/SendLocationMsg", data, private_ip, port)
             context["is_success"] = res.get("SendLocationMsg")
-            if res.get("success") == "1":
+            if res.get("SendLocationMsg") == "1":
                 logger.info(f"[wx_hook] send location success")
             else:
                 logger.error(f"[wx_hook] send location failed")
@@ -242,8 +242,9 @@ class WxHookChannel(ChatChannel):
                 "diyfilename": context["diyfilename"]
             }
             res = self.wx_hook_request("/SendFileMsg", data, private_ip, port)
+
             context["is_success"] = res.get("SendFileMsg")
-            if res.get("success") == "1":
+            if res.get("SendFileMsg") == "1":
                 logger.info(f"[wx_hook] send file success")
             else:
                 logger.error(f"[wx_hook] send file failed")
