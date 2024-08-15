@@ -282,9 +282,9 @@ class WxHookController:
         logger.info(f"[wx_hook] receive request: {data}")
 
         # 只接收 30001、30002、30003、30004、30005 和配置的 端口的消息
-        if data.get("ServerPort") not in ["30001", "30002", "30003", "30004", "30005", conf().get("wx_hook_port")]:
-            logger.debug(f"[wx_hook] not a specified port, port={data.get('port')}")
-            return "not a specified port"
+        # if data.get("ServerPort") not in ["30001", "30002", "30003", "30004", "30005", conf().get("wx_hook_port")]:
+        #     logger.debug(f"[wx_hook] not a specified port, port={data.get('port')}")
+        #     return "not a specified port"
 
         # 只处理接收消息
         if data.get("sendorrecv") != "2":
