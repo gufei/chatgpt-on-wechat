@@ -177,57 +177,11 @@ class WxHookChannel(ChatChannel):
         if reply.type == ReplyType.TEXT or reply.type == ReplyType.INFO or reply.type == ReplyType.ERROR or reply.type == ReplyType.TEXT_:
             
 
-            if is_group:
-
-                xml = f"""<appmsg appid="" sdkver="0">
-                            <title>{reply.content}</title>
-                            <des />
-                            <action>view</action>
-                            <type>57</type>
-                            <showtype>0</showtype>
-                            <content />
-                            <url />
-                            <dataurl />
-                            <lowurl />
-                            <lowdataurl />
-                            <recorditem />
-                            <thumburl />
-                            <messageaction />
-                            <laninfo />
-                            <refermsg>
-                                <type>1</type>
-                                <svrid>{context['wx_hook_msg'].msg_id}</svrid>
-                                <fromusr>{context['wx_hook_msg'].actual_user_id}</fromusr>
-                                <chatusr />
-                                <displayname>{context['wx_hook_msg'].actual_user_nickname}</displayname>
-                                <msgsource></msgsource>
-                                <content>{context['wx_hook_msg'].content}</content>
-                            </refermsg>
-                            <extinfo />
-                            <sourceusername />
-                            <sourcedisplayname />
-                            <commenturl />
-                            <appattach>
-                                <totallen>0</totallen>
-                                <attachid />
-                                <emoticonmd5 />
-                                <fileext />
-                                <aeskey />
-                            </appattach>
-                            
-                            <weappinfo>
-                                <pagepath />
-                                <username />
-                                <appid />
-                                <appservicetype>0</appservicetype>
-                            </weappinfo>
-                            <websearch />
-                        </appmsg>"""
-
+            if is_group and False:
                 data = {
                     "type": "57",
                     "towxid": context["receiver"],
-                    "xml": xml,
+                    "xml": "<appmsg appid=\"\" sdkver=\"0\"><title>"+reply.content+"</title><des></des><action>view</action><type>57</type><showtype>0</showtype><content></content><url></url><dataurl></dataurl><lowurl></lowurl><lowdataurl></lowdataurl><recorditem></recorditem><thumburl></thumburl><messageaction></messageaction><laninfo></laninfo><refermsg><type>1</type><svrid>"+context['wx_hook_msg'].msg_id+"</svrid><fromusr>"+context['wx_hook_msg'].to_user_id+"</fromusr><chatusr>"+context['wx_hook_msg'].actual_user_id+"</chatusr><displayname>"+context['wx_hook_msg'].actual_user_nickname+"</displayname><msgsource /><content>"+context['wx_hook_msg'].content+"</content></refermsg><extinfo></extinfo><sourceusername></sourceusername><sourcedisplayname></sourcedisplayname><commenturl></commenturl><appattach><totallen>0</totallen><attachid></attachid><emoticonmd5></emoticonmd5><fileext></fileext><aeskey></aeskey></appattach><weappinfo><pagepath></pagepath><username></username><appid></appid><appservicetype>0</appservicetype></weappinfo><websearch /></appmsg>",
                 }
                 res = self.wx_hook_request("/FowardXMLMsg", data, private_ip, port)
                 context["is_success"] = res.get("FowardXMLMsg")
