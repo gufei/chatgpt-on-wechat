@@ -181,7 +181,7 @@ class WxHookChannel(ChatChannel):
                 data = {
                     "type": "57",
                     "towxid": context["receiver"],
-                    "xml": "<appmsg appid=\"\" sdkver=\"0\"><title>"+reply.content+"</title><des></des><action>view</action><type>57</type><showtype>0</showtype><content></content><url></url><dataurl></dataurl><lowurl></lowurl><lowdataurl></lowdataurl><recorditem></recorditem><thumburl></thumburl><messageaction></messageaction><laninfo></laninfo><refermsg><type>1</type><svrid>"+context['wx_hook_msg'].msg_id+"</svrid><fromusr>"+context['wx_hook_msg'].to_user_id+"</fromusr><chatusr>"+context['wx_hook_msg'].actual_user_id+"</chatusr><displayname>"+context['wx_hook_msg'].actual_user_nickname+"</displayname><msgsource /><content>"+context['wx_hook_msg'].content+"</content></refermsg><extinfo></extinfo><sourceusername></sourceusername><sourcedisplayname></sourcedisplayname><commenturl></commenturl><appattach><totallen>0</totallen><attachid></attachid><emoticonmd5></emoticonmd5><fileext></fileext><aeskey></aeskey></appattach><weappinfo><pagepath></pagepath><username></username><appid></appid><appservicetype>0</appservicetype></weappinfo><websearch /></appmsg>",
+                    "xml": "<appmsg appid=\"\" sdkver=\"0\"><title>"+reply.content+"</title><des></des><action>view</action><type>57</type><showtype>0</showtype><content></content><url></url><dataurl></dataurl><lowurl></lowurl><lowdataurl></lowdataurl><recorditem></recorditem><thumburl></thumburl><messageaction></messageaction><laninfo></laninfo><refermsg><type>1</type><svrid>"+context['cmd_msgsvrid']+"</svrid><fromusr>"+context['wx_hook_msg'].to_user_id+"</fromusr><chatusr>"+context['wx_hook_msg'].actual_user_id+"</chatusr><displayname>"+context['wx_hook_msg'].actual_user_nickname+"</displayname><msgsource /><content>"+context['wx_hook_msg'].content+"</content></refermsg><extinfo></extinfo><sourceusername></sourceusername><sourcedisplayname></sourcedisplayname><commenturl></commenturl><appattach><totallen>0</totallen><attachid></attachid><emoticonmd5></emoticonmd5><fileext></fileext><aeskey></aeskey></appattach><weappinfo><pagepath></pagepath><username></username><appid></appid><appservicetype>0</appservicetype></weappinfo><websearch /></appmsg>",
                 }
                 res = self.wx_hook_request("/FowardXMLMsg", data, private_ip, port)
                 context["is_success"] = res.get("FowardXMLMsg")
@@ -264,6 +264,8 @@ class WxHookController:
     wxinfos = dict()
     servers = dict()
 
+    cmd_msg_svrid = []
+
     def get_wxinfo_by_wxid(self, wxid):
         if not self.wxinfos.get(wxid):
             from app import db_storage
@@ -287,6 +289,10 @@ class WxHookController:
     def POST(self):
         data = json.loads(web.data().decode("utf-8"), strict=False)
         logger.info(f"[wx_hook] receive request: {data}")
+
+        for msg in data.get("msglist"):
+            if msg.get("cmdId") == 5 and msg.get("msgtype") == "1":
+                self.cmd_msg_svrid.append(msg.get("msgsvrid"))
 
         # 只接收 30001、30002、30003、30004、30005 和配置的 端口的消息
         # if data.get("ServerPort") not in ["30001", "30002", "30003", "30004", "30005", conf().get("wx_hook_port")]:
@@ -354,6 +360,9 @@ class WxHookController:
             
             # 增加需要的context
             context['wx_hook_msg'] = wx_hook_msg
+
+            if wx_hook_msg.ctype == ContextType.TEXT:
+                context['cmd_msgsvrid'] = self.cmd_msg_svrid.pop(0) if self.cmd_msg_svrid else wx_hook_msg.msg_id
 
             if wxinfo and wxinfo['api_base']:
                 context['open_ai_api_base'] = wxinfo['api_base']
