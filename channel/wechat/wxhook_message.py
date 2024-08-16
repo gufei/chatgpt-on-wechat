@@ -106,7 +106,7 @@ class WxHookMessage(ChatMessage):
         self.is_at = False
 
         selfnickName = channel.getNickName(selfwxid, private_ip, port)
-        logger.debug(f"[wx_hook] selfnickName is {selfnickName}")
+        logger.debug(f"[wx_hook] selfnickName is {selfnickName} selfwxid is {selfwxid}")
 
         if selfnickName != "" and "@" + selfnickName in self.content:
             self.is_at = True

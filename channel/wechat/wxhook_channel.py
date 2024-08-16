@@ -74,16 +74,6 @@ class WxHookChannel(ChatChannel):
             self.wx_hook_ip, self.wx_hook_port, self.wx_hook_admin_port, self.wx_hook_callback_port))
 
     def wx_hook_request(self, path, data, private_ip, port):
-        # 添加字典
-        # ports = {
-        #     "wxid_77au928zeb2p12": 30001,
-        #     "wxid_vxb2yrhrxsqs12": 30002,
-        #     "wxid_l52egy9jtfu922": 30003,
-        #     "wxid_0u13zxhwsxsu12": 30004,
-        #     "wxid_wmz7m9nqrdg612": 30005,
-        #     "bowen1116": 30006,
-        #     "wxid_edc0mvp188ms22": 30007
-        # }
         try:
             # path判断是不是/开头
             if not path.startswith("/"):
@@ -93,13 +83,19 @@ class WxHookChannel(ChatChannel):
                 "Content-Type": "application/json",
             }
             res = requests.post(url, headers=headers, json=data, timeout=(5, 10))
-            logger.debug(f"[wx_hook] send message success, res: {res}")
+            logger.debug(f"[wx_hook] send message success, url: {url} data: {data} res: {res.json(strict=False)}")
             return res.json(strict=False)
         except Exception as e:
             logger.error(f"[wx_hook] send message failed, error: {e}")
             return None
 
     def getNickName(self, user_id, private_ip, port, group_id=""):
+
+        if user_id is None or user_id == "":
+            return ""
+
+        logger.debug(f"[wx_hook] getNickName user_id={user_id}, group_id={group_id},nicknames_mapping={self.nickNames}")
+
         if not self.nickNames.get(user_id):
             data = {
                 "wxidorgid": user_id
@@ -179,20 +175,77 @@ class WxHookChannel(ChatChannel):
         port = context["port"]
         is_group = context["isgroup"]
         if reply.type == ReplyType.TEXT or reply.type == ReplyType.INFO or reply.type == ReplyType.ERROR or reply.type == ReplyType.TEXT_:
-            # logger.debug(f"[wx_hook] send context: {context}")
-            # logger.debug(f"[wx_hook] send context msg: {vars(context.kwargs['msg'])}")
-            # logger.debug(f"[wx_hook] send context channel: {vars(context.kwargs['channel'])}")
-            # logger.debug(f"[wx_hook] send context channel: {vars(context.kwargs['channel']['user_id'])}")
-            data = {
-                "wxid": context["receiver"],
-                "msg": reply.content
-            }
-            res = self.wx_hook_request("/SendTextMsg", data, private_ip, port)
-            context["is_success"] = res.get("SendTextMsg")
-            if res.get("SendTextMsg") == "1":
-                logger.info(f"[wx_hook] send message success")
+            
+
+            if is_group:
+
+                xml = f"""<appmsg appid="" sdkver="0">
+                            <title>{reply.content}</title>
+                            <des />
+                            <action>view</action>
+                            <type>57</type>
+                            <showtype>0</showtype>
+                            <content />
+                            <url />
+                            <dataurl />
+                            <lowurl />
+                            <lowdataurl />
+                            <recorditem />
+                            <thumburl />
+                            <messageaction />
+                            <laninfo />
+                            <refermsg>
+                                <type>1</type>
+                                <svrid>{context['wx_hook_msg'].msg_id}</svrid>
+                                <fromusr>{context['wx_hook_msg'].actual_user_id}</fromusr>
+                                <chatusr />
+                                <displayname>{context['wx_hook_msg'].actual_user_nickname}</displayname>
+                                <msgsource></msgsource>
+                                <content>{context['wx_hook_msg'].content}</content>
+                            </refermsg>
+                            <extinfo />
+                            <sourceusername />
+                            <sourcedisplayname />
+                            <commenturl />
+                            <appattach>
+                                <totallen>0</totallen>
+                                <attachid />
+                                <emoticonmd5 />
+                                <fileext />
+                                <aeskey />
+                            </appattach>
+                            
+                            <weappinfo>
+                                <pagepath />
+                                <username />
+                                <appid />
+                                <appservicetype>0</appservicetype>
+                            </weappinfo>
+                            <websearch />
+                        </appmsg>"""
+
+                data = {
+                    "type": "57",
+                    "towxid": context["receiver"],
+                    "xml": xml,
+                }
+                res = self.wx_hook_request("/FowardXMLMsg", data, private_ip, port)
+                context["is_success"] = res.get("FowardXMLMsg")
+                if res.get("FowardXMLMsg") == "1":
+                    logger.info(f"[wx_hook] send FowardXMLMsg message success")
+                else:
+                    logger.error(f"[wx_hook] send FowardXMLMsg message failed")
             else:
-                logger.error(f"[wx_hook] send message failed")
+                data = {
+                    "wxid": context["receiver"],
+                    "msg": reply.content
+                }
+                res = self.wx_hook_request("/SendTextMsg", data, private_ip, port)
+                context["is_success"] = res.get("SendTextMsg")
+                if res.get("SendTextMsg") == "1":
+                    logger.info(f"[wx_hook] send message success")
+                else:
+                    logger.error(f"[wx_hook] send message failed")
         elif reply.type == ReplyType.IMAGE_URL:  # 从网络下载图片
             data = {
                 "wxid": context["receiver"],
@@ -311,7 +364,7 @@ class WxHookController:
                 channel.wx_hook_admin_port = server['admin_port']
         # 循环处理每一条消息 data.get("msglist")
         for msg in data.get("msglist"):
-            if "cmdId" in msg:
+            if "cmdId" in msg and msg.get("msgtype") not in ["34"]:
                 return "this is a cmd message"
             selfwxid = ""
 
@@ -344,6 +397,9 @@ class WxHookController:
 
             context = channel._compose_context(wx_hook_msg.ctype, wx_hook_msg.content, isgroup=wx_hook_msg.is_group,
                                                msg=wx_hook_msg)
+            
+            # 增加需要的context
+            context['wx_hook_msg'] = wx_hook_msg
 
             if wxinfo and wxinfo['api_base']:
                 context['open_ai_api_base'] = wxinfo['api_base']
