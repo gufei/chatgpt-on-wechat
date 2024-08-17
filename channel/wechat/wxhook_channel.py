@@ -101,7 +101,7 @@ class WxHookChannel(ChatChannel):
                 "wxidorgid": user_id
             }
             res = self.wx_hook_request("/GetFriendOrChatroomDetailInfo", data, private_ip, port)
-            if res:
+            if res and res.get("wxid") == user_id:
                 if "nickname" in res:
                     self.nickNames[user_id] = res.get("nickname")
                 elif "gname" in res:
@@ -119,7 +119,7 @@ class WxHookChannel(ChatChannel):
                 "wxidorgid": group_id
             }
             res = self.wx_hook_request("/GetFriendOrChatroomDetailInfo", data, private_ip, port)
-            if res:
+            if res and res.get("gid") == group_id:
                 self.groups[group_id] = res
         return self.groups[group_id]
 
