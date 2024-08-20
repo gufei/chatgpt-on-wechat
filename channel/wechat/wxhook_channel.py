@@ -175,8 +175,6 @@ class WxHookChannel(ChatChannel):
         port = context["port"]
         is_group = context["isgroup"]
         if reply.type == ReplyType.TEXT or reply.type == ReplyType.INFO or reply.type == ReplyType.ERROR or reply.type == ReplyType.TEXT_:
-            
-
             if is_group and False:
                 data = {
                     "type": "57",
@@ -190,16 +188,26 @@ class WxHookChannel(ChatChannel):
                 else:
                     logger.error(f"[wx_hook] send FowardXMLMsg message failed")
             else:
-                data = {
-                    "wxid": context["receiver"],
-                    "msg": reply.content
-                }
-                res = self.wx_hook_request("/SendTextMsg", data, private_ip, port)
-                context["is_success"] = res.get("SendTextMsg")
-                if res.get("SendTextMsg") == "1":
-                    logger.info(f"[wx_hook] send message success")
+                if "@openim" in context["receiver"]:
+                    data = {
+                        "wxidorgid": context["receiver"],
+                        "msg": reply.content
+                    }
+                    res = self.wx_hook_request("/SendTextMsg_NoSrc", data, private_ip, port)
+                    context["is_success"] = res.get("SendTextMsg_NoSrc")
+                    if res.get("SendTextMsg_NoSrc") == "1":
+                        logger.info(f"[wx_hook] send message SendTextMsg_NoSrc success")
                 else:
-                    logger.error(f"[wx_hook] send message failed")
+                    data = {
+                        "wxid": context["receiver"],
+                        "msg": reply.content
+                    }
+                    res = self.wx_hook_request("/SendTextMsg", data, private_ip, port)
+                    context["is_success"] = res.get("SendTextMsg")
+                    if res.get("SendTextMsg") == "1":
+                        logger.info(f"[wx_hook] send message success")
+                    else:
+                        logger.error(f"[wx_hook] send message failed")
         elif reply.type == ReplyType.IMAGE_URL:  # 从网络下载图片
             data = {
                 "wxid": context["receiver"],
