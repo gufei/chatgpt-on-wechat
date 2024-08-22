@@ -65,17 +65,12 @@ class ChatGPTBot(Bot, OpenAIImage):
             session = self.sessions.session_query(query, session_id)
             logger.debug("[CHATGPT] session query={}".format(session.messages))
 
-            logger.debug(f"[wx_hook] --------------------open_ai_api_key-----------------, msg={context.get('open_ai_api_key')}")
-            logger.debug(
-                f"[wx_hook] --------------------open_ai_api_base-----------------, msg={context.get('open_ai_api_base')}")
             if context.get("open_ai_api_key"):
                 api_key = context.get("open_ai_api_key")
             if context.get("open_ai_api_base"):
                 api_base = context.get("open_ai_api_base")
             if context.get("api_key"):
                 api_key = context.get("api_key")
-
-            
 
             # model = context.get("gpt_model")
             # new_args = None
@@ -87,12 +82,11 @@ class ChatGPTBot(Bot, OpenAIImage):
             #     return self.reply_text_stream(query, new_query, session_id)
 
             new_args = self.args.copy()
-            
+
             new_args['api_base'] = api_base
 
             if "fastgpt" in api_base or "fastgpt" in api_key:
-                new_args["chatId"] = "chatId-{}".format(context["wxid"] + "_" +  format(session.session_id))
-
+                new_args["chatId"] = "chatId-{}".format(context["wxid"] + "_" + format(session.session_id))
 
             reply_content = self.reply_text(session, api_key, args=new_args)
             logger.debug(
@@ -139,13 +133,18 @@ class ChatGPTBot(Bot, OpenAIImage):
             # if api_key == None, the default openai.api_key will be used
             if args is None:
                 args = self.args
-            response = openai.ChatCompletion.create(api_key=api_key, messages=session.messages, **args)
+
+            # response = openai.ChatCompletion.create(api_key=api_key, messages=session.messages, **args)
+            args["messages"] = session.messages
+            headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + api_key}
+            response = requests.post(args['api_base']+"/chat/completions", headers=headers, json=args)
+            response_json = response.json()
             # logger.debug("[CHATGPT] response={}".format(response))
             # logger.info("[ChatGPT] reply={}, total_tokens={}".format(response.choices[0]['message']['content'], response["usage"]["total_tokens"]))
             return {
-                "total_tokens": response["usage"]["total_tokens"],
-                "completion_tokens": response["usage"]["completion_tokens"],
-                "content": response.choices[0]["message"]["content"],
+                "total_tokens": response_json["usage"]["total_tokens"],
+                "completion_tokens": response_json["usage"]["completion_tokens"],
+                "content": response_json["choices"][0]["message"]["content"],
             }
         except Exception as e:
             need_retry = retry_count < 2
