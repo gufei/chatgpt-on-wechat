@@ -136,10 +136,21 @@ class ChatGPTBot(Bot, OpenAIImage):
 
             # response = openai.ChatCompletion.create(api_key=api_key, messages=session.messages, **args)
             args["messages"] = session.messages
+            # logger.debug("[CHATGPT] args={}".format(args))
             headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + api_key}
-            response = requests.post(args['api_base']+"/chat/completions", headers=headers, json=args)
+
+            # 清理不能传的参数
+            jsondata = args
+            if "api_base" in jsondata:
+                del jsondata["api_base"]
+            if "request_timeout" in jsondata:
+                del jsondata["request_timeout"]
+            if "timeout" in jsondata:
+                del jsondata["timeout"]
+            
+            response = requests.post(args['api_base']+"/chat/completions", headers=headers, json=jsondata)
             response_json = response.json()
-            # logger.debug("[CHATGPT] response={}".format(response))
+            # logger.debug("[CHATGPT] response={}".format(response_json))
             # logger.info("[ChatGPT] reply={}, total_tokens={}".format(response.choices[0]['message']['content'], response["usage"]["total_tokens"]))
             return {
                 "total_tokens": response_json["usage"]["total_tokens"],
