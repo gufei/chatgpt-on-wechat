@@ -150,7 +150,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                 del args["timeout"]
             
             # logger.debug("[CHATGPT] jsondata={}".format(jsondata))
-            response = requests.post(api_base+"/chat/completions", headers=headers, json=jsondata)
+            response = requests.post(api_base+"/chat/completions", headers=headers, json=args)
             response_json = response.json()
              
             # logger.info("[ChatGPT] reply={}, total_tokens={}".format(response.choices[0]['message']['content'], response["usage"]["total_tokens"]))
