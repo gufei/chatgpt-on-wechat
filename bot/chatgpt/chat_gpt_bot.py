@@ -1,5 +1,6 @@
 # encoding:utf-8
-
+import json
+import re
 import time
 
 import openai
@@ -139,7 +140,6 @@ class ChatGPTBot(Bot, OpenAIImage):
             # logger.debug("[CHATGPT] args={}".format(args))
             headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + api_key}
 
-
             api_base = args['api_base']
             # 清理不能传的参数
             if "api_base" in args:
@@ -148,16 +148,18 @@ class ChatGPTBot(Bot, OpenAIImage):
                 del args["request_timeout"]
             if "timeout" in args:
                 del args["timeout"]
-            
+
             # logger.debug("[CHATGPT] jsondata={}".format(jsondata))
-            response = requests.post(api_base+"/chat/completions", headers=headers, json=args)
+            response = requests.post(api_base + "/chat/completions", headers=headers, json=args)
             response_json = response.json()
-             
+
+            content = parse_markdown(response_json["choices"][0]["message"]["content"])
+
             # logger.info("[ChatGPT] reply={}, total_tokens={}".format(response.choices[0]['message']['content'], response["usage"]["total_tokens"]))
             return {
                 "total_tokens": response_json["usage"]["total_tokens"],
                 "completion_tokens": response_json["usage"]["completion_tokens"],
-                "content": response_json["choices"][0]["message"]["content"],
+                "content": content,
             }
         except Exception as e:
             need_retry = retry_count < 2
@@ -192,6 +194,80 @@ class ChatGPTBot(Bot, OpenAIImage):
                 return self.reply_text(session, api_key, args, retry_count + 1)
             else:
                 return result
+
+
+def parse_markdown(input_text):
+    # 定义正则表达式来匹配Markdown格式的图片
+    image_pattern = re.compile(r'!\[(.*?)\]\((.*?)\)')
+
+    # 定义正则表达式来匹配两个以上的换行符
+    split_pattern = re.compile(r'\n{2,}')
+
+    # 用来存储解析后的结果
+    result = []
+
+    # 用来记录当前处理的位置
+    last_pos = 0
+
+    # 标记是否找到图片
+    found_image = False
+
+    # 迭代匹配到的图片
+    for match in image_pattern.finditer(input_text):
+        found_image = True  # 找到图片，设置标记
+        # 获取匹配到的图片的前一段文本
+        if match.start() > last_pos:
+            text_segment = input_text[last_pos:match.start()].strip()
+            if text_segment:
+                # 将文本按两个以上的换行符进行分段
+                segments = split_pattern.split(text_segment)
+                # 处理每一段
+                for segment in segments:
+                    result.append({
+                        "type": "TEXT",
+                        "content": segment
+                    })
+
+        # 获取图片信息
+        # alt_text = match.group(1)
+        image_url = match.group(2)
+        image_filename = image_url.split('/')[-1]
+
+        result.append({
+            "type": "FILE",
+            "content": image_url,
+            "diyfilename": image_filename
+        })
+
+        # 更新当前处理的位置
+        last_pos = match.end()
+
+    # 获取最后一段文本
+    if last_pos < len(input_text):
+        text_segment = input_text[last_pos:].strip()
+        if text_segment:
+            segments = split_pattern.split(text_segment)
+            # 处理每一段
+            for segment in segments:
+                result.append({
+                    "type": "TEXT",
+                    "content": segment
+                })
+
+    # 如果没有找到图片，返回原始内容
+    if not found_image:
+        segments = split_pattern.split(input_text)
+        # 处理每一段
+        if len(segments) == 1:
+            return input_text
+        else:
+            for segment in segments:
+                result.append({
+                    "type": "TEXT",
+                    "content": segment
+                })
+
+    return json.dumps(result, ensure_ascii=False, indent=4)
 
 
 class AzureChatGPTBot(ChatGPTBot):
