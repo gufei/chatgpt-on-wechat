@@ -52,9 +52,6 @@ class WXAgent(Plugin):
             contact_type = 2
 
         agent_info = db_storage.get_agent_info(bot_wxid)
-        logger.debug("[wxagent] content: %s" % content)
-        logger.debug("[wxagent] receiver: %s" % receiver)
-        logger.debug("[wxagent] bot_wxid: %s" % bot_wxid)
         # 调用 chatgpt 接口
         if agent_info:
             prompt = f"""# 用户发送内容：{content}

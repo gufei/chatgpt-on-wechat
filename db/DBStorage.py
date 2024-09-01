@@ -3,6 +3,7 @@ import os
 from typing import Optional
 
 import mysql.connector
+import redis
 from mysql.connector import Error
 from DBUtils.PooledDB import PooledDB
 
@@ -35,24 +36,36 @@ class DBStorage:
             ping=0,
             # ping MySQL服务端，检查是否服务可用。如：0 = None = never, 1 = default = whenever it is requested,
             # 2 = when a cursor is created, 4 = when a query is executed, 7 = always
-            host=conf["host"],
-            port=conf["port"],
-            user=conf["user"],
-            password=conf["password"],
-            database=conf["database"],
+            host=conf["mysql_host"],
+            port=conf["mysql_port"],
+            user=conf["mysql_user"],
+            password=conf["mysql_password"],
+            database=conf["mysql_database"],
             charset='utf8'
         )
+        self._redis = redis.Redis(
+            host=conf["redis_host"],
+            port=conf["redis_port"],
+            db=0,
+            decode_responses=True)
 
     def get_server_by_id(self,id: int):
+        server_info = self._redis.hget('server_info', str(id))
+        if server_info:
+            logger.debug(
+                f"[CHATGPT] --------------------server_info-----------------, msg={server_info}")
+            return json.loads(server_info)
+
         conn = self._mysql.connection()
         try:
-            sql_query = "SELECT * FROM server WHERE id = %s LIMIT 1"
+            sql_query = "SELECT id, status, name, public_ip, private_ip, admin_port FROM server WHERE id = %s LIMIT 1"
             record_tuple = (id, )
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
-                message_record = cursor.fetchone()
-            if message_record:
-                return message_record
+                server_record = cursor.fetchone()
+            if server_record:
+                self._redis.hset('server_info', str(id), json.dumps(server_record))
+                return server_record
             else:
                 return None
         except Error as e:
@@ -63,15 +76,19 @@ class DBStorage:
     
     # 查询微信账号信息
     def get_info_by_wxid(self, wxid: str):
+        wx_info = self._redis.hget('wx_info', wxid)
+        if wx_info:
+            return json.loads(wx_info)
         conn = self._mysql.connection()
         try:
-            sql_query = "SELECT * FROM wx WHERE wxid = %s ORDER BY id DESC LIMIT 1"
+            sql_query = "SELECT id, status, port, process_id, callback, wxid, account, nickname, server_id, organization_id, agent_id, api_base, api_key FROM wx WHERE wxid = %s ORDER BY id DESC LIMIT 1"
             record_tuple = (wxid, )
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
-                message_record = cursor.fetchone()
-            if message_record:
-                return message_record
+                wx_record = cursor.fetchone()
+            if wx_record:
+                self._redis.hset('wx_info', wxid, json.dumps(wx_record))
+                return wx_record
             else:
                 return None
         except Error as e:

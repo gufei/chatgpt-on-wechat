@@ -9,7 +9,6 @@ from channel.chat_channel import ChatChannel
 from channel.wechat.wxhook_message import WxHookMessage
 from common.expired_dict import ExpiredDict
 from common.log import logger
-from common.singleton import singleton
 from config import conf
 from bridge.reply import Reply, ReplyType
 
@@ -275,24 +274,20 @@ class WxHookController:
     cmd_msg_svrid = []
 
     def get_wxinfo_by_wxid(self, wxid):
-        if not self.wxinfos.get(wxid):
-            from app import db_storage
-            wxinfo = db_storage.get_info_by_wxid(wxid)
-            if wxinfo is None:
-                return None
-            else:
-                self.wxinfos[wxid] = wxinfo
-        return self.wxinfos.get(wxid)
+        from app import db_storage
+        wxinfo = db_storage.get_info_by_wxid(wxid)
+        if wxinfo is None:
+            return None
+        else:
+            return wxinfo
 
     def get_serverinfo(self, server_id):
-        if not self.servers.get(server_id):
-            from app import db_storage
-            server = db_storage.get_server_by_id(server_id)
-            if server is None:
-                return None
-            else:
-                self.servers[server_id] = server
-        return self.servers.get(server_id)
+        from app import db_storage
+        server = db_storage.get_server_by_id(server_id)
+        if server is None:
+            return None
+        else:
+            return server
 
     def POST(self):
         data = json.loads(web.data().decode("utf-8"), strict=False)
@@ -375,7 +370,7 @@ class WxHookController:
             if wxinfo and wxinfo['api_base']:
                 context['open_ai_api_base'] = wxinfo['api_base']
                 context['open_ai_api_key'] = wxinfo['api_key']
-                context['wxid'] = wxinfo['wxid']
+                context['wxid'] = data.get("selfwxid")
                 context['private_ip'] = server['private_ip']
                 context['port'] = wxinfo['port']
                 logger.debug(f"[wx_hook] open_ai_api_base, msg={wxinfo['api_base']}")
