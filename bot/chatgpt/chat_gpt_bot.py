@@ -209,12 +209,8 @@ def parse_markdown(input_text):
     # 用来记录当前处理的位置
     last_pos = 0
 
-    # 标记是否找到图片
-    found_image = False
-
     # 迭代匹配到的图片
     for match in image_pattern.finditer(input_text):
-        found_image = True  # 找到图片，设置标记
         # 获取匹配到的图片的前一段文本
         if match.start() > last_pos:
             text_segment = input_text[last_pos:match.start()].strip()
@@ -248,19 +244,6 @@ def parse_markdown(input_text):
         if text_segment:
             segments = split_pattern.split(text_segment)
             # 处理每一段
-            for segment in segments:
-                result.append({
-                    "type": "TEXT",
-                    "content": segment
-                })
-
-    # 如果没有找到图片，返回原始内容
-    if not found_image:
-        segments = split_pattern.split(input_text)
-        # 处理每一段
-        if len(segments) == 1:
-            return input_text
-        else:
             for segment in segments:
                 result.append({
                     "type": "TEXT",
