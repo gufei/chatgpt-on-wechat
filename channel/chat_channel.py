@@ -1,4 +1,5 @@
 import os
+import random
 import re
 import threading
 import time
@@ -286,7 +287,7 @@ class ChatChannel(Channel):
     def _send_reply(self, context: Context, reply: Reply):
         if reply and reply.type:
             if reply.type == ReplyType.JSON_MULTIPLE_RESP:
-                for item in json.loads(reply.content):
+                for i, item in enumerate(json.loads(reply.content)):
                     if item["content"] == "":
                         continue
                     if item["type"] == "TEXT":
@@ -306,6 +307,10 @@ class ChatChannel(Channel):
                         self._send_reply(context, Reply(ReplyType.LOCATION, item["content"]))
                     else:
                         logger.warning("[WX] unknown reply type: {}, content: {}".format(item["type"], item["content"]))
+
+                    # 随机睡眠 500-3000毫秒
+                    if i < len(json.loads(reply.content)) - 1:
+                        time.sleep(random.uniform(0.5, 3.0))
                 return
             e_context = PluginManager().emit_event(
                 EventContext(

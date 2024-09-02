@@ -197,6 +197,9 @@ class ChatGPTBot(Bot, OpenAIImage):
 
 
 def parse_markdown(input_text):
+    # 当字符串以[开头时跳过
+    if is_json_array(input_text):
+        return input_text
     # 定义正则表达式来匹配Markdown格式的图片
     image_pattern = re.compile(r'!\[(.*?)\]\((.*?)\)')
 
@@ -252,6 +255,14 @@ def parse_markdown(input_text):
 
     return json.dumps(result, ensure_ascii=False, indent=4)
 
+def is_json_array(input_text):
+    try:
+        data = json.loads(input_text)
+        if isinstance(data, list):
+            return True
+        return False
+    except json.JSONDecodeError:
+        return False
 
 class AzureChatGPTBot(ChatGPTBot):
     def __init__(self):
