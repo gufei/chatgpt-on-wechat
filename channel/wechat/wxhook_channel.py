@@ -363,44 +363,40 @@ class WxHookController:
             if context is None:
                 return self.FAILED_MSG
 
-            # 是否禁用所有群
-            if context['isgroup'] and wxinfo['group_block_list'] and "ALL" in wxinfo['group_block_list']:
-                logger.debug(
-                    f"[CHATGPT] --------------------已禁用所有群-----------------")
-                return self.FAILED_MSG
-            # 是否禁用当前群
-            if context['isgroup'] and wxinfo['group_block_list'] and context['receiver'] in wxinfo['group_block_list']:
-                logger.debug(
-                    f"[CHATGPT] --------------------当前群在黑名单-----------------")
-                return self.FAILED_MSG
-            # 是否禁用所有用户
-            if wxinfo['block_list'] and "ALL" in wxinfo['block_list']:
-                logger.debug(
-                    f"[CHATGPT] --------------------已禁用所有用户-----------------")
-                return self.FAILED_MSG
-            # 是否禁用当前用户
-            if wxinfo['block_list'] and context['session_id'] in wxinfo['block_list']:
-                logger.debug(
-                    f"[CHATGPT] --------------------当前用户在黑名单-----------------")
-                return self.FAILED_MSG
-            # 当没有允许所有群时
-            if context['isgroup'] and wxinfo['group_allow_list'] and "ALL" not in wxinfo['group_allow_list']:
-                # 是否允许当前群
-                if context['receiver'] not in wxinfo['group_allow_list']:
-                    logger.debug(
-                        f"[CHATGPT] --------------------当前群不在白名单-----------------")
-                    return self.FAILED_MSG
-            # 当没有允许所有用户时
-            if wxinfo['allow_list'] and "ALL" not in wxinfo['allow_list']:
-                # 是否允许当前用户
-                if context['session_id'] not in wxinfo['allow_list']:
-                    logger.debug(
-                        f"[CHATGPT] --------------------当前用户不在白名单-----------------")
-                    return self.FAILED_MSG
-
-
-
-
+            # # 是否禁用所有群
+            # if context['isgroup'] and wxinfo['group_block_list'] and "ALL" in wxinfo['group_block_list']:
+            #     logger.debug(
+            #         f"[CHATGPT] --------------------已禁用所有群-----------------")
+            #     return self.FAILED_MSG
+            # # 是否禁用当前群
+            # if context['isgroup'] and wxinfo['group_block_list'] and context['receiver'] in wxinfo['group_block_list']:
+            #     logger.debug(
+            #         f"[CHATGPT] --------------------当前群在黑名单-----------------")
+            #     return self.FAILED_MSG
+            # # 是否禁用所有用户
+            # if wxinfo['block_list'] and "ALL" in wxinfo['block_list']:
+            #     logger.debug(
+            #         f"[CHATGPT] --------------------已禁用所有用户-----------------")
+            #     return self.FAILED_MSG
+            # # 是否禁用当前用户
+            # if wxinfo['block_list'] and context['session_id'] in wxinfo['block_list']:
+            #     logger.debug(
+            #         f"[CHATGPT] --------------------当前用户在黑名单-----------------")
+            #     return self.FAILED_MSG
+            # # 当没有允许所有群时
+            # if context['isgroup'] and wxinfo['group_allow_list'] and "ALL" not in wxinfo['group_allow_list']:
+            #     # 是否允许当前群
+            #     if context['receiver'] not in wxinfo['group_allow_list']:
+            #         logger.debug(
+            #             f"[CHATGPT] --------------------当前群不在白名单-----------------")
+            #         return self.FAILED_MSG
+            # # 当没有允许所有用户时
+            # if wxinfo['allow_list'] and "ALL" not in wxinfo['allow_list']:
+            #     # 是否允许当前用户
+            #     if context['session_id'] not in wxinfo['allow_list']:
+            #         logger.debug(
+            #             f"[CHATGPT] --------------------当前用户不在白名单-----------------")
+            #         return self.FAILED_MSG
 
             # 增加需要的context
             context['wx_hook_msg'] = wx_hook_msg
