@@ -81,7 +81,7 @@ class DBStorage:
             return json.loads(wx_info)
         conn = self._mysql.connection()
         try:
-            sql_query = "SELECT id, status, port, process_id, callback, wxid, account, nickname, server_id, organization_id, agent_id, api_base, api_key FROM wx WHERE wxid = %s ORDER BY id DESC LIMIT 1"
+            sql_query = "SELECT id, status, port, process_id, callback, wxid, account, nickname, server_id, organization_id, agent_id, api_base, api_key, allow_list, group_allow_list, block_list, group_block_list FROM wx WHERE wxid = %s ORDER BY id DESC LIMIT 1"
             record_tuple = (wxid, )
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
