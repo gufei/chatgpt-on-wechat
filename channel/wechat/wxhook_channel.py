@@ -390,8 +390,15 @@ class WxHookController:
         return "success"
 
 def check_allow_or_block_list(context, wxinfo):
-    block_list = json.loads(wxinfo.get('block_list', '[]'))
-    allow_list = json.loads(wxinfo.get('allow_list', '[]'))
+    block_list = wxinfo.get('block_list')
+    if block_list is None:
+        block_list = '[]'
+    block_list = json.loads(block_list)
+
+    allow_list = wxinfo.get('allow_list')
+    if allow_list is None:
+        allow_list = '[]'
+    allow_list = json.loads(allow_list)
     # 是否禁用所有群
     if context['isgroup']:
         group_block_list = json.loads(wxinfo.get('group_block_list', '[]'))
