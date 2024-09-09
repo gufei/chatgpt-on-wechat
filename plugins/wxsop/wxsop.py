@@ -40,8 +40,8 @@ class WXSop(Plugin):
     def on_handle_context(self, e_context: EventContext):
         if e_context["context"].type != ContextType.TEXT:
             return
-
-        bot_wxid = e_context.econtext['channel'].user_id
+        
+        bot_wxid = e_context.econtext['context'].kwargs['wxid']
         contact_wxid = e_context.econtext['context'].kwargs['session_id']
         receiver = e_context.econtext['context'].kwargs['receiver']
         # nickname = e_context.econtext['context'].kwargs['msg'].from_user_nickname
