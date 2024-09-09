@@ -65,11 +65,11 @@ class WXSop(Plugin):
 
 # 节点列表："""
             for index, sop_node in enumerate(sop_nodes):
-                condition_list = json.loads(sop_node['condition_list'])
-                if condition_list[0] == "":
+                # condition_list = json.loads(sop_node['condition_list'])
+                if sop_node['condition_list'] == "":
                     prompt += f"""
 节点 id: {index}
-命中条件：{condition_list}
+命中条件：{sop_node['condition_list']}
 """
                 else:
                     prompt += f"""
