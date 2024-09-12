@@ -177,7 +177,12 @@ class WxHookChannel(ChatChannel):
                 data = {
                     "type": "57",
                     "towxid": context["receiver"],
-                    "xml": "<appmsg appid=\"\" sdkver=\"0\"><title>"+reply.content+"</title><des></des><action>view</action><type>57</type><showtype>0</showtype><content></content><url></url><dataurl></dataurl><lowurl></lowurl><lowdataurl></lowdataurl><recorditem></recorditem><thumburl></thumburl><messageaction></messageaction><laninfo></laninfo><refermsg><type>1</type><svrid>"+context['cmd_msgsvrid']+"</svrid><fromusr>"+context['wx_hook_msg'].to_user_id+"</fromusr><chatusr>"+context['wx_hook_msg'].actual_user_id+"</chatusr><displayname>"+context['wx_hook_msg'].actual_user_nickname+"</displayname><msgsource /><content>"+context['wx_hook_msg'].content+"</content></refermsg><extinfo></extinfo><sourceusername></sourceusername><sourcedisplayname></sourcedisplayname><commenturl></commenturl><appattach><totallen>0</totallen><attachid></attachid><emoticonmd5></emoticonmd5><fileext></fileext><aeskey></aeskey></appattach><weappinfo><pagepath></pagepath><username></username><appid></appid><appservicetype>0</appservicetype></weappinfo><websearch /></appmsg>",
+                    "xml": "<appmsg appid=\"\" sdkver=\"0\"><title>" + reply.content + "</title><des></des><action>view</action><type>57</type><showtype>0</showtype><content></content><url></url><dataurl></dataurl><lowurl></lowurl><lowdataurl></lowdataurl><recorditem></recorditem><thumburl></thumburl><messageaction></messageaction><laninfo></laninfo><refermsg><type>1</type><svrid>" +
+                           context['cmd_msgsvrid'] + "</svrid><fromusr>" + context[
+                               'wx_hook_msg'].to_user_id + "</fromusr><chatusr>" + context[
+                               'wx_hook_msg'].actual_user_id + "</chatusr><displayname>" + context[
+                               'wx_hook_msg'].actual_user_nickname + "</displayname><msgsource /><content>" + context[
+                               'wx_hook_msg'].content + "</content></refermsg><extinfo></extinfo><sourceusername></sourceusername><sourcedisplayname></sourcedisplayname><commenturl></commenturl><appattach><totallen>0</totallen><attachid></attachid><emoticonmd5></emoticonmd5><fileext></fileext><aeskey></aeskey></appattach><weappinfo><pagepath></pagepath><username></username><appid></appid><appservicetype>0</appservicetype></weappinfo><websearch /></appmsg>",
                 }
                 res = self.wx_hook_request("/FowardXMLMsg", data, private_ip, port)
                 context["is_success"] = res.get("FowardXMLMsg")
@@ -389,6 +394,7 @@ class WxHookController:
 
         return "success"
 
+
 def check_allow_or_block_list(context, wxinfo):
     block_list = wxinfo.get('block_list')
     if block_list is None:
@@ -401,7 +407,10 @@ def check_allow_or_block_list(context, wxinfo):
     allow_list = json.loads(allow_list)
     # 是否禁用所有群
     if context['isgroup']:
-        group_block_list = json.loads(wxinfo.get('group_block_list', '[]'))
+        group_block_list = wxinfo.get('group_block_list')
+        if group_block_list is None:
+            group_block_list = '[]'
+        group_block_list = json.loads(group_block_list)
         if group_block_list and ("ALL" in group_block_list or context['receiver'] in group_block_list):
             logger.debug(
                 f"[CHATGPT] --------------------已禁用改群或所有群-----------------")
@@ -413,7 +422,10 @@ def check_allow_or_block_list(context, wxinfo):
         return False
     # 当没有允许所有群时
     if context['isgroup']:
-        group_allow_list = json.loads(wxinfo.get('group_allow_list', '[]'))
+        group_allow_list = wxinfo.get('group_allow_list')
+        if group_allow_list is None:
+            group_allow_list = '[]'
+        group_allow_list = json.loads(group_allow_list)
         if group_allow_list and len(group_allow_list) > 0:
             # 是否允许当前群
             if "ALL" not in group_allow_list and context['receiver'] not in group_allow_list:
