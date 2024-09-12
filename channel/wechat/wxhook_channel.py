@@ -331,7 +331,7 @@ class WxHookController:
                 channel.wx_hook_admin_port = server['admin_port']
         # 循环处理每一条消息 data.get("msglist")
         for msg in data.get("msglist"):
-            if "cmdId" in msg:
+            if "cmdId" in msg and msg.get("msgtype") not in ["1", "34"]:
                 return "this is a cmd message"
             selfwxid = ""
 
