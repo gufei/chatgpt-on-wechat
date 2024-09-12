@@ -416,7 +416,7 @@ def check_allow_or_block_list(context, wxinfo):
                 f"[CHATGPT] --------------------已禁用改群或所有群-----------------")
             return False
     # 是否禁用所有用户
-    if block_list and ("ALL" in block_list or context['session_id'] in block_list):
+    elif block_list and ("ALL" in block_list or context['session_id'] in block_list):
         logger.debug(
             f"[CHATGPT] --------------------已禁用当前用户或所有用户-----------------")
         return False
@@ -433,7 +433,7 @@ def check_allow_or_block_list(context, wxinfo):
                     f"[CHATGPT] --------------------群不在白名单-----------------")
                 return False
     # 当没有允许所有用户时
-    if allow_list and len(allow_list) > 0:
+    elif allow_list and len(allow_list) > 0:
         # 是否允许当前用户
         if "ALL" not in allow_list and context['session_id'] not in allow_list:
             logger.debug(
