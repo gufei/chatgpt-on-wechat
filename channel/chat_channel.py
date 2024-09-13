@@ -253,12 +253,17 @@ class ChatChannel(Channel):
                     logger.error("[WX]reply type not support: " + str(reply.type))
                     reply.type = ReplyType.ERROR
                     reply.content = "不支持发送的消息类型: " + str(reply.type)
-
                 if reply.type == ReplyType.TEXT:
                     try:
                         json_object = json.loads(reply.content)
                         if "type" in json_object[0] and "content" in json_object[0]:
                             reply.type = ReplyType.JSON_MULTIPLE_RESP
+                            if context.get("isgroup", False):
+                                if not context.get("no_need_at", False):
+                                    json_object[0]["content"] = "@" + context["msg"].to_user_nickname + "\n" + json_object[0]["content"].strip()
+                                json_object[0]["content"] = conf().get("group_chat_reply_prefix", "") + json_object[0]["content"] + conf().get(
+                                    "group_chat_reply_suffix", "")
+                                reply.content = json.dumps(json_object)
                             return self._decorate_reply(context, reply)
                     except json.JSONDecodeError:
                         pass
