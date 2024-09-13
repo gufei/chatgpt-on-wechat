@@ -81,8 +81,8 @@ class WXSop(Plugin):
 「用户发送内容」与「节点命中条件」的意图相同即算命中节点，如都为肯定或否定等。而意图不同则不算命中
 
 # 回复要求
-- 如果命中节点：则仅回复节点 id 数字（如命中多个节点，则仅回复最小值）
-- 如果未命中节点：则仅回复一个单词: None"""
+- 如果命中节点：则仅回复节点 id 数字（如命中多个节点，则仅回复最小值）"""
+# - 如果未命中节点：则仅回复一个单词: None"""
             reply = self.bot.reply(prompt, e_context.econtext['context'])
             logger.debug("[wxsop] reply: %s" % reply)
             if reply.content != "None":
