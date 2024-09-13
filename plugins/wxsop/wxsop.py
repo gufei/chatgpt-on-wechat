@@ -29,7 +29,7 @@ class WXSop(Plugin):
                 logger.debug(f"[wxsop]加载配置文件{config_path}")
                 with open(config_path, "r", encoding="utf-8") as f:
                     conf = json.load(f)
-            self.bot = OpenaiBot(conf["open_ai_api_base"], conf["open_ai_api_key"])
+            self.bot = OpenaiBot(conf["open_ai_api_base"], conf["open_ai_api_key"], conf["model"])
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
             self.continue_on_miss = conf["continue_on_miss"]
             logger.info("[wxsop] inited.")
@@ -60,9 +60,11 @@ class WXSop(Plugin):
         if message_record and sop_nodes:
             organization_id = message_record["organization_id"]
             prompt = f"""# 任务
-请根据 用户发送内容，判断命中了 节点列表 中的哪个 节点。
+请根据历史消息，判断用户的话命中了 节点列表 中的哪个 节点。
 
-# 用户发送内容：{content}
+# 历史消息：
+助手：{message_record["content"]}
+用户：{content}
 
 # 节点列表："""
             for index, sop_node in enumerate(sop_nodes):

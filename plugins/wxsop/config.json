@@ -1,5 +1,6 @@
 {
     "open_ai_api_base": "https://newapi.gkscrm.com/v1/chat/completions",
     "open_ai_api_key": "sk-ZQRNypQOC8ID5WbpCdF263C58dF44271842e86D408Bb3848",
-    "continue_on_miss": true
+    "continue_on_miss": true,
+    "model": "gpt-4o"
 }

@@ -20,7 +20,8 @@ from config import conf, load_config
 class OpenaiBot(Bot, OpenAIImage):
     def __init__(self,
                  open_ai_api_base: str,
-                 open_ai_api_key: str):
+                 open_ai_api_key: str,
+                 model: str = "gpt-4o"):
         super().__init__()
         # set the default api_key
         # openai.api_key = conf().get("open_voice_api_key")
@@ -36,7 +37,7 @@ class OpenaiBot(Bot, OpenAIImage):
 
         # self.sessions = SessionManager(ChatGPTSession, model=conf().get("model") or "gpt-3.5-turbo")
         self.args = {
-            "model": conf().get("model") or "gpt-3.5-turbo",  # 对话模型的名称
+            "model": model,  # 对话模型的名称
             "stream": False,  # 是否开启流模式
         }
 
