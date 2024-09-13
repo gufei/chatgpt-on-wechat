@@ -55,6 +55,7 @@ class WXSop(Plugin):
         logger.debug("[wxsop] on_handle_context. message_record: %s" % message_record)
         logger.debug("[wxsop] on_handle_context. sop_nodes: %s" % sop_nodes)
 
+        backup_node_id = -1
         # 调用 chatgpt 接口
         if message_record and sop_nodes:
             organization_id = message_record["organization_id"]
@@ -72,10 +73,11 @@ class WXSop(Plugin):
 命中条件：{sop_node['condition_list']}
 """
                 else:
-                    prompt += f"""
-节点 id: {index}
-命中条件：用户发送任意内容
-"""
+                    backup_node_id = index
+#                     prompt += f"""
+# 节点 id: {index}
+# 命中条件：用户发送任意内容
+# """
             prompt += f"""
 # 判断方式：
 「用户发送内容」与「节点命中条件」的意图相同即算命中节点，如都为肯定或否定等。而意图不同则不算命中
@@ -83,8 +85,11 @@ class WXSop(Plugin):
 # 回复要求
 - 如果命中节点：则仅回复节点 id 数字（如命中多个节点，则仅回复最小值）
 - 如果未命中节点：则仅回复一个单词: None"""
+
             reply = self.bot.reply(prompt, e_context.econtext['context'])
             logger.debug("[wxsop] reply: %s" % reply)
+            if reply.content == "None" and backup_node_id != -1:
+                reply.content = str(backup_node_id)
             if reply.content != "None":
                 # 将 reply.content 从 str 转换为 int
                 node_order = int(reply.content)
