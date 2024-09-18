@@ -104,7 +104,7 @@ class DBStorage:
         conn = self._mysql.connection()
         try:
             # 在message_records表中，查询bot_wxid == selfwxid and contact_wxid == fromid contact_type == 1 source_type == 3 status == 1 的最新一条记录，按created_at字段排序
-            sql_query = "SELECT * FROM message_records WHERE bot_wxid = %s AND contact_wxid = %s AND contact_type = %s AND (source_type = 3 OR source_type = 4) AND status = 3 ORDER BY created_at DESC LIMIT 1"
+            sql_query = "SELECT * FROM message_records WHERE bot_wxid = %s AND contact_wxid = %s AND contact_type = %s AND (source_type = 3 OR source_type = 4) AND status = 3 ORDER BY id DESC LIMIT 1"
             record_tuple = (bot_wxid, contact_wxid, contact_type)
 
             with conn.cursor(dictionary=True) as cursor:
