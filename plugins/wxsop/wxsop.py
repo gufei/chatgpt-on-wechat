@@ -75,7 +75,8 @@ class WXSop(Plugin):
 命中条件：{sop_node['condition_list']}
 """
                 else:
-                    backup_node_id = index
+                    if sop_node['no_reply_condition'] == 0:
+                        backup_node_id = index
 #                     prompt += f"""
 # 节点 id: {index}
 # 命中条件：用户发送任意内容
@@ -162,7 +163,7 @@ class WXSop(Plugin):
                         }
                     else:
                         meta = {}
-
+                    logger.debug("[wxsop] create_message_record. content: %s" % message['content'])
                     lastrowid = db_storage.create_message_record(2, bot_wxid, contact_id, contact_type, contact_wxid,
                                                       type, message['content'], meta, 3, stage["id"], index, organization_id)
                     if lastrowid:
