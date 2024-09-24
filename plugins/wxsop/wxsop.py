@@ -60,11 +60,11 @@ class WXSop(Plugin):
         if message_record and sop_nodes:
             organization_id = message_record["organization_id"]
             prompt = f"""# 任务
-请根据历史消息，判断用户的话命中了 节点列表 中的哪个 节点。
+请根据历史消息，判断用户回复的内容或深层意图，与哪个节点的意图相匹配。
 
 # 历史消息：
-助手：{message_record["content"]}
-用户：{content}
+助手发送：{message_record["content"]}
+用户回复：{content}
 
 # 节点列表："""
             for index, sop_node in enumerate(sop_nodes):
@@ -72,7 +72,7 @@ class WXSop(Plugin):
                 if sop_node['condition_list'] != '[""]':
                     prompt += f"""
 节点 id: {index}
-命中条件：{sop_node['condition_list']}
+节点意图：{sop_node['condition_list']}
 """
                 else:
                     if sop_node['no_reply_condition'] == 0:
@@ -82,9 +82,6 @@ class WXSop(Plugin):
 # 命中条件：用户发送任意内容
 # """
             prompt += f"""
-# 判断方式：
-「用户发送内容」与「节点命中条件」的意图相同即算命中节点，如都为肯定或否定等。而意图不同则不算命中
-
 # 回复要求
 - 如果命中节点：则仅回复节点 id 数字（如命中多个节点，则仅回复最小值）
 - 如果未命中节点：则仅回复一个单词: None"""
