@@ -102,27 +102,28 @@ class WXSop(Plugin):
                 action_messages = json.loads(sop_nodes[node_order]['action_message'])
 
                 for index, message in enumerate(action_messages):
-                    type = int(message['type'])
+                    if message['content'] != "":
+                        type = int(message['type'])
 
-                    reply = Reply()
-                    reply.type = ReplyType.TEXT if type == 1 else ReplyType.FILE
-                    reply.content = message['content']
-                    if type == 2:
-                        e_context.econtext.get('context', {})["diyfilename"] = message['meta']['filename']
-                        meta = {
-                            "filename": message['meta']['filename']
-                        }
-                    else:
-                        meta = {}
-                    logger.debug("[wxsop] reply: %s" % reply)
-                    reply = e_context.econtext['channel']._decorate_reply(e_context.econtext['context'], reply)
-                    e_context.econtext['channel']._send_reply(e_context.econtext.get('context', {}), reply)
+                        reply = Reply()
+                        reply.type = ReplyType.TEXT if type == 1 else ReplyType.FILE
+                        reply.content = message['content']
+                        if type == 2:
+                            e_context.econtext.get('context', {})["diyfilename"] = message['meta']['filename']
+                            meta = {
+                                "filename": message['meta']['filename']
+                            }
+                        else:
+                            meta = {}
+                        logger.debug("[wxsop] reply: %s" % reply)
+                        reply = e_context.econtext['channel']._decorate_reply(e_context.econtext['context'], reply)
+                        e_context.econtext['channel']._send_reply(e_context.econtext.get('context', {}), reply)
 
-                    status = 3 if e_context.econtext.get('context', {}).get('is_success') else 4
+                        status = 3 if e_context.econtext.get('context', {}).get('is_success') else 4
 
-                    _ = db_storage.create_message_record(status, bot_wxid, message_record["contact_id"], contact_type,
-                                                      contact_wxid, type, message['content'], meta,4,
-                                                      sop_nodes[node_order]["id"], index, organization_id)
+                        _ = db_storage.create_message_record(status, bot_wxid, message_record["contact_id"], contact_type,
+                                                          contact_wxid, type, message['content'], meta,4,
+                                                          sop_nodes[node_order]["id"], index, organization_id)
 
                 action_label = json.loads(sop_nodes[node_order]['action_label'])
                 if action_label:
