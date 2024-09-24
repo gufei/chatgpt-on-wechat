@@ -56,6 +56,7 @@ class WXSop(Plugin):
         logger.debug("[wxsop] on_handle_context. sop_nodes: %s" % sop_nodes)
 
         backup_node_id = -1
+        need_judge = False
         # 调用 chatgpt 接口
         if message_record and sop_nodes:
             organization_id = message_record["organization_id"]
@@ -70,6 +71,7 @@ class WXSop(Plugin):
             for index, sop_node in enumerate(sop_nodes):
                 # condition_list = json.loads(sop_node['condition_list'])
                 if sop_node['condition_list'] != '[""]':
+                    need_judge = True
                     prompt += f"""
 节点 id: {index}
 节点意图：{sop_node['condition_list']}
@@ -85,8 +87,11 @@ class WXSop(Plugin):
 # 回复要求
 - 如果命中节点：则仅回复节点 id 数字（如命中多个节点，则仅回复最小值）
 - 如果未命中节点：则仅回复一个单词: None"""
-
-            reply = self.bot.reply(prompt, e_context.econtext['context'])
+            if need_judge:
+                reply = self.bot.reply(prompt, e_context.econtext['context'])
+            else:
+                reply = Reply()
+                reply.content = "None"
             logger.debug("[wxsop] reply: %s" % reply)
             if reply.content == "None" and backup_node_id != -1:
                 reply.content = str(backup_node_id)
