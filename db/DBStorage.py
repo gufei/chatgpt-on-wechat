@@ -97,6 +97,24 @@ class DBStorage:
         finally:
             conn.close()
 
+    def get_contact_by_wxid(self, wxid: str):
+        conn = self._mysql.connection()
+        try:
+            sql_query = "SELECT * FROM contact WHERE wxid = %s ORDER BY id DESC LIMIT 1"
+            record_tuple = (wxid, )
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(sql_query, record_tuple)
+                wx_record = cursor.fetchone()
+            if wx_record:
+                return wx_record
+            else:
+                return None
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
 
 
     # 查询接下来带匹配的回答
