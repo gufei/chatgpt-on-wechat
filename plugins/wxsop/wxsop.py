@@ -43,9 +43,6 @@ class WXSop(Plugin):
             raise e
 
     def on_handle_context(self, e_context: EventContext):
-        # 随机睡眠 500-3000毫秒
-        time.sleep(random.uniform(0.5, 3.0))
-
         bot_wxid = e_context.econtext['context'].kwargs['wxid']
         contact_wxid = e_context.econtext['context'].kwargs['session_id']
         receiver = e_context.econtext['context'].kwargs['receiver']
@@ -180,6 +177,8 @@ class WXSop(Plugin):
                 else:
                     contactinfo = {}
                 for message in messages:
+                    # 随机睡眠
+                    time.sleep(random.uniform(2.0, 5.0))
                     if message["type"] == 1:
                         if haveVar:
                             message["message"]["msg"] = var_replace(message["message"]["msg"], contactinfo)
@@ -199,6 +198,8 @@ class WXSop(Plugin):
                                                              sop_nodes[node_order]["id"], index, organization_id)
 
                 for message in forwards:
+                    # 随机睡眠
+                    time.sleep(random.uniform(2.0, 5.0))
                     if message["type"] == 1:
                         if haveVar:
                             message["message"]["msg"] = var_replace(message["message"]["msg"], contactinfo)

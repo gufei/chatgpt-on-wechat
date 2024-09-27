@@ -313,9 +313,9 @@ class ChatChannel(Channel):
                     else:
                         logger.warning("[WX] unknown reply type: {}, content: {}".format(item["type"], item["content"]))
 
-                    # 随机睡眠 500-3000毫秒
+                    # 随机睡眠
                     if i < len(json.loads(reply.content)) - 1:
-                        time.sleep(random.uniform(0.5, 3.0))
+                        time.sleep(random.uniform(2.0, 5.0))
                 return
             e_context = PluginManager().emit_event(
                 EventContext(
