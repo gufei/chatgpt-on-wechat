@@ -106,77 +106,82 @@ class WXSop(Plugin):
                 messages = []
                 forwards = []
                 haveVar = False
-                action_messages = json.loads(sop_nodes[node_order]['action_message'])
 
-                for index, message in enumerate(action_messages):
-                    if message['content'] != "":
-                        type = int(message['type'])
-
-                        if type == 1:
-                            haveVar = contains_placeholder(message['content'])
-                            messages.append({
-                                "type": 1,
-                                "message": {
-                                    "wxid": receiver,
-                                    "msg": message['content']
-                                }
-                            })
-                        else:
-                            messages.append({
-                                "type": 2,
-                                "message": {
-                                    "wxid": receiver,
-                                    "filepath": message['content'],
-                                    "diyfilename": message['meta']['filename']
-                                }
-                            })
-                    else:
-                        _ = db_storage.create_message_record(3, bot_wxid, message_record["contact_id"],
-                                                             contact_type,
-                                                             contact_wxid, 1, "", {}, 4,
-                                                             sop_nodes[node_order]["id"], index, organization_id)
-
-                        # logger.debug("[wxsop] reply: %s" % reply)
-                        # reply = e_context.econtext['channel']._decorate_reply(e_context.econtext['context'], reply)
-                        # e_context.econtext['channel']._send_reply(e_context.econtext.get('context', {}), reply)
-
-                        # status = 3 if e_context.econtext.get('context', {}).get('is_success') else 4
-                        #
-                        # _ = db_storage.create_message_record(status, bot_wxid, message_record["contact_id"],
-                        #                                      contact_type,
-                        #                                      contact_wxid, type, message['content'], meta, 4,
-                        #                                      sop_nodes[node_order]["id"], index, organization_id)
-
-                if sop_nodes[node_order]['action_forward'] is not None:
-                    action_forward = json.loads(sop_nodes[node_order]['action_forward'])
-                    for index, message in enumerate(action_forward['action']):
+                if sop_nodes[node_order]['action_message'] is not None:
+                    action_messages = json.loads(sop_nodes[node_order]['action_message'])
+                    for index, message in enumerate(action_messages):
                         if message['content'] != "":
                             type = int(message['type'])
+
                             if type == 1:
                                 haveVar = contains_placeholder(message['content'])
-                                forwards.append({
+                                messages.append({
                                     "type": 1,
                                     "message": {
-                                        "wxid": action_forward["wxid"],
+                                        "wxid": receiver,
                                         "msg": message['content']
                                     }
                                 })
-                                # _ = wx_hook_request("/SendTextMsg", data, server['private_ip'], wxinfo['port'])
                             else:
-                                forwards.append({
+                                messages.append({
                                     "type": 2,
                                     "message": {
-                                        "wxid": action_forward["wxid"],
+                                        "wxid": receiver,
                                         "filepath": message['content'],
                                         "diyfilename": message['meta']['filename']
                                     }
                                 })
+
+                if len(messages) == 0:
+                    _ = db_storage.create_message_record(3, bot_wxid, message_record["contact_id"],
+                                                         contact_type,
+                                                         contact_wxid, 1, "", {}, 4,
+                                                         sop_nodes[node_order]["id"], 0, organization_id)
+
+                    # logger.debug("[wxsop] reply: %s" % reply)
+                    # reply = e_context.econtext['channel']._decorate_reply(e_context.econtext['context'], reply)
+                    # e_context.econtext['channel']._send_reply(e_context.econtext.get('context', {}), reply)
+
+                    # status = 3 if e_context.econtext.get('context', {}).get('is_success') else 4
+                    #
+                    # _ = db_storage.create_message_record(status, bot_wxid, message_record["contact_id"],
+                    #                                      contact_type,
+                    #                                      contact_wxid, type, message['content'], meta, 4,
+                    #                                      sop_nodes[node_order]["id"], index, organization_id)
+
+                if sop_nodes[node_order]['action_forward'] is not None:
+                    action_forward = json.loads(sop_nodes[node_order]['action_forward'])
+                    if action_forward['wxid'] != "":
+                        forward_wxids = split_string(action_forward['wxid'])
+                        for forward_wxid in forward_wxids:
+                            for index, message in enumerate(action_forward['action']):
+                                if message['content'] != "":
+                                    type = int(message['type'])
+                                    if type == 1:
+                                        haveVar = contains_placeholder(message['content'])
+                                        forwards.append({
+                                            "type": 1,
+                                            "message": {
+                                                "wxid": forward_wxid,
+                                                "msg": message['content']
+                                            }
+                                        })
+                                        # _ = wx_hook_request("/SendTextMsg", data, server['private_ip'], wxinfo['port'])
+                                    else:
+                                        forwards.append({
+                                            "type": 2,
+                                            "message": {
+                                                "wxid": forward_wxid,
+                                                "filepath": message['content'],
+                                                "diyfilename": message['meta']['filename']
+                                            }
+                                        })
                                 # _ = wx_hook_request("/SendFileMsg", data, server['private_ip'], wxinfo['port'])
                 if haveVar:
                     contactinfo = db_storage.get_contact_by_wxid(receiver)
                 else:
                     contactinfo = {}
-                for message in messages:
+                for index, message in enumerate(messages):
                     # 随机睡眠
                     time.sleep(random.uniform(2.0, 5.0))
                     if message["type"] == 1:
@@ -194,7 +199,9 @@ class WXSop(Plugin):
 
                         _ = db_storage.create_message_record(3, bot_wxid, message_record["contact_id"],
                                                              contact_type,
-                                                             contact_wxid, message["type"], message['message']['filepath'], {"filename": message['message']['diyfilename']}, 4,
+                                                             contact_wxid, message["type"],
+                                                             message['message']['filepath'],
+                                                             {"filename": message['message']['diyfilename']}, 4,
                                                              sop_nodes[node_order]["id"], index, organization_id)
 
                 for message in forwards:
@@ -208,18 +215,19 @@ class WXSop(Plugin):
                     else:
                         _ = wx_hook_request("/SendFileMsg", message["message"], server['private_ip'],
                                             wxinfo['port'])
-                            # status = 3 if e_context.econtext.get('context', {}).get('is_success') else 4
-                            #
-                            # _ = db_storage.create_message_record(status, bot_wxid, message_record["contact_id"],
-                            #                                      contact_type,
-                            #                                      contact_wxid, type, message['content'], meta, 4,
-                            #                                      sop_nodes[node_order]["id"], index, organization_id)
+                        # status = 3 if e_context.econtext.get('context', {}).get('is_success') else 4
+                        #
+                        # _ = db_storage.create_message_record(status, bot_wxid, message_record["contact_id"],
+                        #                                      contact_type,
+                        #                                      contact_wxid, type, message['content'], meta, 4,
+                        #                                      sop_nodes[node_order]["id"], index, organization_id)
 
-                action_label = json.loads(sop_nodes[node_order]['action_label'])
-                if action_label:
+                action_label_add = json.loads(sop_nodes[node_order]['action_label_add'])
+                action_label_del = json.loads(sop_nodes[node_order]['action_label_del'])
+                if action_label_add or action_label_del:
                     stages = db_storage.get_stage(organization_id)
-                    self.add_tag(bot_wxid, message_record["contact_id"], contact_type, contact_wxid, action_label,
-                                 stages, e_context.econtext, organization_id)
+                    self.add_tag(bot_wxid, message_record["contact_id"], contact_type, contact_wxid, action_label_add, action_label_del,
+                                 stages, e_context.econtext, organization_id, wxinfo, server)
 
                 e_context.action = EventAction.BREAK_PASS
             else:
@@ -230,10 +238,9 @@ class WXSop(Plugin):
                 e_context.action = EventAction.BREAK_PASS
 
     # 为联系人添加标签
-    def add_tag(self, bot_wxid, contact_id, contact_type, contact_wxid, label_ids, stages, context,
-                organization_id: int):
-        logger.debug("[wxsop] label_ids: %s" % label_ids)
-        contact_label_ids = db_storage.add_contact_label(contact_id, label_ids, organization_id)
+    def add_tag(self, bot_wxid, contact_id, contact_type, contact_wxid, action_label_add, action_label_del, stages, context,
+                organization_id, wxinfo, server):
+        contact_label_ids = db_storage.add_contact_label(contact_id, action_label_add, action_label_del, organization_id)
         match_stages = []
         logger.debug("[wxsop] contact_label_ids: %s" % contact_label_ids)
         logger.debug("[wxsop] stages: %s" % stages)
@@ -241,46 +248,156 @@ class WXSop(Plugin):
             if stage["condition_type"] == 1:
                 logger.debug("[wxsop] stage: %s" % stage)
                 if check_filter(stage, contact_label_ids):
-                    logger.debug("[wxsop] check_filter")
                     match_stages.append(stage)
         for stage in match_stages:
             is_message_send = db_storage.check_message_record(contact_wxid, 3, stage["id"], 0)
             if is_message_send:
                 continue
+            messages = []
+            forwards = []
+            haveVar = False
             if stage["action_message"]:
                 action_message = json.loads(stage['action_message'])
                 for index, message in enumerate(action_message):
-                    type = int(message['type'])
+                    if message['content'] != "":
+                        type = int(message['type'])
 
-                    if type == 2:
-                        meta = {
-                            "filename": message['meta']['filename']
-                        }
-                    else:
-                        meta = {}
-                    logger.debug("[wxsop] create_message_record. content: %s" % message['content'])
-                    lastrowid = db_storage.create_message_record(2, bot_wxid, contact_id, contact_type, contact_wxid,
-                                                                 type, message['content'], meta, 3, stage["id"], index,
-                                                                 organization_id)
-                    if lastrowid:
-                        reply = Reply()
-                        reply.type = ReplyType.TEXT if type == 1 else ReplyType.FILE
-                        reply.content = message['content']
-                        reply = context['channel']._decorate_reply(context['context'], reply)
-                        if type == 2:
-                            context.get('context', {})["diyfilename"] = message['meta']['filename']
-                        logger.debug("[wxsop] context: %s" % context.get('context', {}))
-                        context['channel']._send_reply(context.get('context', {}), reply)
-
-                        if context.get('context', {}).get('is_success'):
-                            db_storage.update_message_record(lastrowid, 3)
+                        if type == 1:
+                            haveVar = contains_placeholder(message['content'])
+                            messages.append({
+                                "type": 1,
+                                "message": {
+                                    "wxid": contact_wxid,
+                                    "msg": message['content']
+                                }
+                            })
                         else:
-                            db_storage.update_message_record(lastrowid, 4, "SOP send failed")
+                            messages.append({
+                                "type": 2,
+                                "message": {
+                                    "wxid": contact_wxid,
+                                    "filepath": message['content'],
+                                    "diyfilename": message['meta']['filename']
+                                }
+                            })
+                        # lastrowid = db_storage.create_message_record(2, bot_wxid, contact_id, contact_type, contact_wxid,
+                        #                                              type, message['content'], meta, 3, stage["id"], index,
+                        #                                              organization_id)
+            if len(messages) == 0:
+                _ = db_storage.create_message_record(3, bot_wxid, contact_id,
+                                                     contact_type,
+                                                     contact_wxid, 1, "", {}, 3,
+                                                     stage["id"], 0, organization_id)
+                        # if lastrowid:
+                        #     reply = Reply()
+                        #     reply.type = ReplyType.TEXT if type == 1 else ReplyType.FILE
+                        #     reply.content = message['content']
+                        #     reply = context['channel']._decorate_reply(context['context'], reply)
+                        #     if type == 2:
+                        #         context.get('context', {})["diyfilename"] = message['meta']['filename']
+                        #     logger.debug("[wxsop] context: %s" % context.get('context', {}))
+                        #     context['channel']._send_reply(context.get('context', {}), reply)
+                        #
+                        #     if context.get('context', {}).get('is_success'):
+                        #         db_storage.update_message_record(lastrowid, 3)
+                        #     else:
+                        #         db_storage.update_message_record(lastrowid, 4, "SOP send failed")
 
-            if stage["action_label"]:
-                action_label = json.loads(stage['action_label'])
-                self.add_tag(bot_wxid, contact_id, contact_type, contact_wxid, action_label, stages, context,
-                             organization_id)
+            if stage["action_forward"]:
+                action_forward = json.loads(stage['action_forward'])
+                if action_forward['wxid'] != "":
+                    forward_wxids = split_string(action_forward['wxid'])
+                    for forward_wxid in forward_wxids:
+                        for index, message in enumerate(action_forward['action']):
+                            if message['content'] != "":
+                                type = int(message['type'])
+
+                                if type == 1:
+                                    haveVar = contains_placeholder(message['content'])
+                                    forwards.append({
+                                        "type": 1,
+                                        "message": {
+                                            "wxid": forward_wxid,
+                                            "msg": message['content']
+                                        }
+                                    })
+                                    # _ = wx_hook_request("/SendTextMsg", data, server['private_ip'], wxinfo['port'])
+                                else:
+                                    forwards.append({
+                                        "type": 2,
+                                        "message": {
+                                            "wxid": forward_wxid,
+                                            "filepath": message['content'],
+                                            "diyfilename": message['meta']['filename']
+                                        }
+                                    })
+            if haveVar:
+                contactinfo = db_storage.get_contact_by_wxid(contact_wxid)
+            else:
+                contactinfo = {}
+            for index, message in enumerate(messages):
+                # 随机睡眠
+                time.sleep(random.uniform(2.0, 5.0))
+                if message["type"] == 1:
+                    if haveVar:
+                        message["message"]["msg"] = var_replace(message["message"]["msg"],
+                                                                contactinfo)
+                    _ = wx_hook_request("/SendTextMsg", message["message"], server['private_ip'],
+                                        wxinfo['port'])
+
+                    _ = db_storage.create_message_record(3, bot_wxid, contact_id,
+                                                         contact_type,
+                                                         contact_wxid, message["type"],
+                                                         message['message']['msg'], {}, 3,
+                                                         stage["id"], index,
+                                                         organization_id)
+                else:
+                    _ = wx_hook_request("/SendFileMsg", message["message"], server['private_ip'],
+                                        wxinfo['port'])
+
+                    _ = db_storage.create_message_record(3, bot_wxid, contact_id,
+                                                         contact_type,
+                                                         contact_wxid, message["type"],
+                                                         message['message']['filepath'],
+                                                         {"filename": message['message'][
+                                                             'diyfilename']}, 3,
+                                                         stage["id"], index,
+                                                         organization_id)
+
+            for message in forwards:
+                # 随机睡眠
+                time.sleep(random.uniform(2.0, 5.0))
+                if message["type"] == 1:
+                    if haveVar:
+                        message["message"]["msg"] = var_replace(message["message"]["msg"], contactinfo)
+                    _ = wx_hook_request("/SendTextMsg", message["message"], server['private_ip'],
+                                        wxinfo['port'])
+                else:
+                    _ = wx_hook_request("/SendFileMsg", message["message"], server['private_ip'],
+                                        wxinfo['port'])
+                                # lastrowid = db_storage.create_message_record(2, bot_wxid, contact_id, contact_type, contact_wxid,
+                                #                                              type, message['content'], meta, 3, stage["id"], index,
+                                #                                              organization_id)
+                                # if lastrowid:
+                                #     reply = Reply()
+                                #     reply.type = ReplyType.TEXT if type == 1 else ReplyType.FILE
+                                #     reply.content = message['content']
+                                #     reply = context['channel']._decorate_reply(context['context'], reply)
+                                #     if type == 2:
+                                #         context.get('context', {})["diyfilename"] = message['meta']['filename']
+                                #     logger.debug("[wxsop] context: %s" % context.get('context', {}))
+                                #     context['channel']._send_reply(context.get('context', {}), reply)
+                                #
+                                #     if context.get('context', {}).get('is_success'):
+                                #         db_storage.update_message_record(lastrowid, 3)
+                                #     else:
+                                #         db_storage.update_message_record(lastrowid, 4, "SOP send failed")
+
+            if stage["action_label_add"] or stage["action_label_del"]:
+                add_labels = json.loads(stage['action_label_add'])
+                rem_labels = json.loads(stage['action_label_del'])
+                self.add_tag(bot_wxid, contact_id, contact_type, contact_wxid, add_labels, rem_labels, stages, context,
+                             organization_id, wxinfo, server)
 
     def get_help_text(self, **kwargs):
         help_text = "SOP 过滤"
@@ -325,10 +442,20 @@ def wx_hook_request(path, data, private_ip, port):
         logger.error(f"[wx_hook] send message failed, error: {e}")
         return None
 
+
 def contains_placeholder(s: str) -> bool:
     pattern = r'\$\{.*?\}'
     return bool(re.search(pattern, s))
 
+
 def var_replace(s: str, contactinfo: dict) -> str:
-    s = s.replace("${nickname}",contactinfo["nickname"])
+    s = s.replace("${nickname}", contactinfo["nickname"])
     return s
+
+
+def split_string(input_string):
+    # 定义正则表达式，匹配中文逗号、英文逗号和顿号
+    pattern = r'[，,、]'
+    # 使用re.split方法分割字符串
+    result = re.split(pattern, input_string)
+    return result

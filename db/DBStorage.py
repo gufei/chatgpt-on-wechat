@@ -191,7 +191,7 @@ class DBStorage:
             conn.close()
 
     # 追加联系人标签
-    def add_contact_label(self, contact_id: int, label_ids: list[int], organization_id: int):
+    def add_contact_label(self, contact_id: int, action_label_add: list[int], action_label_del: list[int], organization_id: int):
         conn = self._mysql.connection()
         try:
             # 从 label_relationship 表中查询 contact_id == contact_id 的记录
@@ -203,25 +203,45 @@ class DBStorage:
                 label_relationships = cursor.fetchall()
                 logger.debug("[wxsop] label_relationships: %s" % label_relationships)
                 add_label_ids = []
+                rem_label_ids = []
+                contact_label_ids = []
+                final_label_ids = []
                 if label_relationships:
                     contact_label_ids = [label_relationship['label_id'] for label_relationship in label_relationships]
-                    for label_id in label_ids:
-                        if label_id not in contact_label_ids:
-                            add_label_ids.append(label_id)
+                    for add_label_id in action_label_add:
+                        if add_label_id not in contact_label_ids and add_label_id not in action_label_del:
+                            add_label_ids.append(add_label_id)
+                            contact_label_ids.append(add_label_id)
                     # if add_label_ids:
                     #     return contact_label_ids
                 else:
-                    add_label_ids = label_ids
-                    contact_label_ids = []
+                    add_label_ids = action_label_add
+                    for add_label_id in action_label_add:
+                        if add_label_id not in action_label_del:
+                            add_label_ids.append(add_label_id)
+                            contact_label_ids.append(add_label_id)
+
+                for contact_label_id in contact_label_ids:
+                    if contact_label_id not in action_label_del:
+                        final_label_ids.append(contact_label_id)
+                    else:
+                        rem_label_ids.append(contact_label_id)
+
                 logger.debug("[wxsop] add_label_ids: %s" % add_label_ids)
                 for label_id in add_label_ids:
                     sql_insert = "INSERT INTO label_relationship (status, contact_id, label_id, organization_id, created_at, updated_at) VALUES (%s, %s, %s, %s, NOW(), NOW())"
                     record_tuple = (1, contact_id, label_id, organization_id)
                     cursor.execute(sql_insert, record_tuple)
-                    contact_label_ids.append(label_id)
+
+                logger.debug("[wxsop] rem_label_ids: %s" % rem_label_ids)
+                for label_id in rem_label_ids:
+                    sql_delete = "DELETE FROM label_relationship WHERE contact_id = %s AND label_id = %s AND organization_id = %s"
+                    record_tuple = (contact_id, label_id, organization_id)
+                    cursor.execute(sql_delete, record_tuple)
+
                 conn.commit()
 
-                return contact_label_ids
+                return final_label_ids
         except Error as e:
             print(f"Error while connecting to MySQL: {e}")
             conn.rollback()
