@@ -54,6 +54,8 @@ class WXSop(Plugin):
             contact_type = 2
 
         wxinfo = db_storage.get_info_by_wxid(bot_wxid)
+        if not wxinfo:
+            return
         server = db_storage.get_server_by_id(wxinfo['server_id'])
         message_record, sop_nodes = db_storage.get_next_answers(bot_wxid, contact_wxid, contact_type)
         logger.debug("[wxsop] on_handle_context. message_record: %s" % message_record)
