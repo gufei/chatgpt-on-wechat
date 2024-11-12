@@ -51,8 +51,6 @@ class WorkPhoneMessage(ChatMessage):
                     self.is_at = True
 
         else:
-            contact_json = redis_conn.hget("workphone_contact_info_"+wechat['wechatid'], message.FriendId)
-            contact = json.loads(contact_json)
             self.from_user_id = message.FriendId
             self.from_user_nickname = message.NickName
             self.to_user_id = message.WeChatId
