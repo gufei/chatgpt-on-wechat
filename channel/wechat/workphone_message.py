@@ -25,14 +25,18 @@ class WorkPhoneMessage(ChatMessage):
 
         if self.is_group:
             group_json = redis_conn.hget("workphone_group_info_"+wechat['wechatid'], message.FriendId)
-            group = json.loads(group_json)
+            if group_json:
+                group = json.loads(group_json)
+                self.to_user_nickname = group['nickname']
+                self.other_user_nickname = group['nickname']
+
             self.content = message.Content.decode('utf-8')
             lines = self.content.split(':',1)
             self.from_user_id = lines[0]
             self.to_user_id = message.FriendId
-            self.to_user_nickname = group['nickname']
+
             self.other_user_id = message.FriendId
-            self.other_user_nickname = group['nickname']
+
             self.content = lines[1].strip()
 
             self.actual_user_id = lines[0]
