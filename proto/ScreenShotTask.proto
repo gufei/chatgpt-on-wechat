@@ -1,0 +1,10 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message ScreenShotTaskMessage {
+  string WeChatId = 1; //微信唯一Id
+  int32 Type = 2; // 类型，0：聊天界面（隐藏隐私信息）
+  string Param = 3; //类型参数，聊天id
+  int64 Param2 = 4; //参数 最顶部消息srvId
+  int64 TaskId = 5; //
+}

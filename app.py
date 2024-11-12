@@ -5,6 +5,7 @@ import os
 import signal
 import sys
 import time
+sys.path.append(os.getcwd()+'/workphone')
 
 from flask import Flask
 from channel import channel_factory
@@ -36,7 +37,7 @@ def sigterm_handler_wrap(_signo):
 
 def start_channel(channel_name: str):
     channel = channel_factory.create_channel(channel_name)
-    if channel_name in ["wx", "wxy", "wx_hook", "terminal", "wechatmp", "wechatmp_service", "wechatcom_app", "wework",
+    if channel_name in ["wx", "wxy", "wx_hook",'workphone', "terminal", "wechatmp", "wechatmp_service", "wechatcom_app", "wework",
                         const.FEISHU, const.DINGTALK]:
         PluginManager().load_plugins()
 
@@ -50,6 +51,7 @@ def start_channel(channel_name: str):
 
 
 db_storage = DBStorage()
+redis_conn = db_storage.get_redis_conn()
 
 
 def run(app: Flask):

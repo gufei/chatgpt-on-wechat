@@ -1,0 +1,9 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message OneKeyLikeTaskResultNoticeMessage {
+    string WeChatId = 1; //
+    int64 TaskId = 2; // 所执行的任务ID
+    int32 Count = 3; // 已点赞数量
+    int32 EndType = 4; //结束方式，0 正常 1 到达上次点赞位置 2 到达最大点赞数 3 朋友圈到底 4 任务超时
+}

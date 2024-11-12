@@ -1,0 +1,8 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message RequestContactsInfoTaskMessage {
+    string WeChatId = 1; //微信唯一Id
+    string Contact = 2; // 联系人username
+    bool Local = 3; // 只返回本地信息，不打开详情页
+}

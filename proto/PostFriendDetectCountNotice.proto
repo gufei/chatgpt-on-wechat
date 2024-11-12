@@ -1,0 +1,12 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message PostFriendDetectCountNoticeMessage {
+    int64 TaskId = 1; // 所执行的任务ID
+    int32 Count = 2; // 已检测的好友人数
+    int32 DelCount = 3;  //已删除的好友人数
+    bool IsFinished = 4;  //是否清粉完毕
+    int32 SkipCount = 5; // 跳过检测人数：设置时间内检测过，聊天过，朋友圈互动过
+    repeated string Zombies = 6; // 僵尸粉id，未区分非好友和拉黑
+    string WeChatId = 7; // 商家个人微信内部全局唯一识别码
+}

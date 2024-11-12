@@ -1,0 +1,11 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+message ModifyFriendMemoTaskMessage {
+    string WeChatId = 1; //
+    string FriendId = 2; // 联系人微信号
+    string Memo = 3; // 备注
+    int64 TaskId = 4; // 任务ID
+    string Desc = 5; // 描述
+    string Phone = 6; // 电话号码
+    int32 DelFlag = 7; // 删除标志  1 删除备注 2 删除描述 4 删除号码；可组合
+}

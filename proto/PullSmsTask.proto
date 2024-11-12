@@ -1,0 +1,10 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message PullSmsTaskMessage {
+    string WeChatId = 1; //微信唯一Id
+    string IMEI = 2; // 设备id
+    int64 StartTime = 3; // 起始时间，UTC
+    int64 EndTime = 4; // 结束时间，0为当前时间 UTC
+    int64 TaskId = 5;
+}

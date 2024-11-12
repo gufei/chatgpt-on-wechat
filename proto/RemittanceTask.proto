@@ -1,0 +1,12 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message RemittanceTaskMessage {
+    string WeChatId = 1; //微信唯一Id
+    string FriendId = 2; //聊天好友微信唯一id
+    int32 Money = 3; //钱数，单位：分
+    string Passwd = 4; // 密码，6位，纯数字
+    string Memo = 5; // 留言
+    int64 TaskId = 6; //
+    string RoomId = 7; //群聊id
+}

@@ -49,6 +49,9 @@ class DBStorage:
             db=0,
             decode_responses=True)
 
+    def get_redis_conn(self):
+        return self._redis
+
     def get_server_by_id(self,id: int):
         server_info = self._redis.hget('server_info', str(id))
         if server_info:

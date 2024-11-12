@@ -1,0 +1,13 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message SendJielongTaskMessage {
+    string WeChatId = 1; //微信唯一Id
+    string Chatoom = 2; //群聊id
+    string Content = 3; //接龙内容
+    string Title = 4; // 接龙标题 新建接龙时有效
+    string Sample = 5; // 接龙示例（例：） 新建接龙时有效
+    string Memo = 6; // 补充说明 新建接龙时有效
+    int64 MsgSvrId = 7; // 参与接龙的msgSvrid，新建接龙则传0
+    int64 TaskId = 8; //
+}

@@ -1,0 +1,51 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+
+message PostSNSNewsTaskMessage {
+    string WeChatId = 1; // 商家所属微信号 (手机端不需要)
+    string Content = 2; //发布的文案
+    AttachmentMessage Attachment = 3; //携带的图片、视频、链接等资源
+    string Comment = 4; // 评论
+    int64 TaskId = 5; //任务id 在TaskResult中回传
+    VisibleMessage Visible = 6; // 可见范围
+    bool SendSlow = 7; // 慢速发送，根据文案字数，最多耗时40秒
+    PoiMessage Poi = 8; // 位置信息
+    repeated string ExtComment = 9; //多条评论
+
+    message AttachmentMessage {
+        EnumAttachType Type = 1; //附件类型
+        repeated string Content = 2; //视频url；多张图片url；链接：[url;标题;图片url;表述]；视频号：视频号消息json
+        //附件类型
+        enum EnumAttachType{
+            Link = 0; //链接
+            Picture = 2; //图片
+            ShortVideo = 3; //短视频
+            LongVideo = 4; //长视频 与ShortVideo相同，不区分长短视频
+            ShiPinHao = 5; //视频号
+            ExtLink = 6; //所有链接（包括小程序等）
+        }
+    }
+
+    message VisibleMessage {
+        EnumVisibleType Type = 1; //附件类型
+        string Labels = 2; //type 2，3时的标签列表,以英文,分隔
+        string Friends = 3; //type 2，3时的好友列表,以英文,分隔
+
+        //可见类型
+        enum EnumVisibleType{
+            Public = 0; //公开 所有朋友可见
+            Private = 1; //私密 仅自己可见
+            WhoVisible = 2; //部分可见 选中的朋友可见（标签和联系人）
+            WhoInvisible = 3; //不给谁看 选中的朋友不可见（标签和联系人）
+        }
+    }
+
+    message PoiMessage {
+        string City = 1; // 城市
+        string Name = 2; // 显示名称，如：万达广场
+        string Address = 3; // 详细地址
+        float Lat = 4; // 纬度
+        float Lng = 5; // 经度
+    }
+}

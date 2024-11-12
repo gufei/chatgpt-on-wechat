@@ -1,0 +1,24 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+enum CDNFileType {
+    NoteMsg_Picture = 0; //笔记消息内容中的图片
+    NoteMsg_Thumb = 1; //笔记消息内容中的图片视频的缩略图
+    NoteMsg_Video = 2; //笔记消息内容中的视频
+    NoteMsg_File = 3; //笔记消息内容中的文件（html，语音（speex），pdf,ppt,doc等其他文件）
+    ChatMsg_Picture = 4; //聊天消息的图片 // 未实现
+    ChatMsg_Thumb = 5; //聊天消息的缩略图（图片，视频的缩略图）// 未实现
+    ChatMsg_Video = 6; //聊天消息的视频 // 未实现
+    ChatMsg_File = 7; //聊天消息的文件 // 未实现
+    ChatMsg_Emoji =8; //聊天消息表情 // 未实现
+}
+message CDNDownloadFileTaskMessage {
+    string WeChatId = 1; // 商家所属微信号
+    string CdnUrl = 2;
+    string CdnKey = 3;
+    CDNFileType FileType = 4; // 文件下载的场景
+    string FileId = 5; // 文件id,返回结果标识匹配，如果没有自己生成一个（比如用msgSvrId）
+    string FileFmt = 6; // 文件格式（后缀）
+    int32 FileSize = 7; // 文件大小
+    int64 MsgSvrId = 8; // 聊天消息id（msgSvrId) 可不传，没有cndUrl，可只传图片，视频，文件消息的msgSvrid // 未实现
+}

@@ -1,0 +1,10 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message GetContactInfoTaskMessage {
+    string WeChatId = 1; //
+    string Contact = 2; // 联系人username
+    string Chatroom = 3; // 共同的群聊
+    string Ticket = 4; // 备用
+    int64 TaskId = 5;
+}

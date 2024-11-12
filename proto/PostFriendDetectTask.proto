@@ -1,0 +1,12 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message PostFriendDetectTaskMessage {
+  string WeChatId = 1; // 微信id
+  int64 TaskId = 2; // 清粉任务ID
+  string Message = 3; // 消息内容（内容为空时发空名片，对方无感知；不为空则发送文本消息，对方能收到）
+  bool OnlyCheck = 4; // false 检测到立即删除，true 不删除，通知到服务端
+  int32 SkipHour = 5; // 跳过多少小时内有互动的好友（聊天，朋友圈互动,上次已检测等），缺省72小时
+  int32 Mode = 6; // &01 不检测朋友圈 (废弃，改进后朋友圈检测效率提高）
+  int32 Max = 7; // 检测最大人数（不包括跳过检测的，配合SkipHour可以将整个清粉动作分成几天完成）
+}

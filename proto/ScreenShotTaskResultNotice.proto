@@ -1,0 +1,10 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message ScreenShotTaskResultNoticeMessage {
+    string WeChatId = 1; //微信唯一Id
+    bool Success = 2;
+    string ErrMsg = 3; // 错误信息
+    string Url = 4; // 图片url
+    int64 TaskId = 5; //
+}

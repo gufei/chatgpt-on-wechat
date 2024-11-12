@@ -1,0 +1,9 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message PullFriendAddReqListTaskMessage {
+    string WeChatId = 1; // 所属微信
+    int64 StartTime = 2; // 毫秒，0 则全部
+    bool OnlyNew = 3; // 只获取未读的请求
+    bool GetAll = 4; // 获取所有的加好友请求信息，包括已经添加的
+}

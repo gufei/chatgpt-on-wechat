@@ -119,8 +119,11 @@ class ChatChannel(Channel):
                         logger.info("[WX]receive group at")
                         if not conf().get("group_at_off", False):
                             flag = True
-                        pattern = f"@{re.escape(self.name)}(\u2005|\u0020|\?)"
-                        subtract_res = re.sub(pattern, r"", content)
+                        if self.name:
+                            pattern = f"@{re.escape(self.name)}(\u2005|\u0020|\?)"
+                            subtract_res = re.sub(pattern, r"", content)
+                        else:
+                            subtract_res = content
                         if isinstance(context["msg"].at_list, list):
                             for at in context["msg"].at_list:
                                 pattern = f"@{re.escape(at)}(\u2005|\u0020|\?)"

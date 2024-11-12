@@ -1,0 +1,19 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+enum EnumSettings {
+    ChangeNickName = 0; // 改昵称
+    ChangeAvatar = 1;// 改头像
+    NeedVerify = 2; // 加我为朋友时需要验证
+    ChangeGender = 3; // 设置性别，IntParam 1 男性 2 女性
+    ChangeZone = 4; // 设置地区，Content格式 CN_Zhejiang_Hangzhou
+    ChangeSignature = 5; // 设置签名 Content字符串
+}
+
+message WechatSettingTaskMessage {
+    string WeChatId = 1; // 商家个人微信内部全局唯一识别码
+    EnumSettings Action = 2; // 设置项
+    string Content = 3; // 字符串参数
+    int32 IntParam = 4; // 开关时，0关 1开
+    int64 TaskId = 5;
+}

@@ -1,0 +1,17 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message FriendDetectResultNoticeMessage {
+    string WeChatId = 1; //
+    int64 TaskId = 2; // 所执行的任务ID
+    int64 StartTime = 3; // 任务开始时间
+    int64 EndTime = 4; // 任务结束时间
+    bool IsFinished = 5;  //是否清粉完毕
+    int32 Count = 6; // 已检测人数
+    int32 SkipCount = 7; // 跳过检测人数：设置时间内检测过，聊天过，朋友圈互动过
+    int32 DelCount = 8; // 已删除的人数
+    repeated string Zombies = 9; // 僵尸粉id
+    repeated string BlockedList = 10; // 拉黑的僵尸粉
+    repeated string BannedList = 11; // 账号异常（被封号）
+    repeated string CanceledList = 12; // 账号已注销
+}

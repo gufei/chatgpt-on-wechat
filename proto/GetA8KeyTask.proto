@@ -1,0 +1,12 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message GetA8KeyTaskMessage {
+  string WeChatId = 1; //微信唯一Id
+  int32 Type = 2; // 类型，0：辅助验证 1：公众号文章
+  string Url = 3; //
+  string UserName = 4; // 消息发送者UserName,微信团队：weixin，公众号文章：公众号id
+  string MsgSvrId = 5; // 消息id，暂时不用
+  int32 Reason = 6; //备用
+  int64 TaskId = 7; //
+}

@@ -1,0 +1,12 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message ForwardMultiMessageTaskMessage {
+    string WeChatId = 1; //
+    string Talker = 2; // 消息所属的会话
+    string FriendIds = 3; //转发目标id（包含群聊），用逗号,分隔，不超过9个
+    repeated int64 MsgIds = 4; // 消息MsgSvrId列表，需同属于一个会话
+    string ExtMsg = 5; // 附带消息
+    bool SendRecord = 6; // 缺省false：逐条转发；true：合并转发，即发送聊天记录
+    int64 TaskId = 7; //任务id
+}

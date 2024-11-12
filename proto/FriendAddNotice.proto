@@ -1,0 +1,28 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+import "TransportMessage.proto";
+
+message FriendMessage {
+    string FriendId = 1; // wxid
+    string FriendNo = 2; // 微信号
+    string FriendNick = 3; // 昵称
+    string Memo = 4; // 备注
+    EnumGender Gender = 5; //性别
+    string Country = 6; //国家 (非必传)
+    string Province = 7; //省份
+    string City = 8; //城市
+    string Avatar = 9; //头像
+    string Remark=10;// 业务备注
+    int32 Type = 11; // 联系人类型，参考 (&512 消息免打扰）
+    string LabelIds = 12; // 标签Id
+    string Phone=13; // 手机号
+    string Desc=14;  // 描述
+    int32 Source=15; // 好友来源
+    string SourceExt=16; //来源扩展信息
+}
+
+message FriendAddNoticeMessage {
+    string WeChatId = 1; // 全局唯一识别码
+    FriendMessage Friend = 3; // 好友信息
+}
+

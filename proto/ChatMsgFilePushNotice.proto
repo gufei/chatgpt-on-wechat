@@ -1,0 +1,11 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message ChatMsgFilePushNoticeMessage {
+    string WeChatId = 1; // 商家个人微信内部全局唯一识别码
+    int64 MsgSvrId = 2; // 消息唯一id
+    int32 MsgType = 3; // 消息类型
+    string Url = 4; //
+    int64 FileSize = 5; //
+    int32 SubType = 6; // 文件类型（图片消息：0 大图，1 原图 ）
+}

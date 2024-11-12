@@ -1,0 +1,20 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message CallLogMessage {
+    int32 Id = 1;
+    string Number = 2; //
+    int32 Type = 3; // 1 incoming，2 outgoing，3 missed 4 voicemail 5 rejected 6 blocked 7 ANSWERED_EXTERNALLY
+    int64 Date = 4; // 呼入呼出时间 UTC时间，秒
+    int32 Duration = 5; // 通话时长
+    string Record = 6; // 通话录音url
+    int32 SimId = 7;
+    int32 BlockType = 8;
+}
+
+message CallLogPushNoticeMessage {
+    string WeChatId = 1; // 商家所属微信号
+    string IMEI = 2; // 手机设备号
+    CallLogMessage Messages = 3; //
+
+}

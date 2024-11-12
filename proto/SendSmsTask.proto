@@ -1,0 +1,11 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+
+message SendSmsTaskMessage {
+    string WeChatId = 1;
+    string Imei = 2; // 备用，用wxid或imei来定位手机
+    string Number = 3; // 对方号码
+    string Content = 4; // 短信内容
+    int64 TaskId = 5;
+}

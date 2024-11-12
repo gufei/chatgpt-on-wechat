@@ -1,0 +1,31 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message BoolConfigMessage {
+    string Key = 1;
+    bool Value = 2;
+    string Name = 3;
+    string Desc = 4;
+}
+
+message IntConfigMessage {
+    string Key = 1;
+    int32 Value = 2;
+    string Name = 3;
+    string Desc = 4;
+}
+
+message StrConfigMessage {
+    string Key = 1;
+    string Value = 2;
+    string Name = 3;
+    string Desc = 4;
+}
+
+message ConfigPushNoticeMessage {
+    string IMEI = 1; // 设备号
+    string WeChatId = 2; //
+    repeated BoolConfigMessage BoolConfs = 7;
+    repeated IntConfigMessage IntConfs = 8;
+    repeated StrConfigMessage StrConfs = 9;
+}

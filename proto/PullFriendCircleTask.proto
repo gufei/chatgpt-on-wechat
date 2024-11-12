@@ -1,0 +1,11 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message PullFriendCircleTaskMessage {
+    string WeChatId = 1; // 所属微信
+    string FriendId = 2; // 获取好友的朋友圈,传空则返回所有人
+    int64 StartTime = 3; // 废弃 //UTC秒，小于该时间，用于向下翻页
+    int32 Count = 4; // 废弃，微信每页获取10条  //最多条数，缺省20条
+    int64 RefTime = 5; // 废弃 //UTC秒，大于该时间，用于向上翻页
+    int64 RefSnsId = 6; // 首次传0，获取下一页传上一页最后一条的snsid
+}

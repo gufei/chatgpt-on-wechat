@@ -1,0 +1,10 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message AgreeJoinChatRoomTaskMessage {
+    string WeChatId = 1; // 商家个人微信内部全局唯一识别码
+    string Talker = 2; // 邀请者
+    int64 MsgSvrId = 3; // 邀请消息的msgSvrId
+    string MsgContent = 4; // 回传邀请信息的内容（json）
+    int64 taskId = 5;
+}

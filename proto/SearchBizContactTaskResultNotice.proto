@@ -1,0 +1,11 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+import "BizContactPushNotice.proto";
+message SearchBizContactTaskResultNoticeMessage {
+    string WeChatId = 1; //微信唯一Id
+    string KeyWord = 2; //搜索关键字
+    int32 Type = 3; // 0：公众号；1：小程序
+    int64 TaskId = 4; //
+    repeated BizContactMessage Items = 5;
+}

@@ -1,0 +1,9 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message ConvDelNoticeMessage {
+    string WeChatId = 1; //
+    string FriendId = 3; // 会话Id
+    string ConvName = 4; // 会话名称
+    string Avatar = 5; // 头像
+}

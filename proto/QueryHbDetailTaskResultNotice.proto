@@ -1,0 +1,27 @@
+syntax = "proto3";
+package Jubo.JuLiao.IM.Wx.Proto; //命名空间约定
+
+message HbRecordMessage {
+    string UserName = 1; //
+    int32 Amount = 2; //
+    string Time = 3; //
+    //string RecId = 4; //
+}
+
+message QueryHbDetailTaskResultNoticeMessage {
+    string WeChatId = 1; // 所属微信号
+    bool Success = 2;
+    string ErrMsg = 3;
+    string HbUrl = 4; //
+    int32 TotalNum = 5; // 红包总个数
+    int32 TotalAmount = 6; // 红包总金额
+    int32 RecNum = 7; // 已收红包个数
+    int32 RecAmount = 8; // 已收红包金额
+    repeated HbRecordMessage Records = 9; // 收红包记录
+    string Sender = 10; // 红包发送者username
+    string Wishing = 11;
+    int32 HbType = 12; // 红包类型 0 个人红包，1 群红包，...
+    int32 HbKind = 13;
+    int32 HbStatus = 14; // 红包状态 2 可抢红包， 3 自己抢完，4 不可抢 ，5 过期红包
+    int32 RevStatus = 15; // 红包接收状态 2 已抢
+}
