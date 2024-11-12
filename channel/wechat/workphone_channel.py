@@ -139,6 +139,7 @@ class WorkPhoneChannel(ChatChannel):
         if context:
             # 增加需要的context
             context['wechat_account'] = wechat
+            context['wxid'] = wechat['wechatid']
 
             # todo 后台做好后，从后台获取apikey的配置
             context['open_ai_api_base'] = "https://newapi.gkscrm.com/v1"
