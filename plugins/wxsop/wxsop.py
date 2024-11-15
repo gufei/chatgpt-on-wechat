@@ -184,12 +184,14 @@ class WXSop(Plugin):
                 else:
                     contactinfo = {}
                 for index, message in enumerate(messages):
+                    logger.debug("[wxsop] ------------message-----------: %s" % message)
                     # 随机睡眠
                     time.sleep(random.uniform(2.0, 5.0))
+
                     if message["type"] == 1:
                         if haveVar:
                             message["message"]["msg"] = var_replace(message["message"]["msg"], contactinfo)
-                        _ = wx_hook_request("/SendTextMsg", message["message"], server['private_ip'], wxinfo['port'])
+                        _ = wx_hook_request(e_context,"/SendTextMsg", message["message"], server.get('private_ip') if server else None, wxinfo.get('port'))
 
                         _ = db_storage.create_message_record(3, bot_wxid, message_record["contact_id"],
                                                              contact_type,
@@ -197,7 +199,7 @@ class WXSop(Plugin):
                                                              message['message']['msg'], {}, 4,
                                                              sop_nodes[node_order]["id"], index, organization_id)
                     else:
-                        _ = wx_hook_request("/SendFileMsg", message["message"], server['private_ip'], wxinfo['port'])
+                        _ = wx_hook_request(e_context, "/SendFileMsg", message["message"], server.get('private_ip') if server else None, wxinfo.get('port'))
 
                         _ = db_storage.create_message_record(3, bot_wxid, message_record["contact_id"],
                                                              contact_type,
@@ -212,10 +214,10 @@ class WXSop(Plugin):
                     if message["type"] == 1:
                         if haveVar:
                             message["message"]["msg"] = var_replace(message["message"]["msg"], contactinfo)
-                        _ = wx_hook_request("/SendTextMsg", message["message"], server['private_ip'],
+                        _ = wx_hook_request(e_context,"/SendTextMsg", message["message"], server.get('private_ip') if server else None,
                                             wxinfo['port'])
                     else:
-                        _ = wx_hook_request("/SendFileMsg", message["message"], server['private_ip'],
+                        _ = wx_hook_request(e_context, "/SendFileMsg", message["message"], server.get('private_ip') if server else None,
                                             wxinfo['port'])
                         # status = 3 if e_context.econtext.get('context', {}).get('is_success') else 4
                         #
@@ -228,7 +230,7 @@ class WXSop(Plugin):
                 action_label_del = json.loads(sop_nodes[node_order]['action_label_del'])
                 if action_label_add or action_label_del:
                     stages = db_storage.get_stage(organization_id)
-                    self.add_tag(bot_wxid, message_record["contact_id"], contact_type, contact_wxid, action_label_add, action_label_del,
+                    self.add_tag(e_context,bot_wxid, message_record["contact_id"], contact_type, contact_wxid, action_label_add, action_label_del,
                                  stages, e_context.econtext, organization_id, wxinfo, server)
 
                 e_context.action = EventAction.BREAK_PASS
@@ -240,7 +242,7 @@ class WXSop(Plugin):
                 e_context.action = EventAction.BREAK_PASS
 
     # 为联系人添加标签
-    def add_tag(self, bot_wxid, contact_id, contact_type, contact_wxid, action_label_add, action_label_del, stages, context,
+    def add_tag(self, e_context: EventContext, bot_wxid, contact_id, contact_type, contact_wxid, action_label_add, action_label_del, stages, context,
                 organization_id, wxinfo, server):
         contact_label_ids = db_storage.add_contact_label(contact_id, action_label_add, action_label_del, organization_id)
         match_stages = []
@@ -344,7 +346,7 @@ class WXSop(Plugin):
                     if haveVar:
                         message["message"]["msg"] = var_replace(message["message"]["msg"],
                                                                 contactinfo)
-                    _ = wx_hook_request("/SendTextMsg", message["message"], server['private_ip'],
+                    _ = wx_hook_request(e_context,"/SendTextMsg", message["message"], server.get('private_ip') if server else None,
                                         wxinfo['port'])
 
                     _ = db_storage.create_message_record(3, bot_wxid, contact_id,
@@ -354,7 +356,7 @@ class WXSop(Plugin):
                                                          stage["id"], index,
                                                          organization_id)
                 else:
-                    _ = wx_hook_request("/SendFileMsg", message["message"], server['private_ip'],
+                    _ = wx_hook_request(e_context,"/SendFileMsg", message["message"], server.get('private_ip') if server else None,
                                         wxinfo['port'])
 
                     _ = db_storage.create_message_record(3, bot_wxid, contact_id,
@@ -372,10 +374,10 @@ class WXSop(Plugin):
                 if message["type"] == 1:
                     if haveVar:
                         message["message"]["msg"] = var_replace(message["message"]["msg"], contactinfo)
-                    _ = wx_hook_request("/SendTextMsg", message["message"], server['private_ip'],
+                    _ = wx_hook_request(e_context,"/SendTextMsg", message["message"], server.get('private_ip') if server else None,
                                         wxinfo['port'])
                 else:
-                    _ = wx_hook_request("/SendFileMsg", message["message"], server['private_ip'],
+                    _ = wx_hook_request(e_context,"/SendFileMsg", message["message"], server.get('private_ip') if server else None,
                                         wxinfo['port'])
                                 # lastrowid = db_storage.create_message_record(2, bot_wxid, contact_id, contact_type, contact_wxid,
                                 #                                              type, message['content'], meta, 3, stage["id"], index,
@@ -398,7 +400,7 @@ class WXSop(Plugin):
             if stage["action_label_add"] or stage["action_label_del"]:
                 add_labels = json.loads(stage['action_label_add'])
                 rem_labels = json.loads(stage['action_label_del'])
-                self.add_tag(bot_wxid, contact_id, contact_type, contact_wxid, add_labels, rem_labels, stages, context,
+                self.add_tag(e_context,bot_wxid, contact_id, contact_type, contact_wxid, add_labels, rem_labels, stages, context,
                              organization_id, wxinfo, server)
 
     def get_help_text(self, **kwargs):
@@ -428,18 +430,26 @@ def check_filter(filter, contact_label_ids):
         return False
 
 
-def wx_hook_request(path, data, private_ip, port):
+def wx_hook_request(e_context: EventContext, path, data, private_ip, port):
     try:
-        # path判断是不是/开头
-        if not path.startswith("/"):
-            path = "/" + path
-        url = f"http://{private_ip}:{port}{path}"
-        headers = {
-            "Content-Type": "application/json",
-        }
-        res = requests.post(url, headers=headers, json=data, timeout=(5, 10))
-        logger.debug(f"[wx_hook] send message success, url: {url} data: {data} res: {res.json(strict=False)}")
-        return res.json(strict=False)
+        if private_ip:
+            # path判断是不是/开头
+            if not path.startswith("/"):
+                path = "/" + path
+            url = f"http://{private_ip}:{port}{path}"
+            headers = {
+                "Content-Type": "application/json",
+            }
+            res = requests.post(url, headers=headers, json=data, timeout=(5, 10))
+            logger.debug(f"[wx_hook] send message success, url: {url} data: {data} res: {res.json(strict=False)}")
+            return res.json(strict=False)
+        else:
+            reply = Reply()
+            reply.type = ReplyType.TEXT
+            reply.content = data["msg"]
+
+            reply = e_context.econtext['channel']._decorate_reply(e_context.econtext['context'], reply)
+            e_context.econtext['channel']._send_reply(e_context.econtext.get('context', {}), reply)
     except Exception as e:
         logger.error(f"[wx_hook] send message failed, error: {e}")
         return None
