@@ -4,7 +4,7 @@ import threading
 import requests
 from google.protobuf.json_format import ParseDict, MessageToDict
 
-from app import redis_conn
+from app import redis_conn, db_storage
 from bridge.context import Context, ContextType
 from bridge.reply import Reply, ReplyType
 from channel.chat_channel import ChatChannel
@@ -12,6 +12,7 @@ from channel.wechat.workphone_message import WorkPhoneMessage
 from common.expired_dict import ExpiredDict
 from common.log import logger
 from common.singleton import singleton
+from lib.allow_block import check_allow_or_block_list
 from lib.wsclient import WebSocketClient
 from workphone.DeviceAuthRsp_pb2 import DeviceAuthRspMessage
 from workphone.FriendTalkNotice_pb2 import FriendTalkNoticeMessage
@@ -133,7 +134,22 @@ class WorkPhoneChannel(ChatChannel):
             logger.error("无法识别的消息类型，跳过")
             return
 
-        # todo 黑白名单处理
+
+        # 获取wxinfo账号信息
+        wxinfo = db_storage.get_info_by_wxid(msg.WeChatId)
+
+        if wxinfo:
+            logger.error("没有找到该账号，跳过")
+            return
+
+        if wxinfo['server_id'] <= 0:
+            logger.error("不是工作手机的账号")
+            return
+
+        # 黑白名单处理
+        if check_allow_or_block_list(context, wxinfo) is False:
+            logger.debug(f"[wx_hook] check_allow_or_block_list failed")
+            return self
 
 
         if context:
@@ -141,9 +157,13 @@ class WorkPhoneChannel(ChatChannel):
             context['wechat_account'] = wechat
             context['wxid'] = wechat['wechatid']
 
-            # todo 后台做好后，从后台获取apikey的配置
-            context['open_ai_api_base'] = "https://newapi.gkscrm.com/v1"
-            context['open_ai_api_key'] = "sk-wwttAtdLcTfeF7F2Eb9d3592Bd4c487f8e8fA544D6C4BbA9"
+            if wxinfo['agent_id'] == 0:
+                if wxinfo['api_base'] != '':
+                    context['open_ai_api_base'] = wxinfo['api_base']
+                    context['open_ai_api_key'] = wxinfo['api_key']
+                else:
+                    context['open_ai_api_base'] = "https://newapi.gkscrm.com/v1"
+                    context['open_ai_api_key'] = "sk-wwttAtdLcTfeF7F2Eb9d3592Bd4c487f8e8fA544D6C4BbA9"
 
             # 不需要添加at
             context['no_need_at'] = True
