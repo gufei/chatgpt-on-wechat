@@ -138,7 +138,7 @@ class WorkPhoneChannel(ChatChannel):
         # 获取wxinfo账号信息
         wxinfo = db_storage.get_info_by_wxid(msg.WeChatId)
 
-        if wxinfo:
+        if not wxinfo:
             logger.error("没有找到该账号，跳过")
             return
 
