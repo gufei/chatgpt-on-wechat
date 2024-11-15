@@ -142,7 +142,7 @@ class WorkPhoneChannel(ChatChannel):
             logger.error("没有找到该账号，跳过")
             return
 
-        if wxinfo['server_id'] <= 0:
+        if wxinfo['server_id'] > 0:
             logger.error("不是工作手机的账号")
             return
 
