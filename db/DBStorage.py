@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime, timezone
 from typing import Optional
 
 import mysql.connector
@@ -84,7 +85,7 @@ class DBStorage:
             return json.loads(wx_info)
         conn = self._mysql.connection()
         try:
-            sql_query = "SELECT id, status, port, process_id, callback, wxid, account, nickname, server_id, organization_id, agent_id, api_base, api_key, allow_list, group_allow_list, block_list, group_block_list FROM wx WHERE wxid = %s ORDER BY id DESC LIMIT 1"
+            sql_query = "SELECT id, status, port, process_id, callback, wxid, account, nickname, server_id, organization_id, agent_id, api_base, api_key, allow_list, group_allow_list, block_list, group_block_list, server_id FROM wx WHERE wxid = %s ORDER BY id DESC LIMIT 1"
             record_tuple = (wxid, )
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
@@ -156,9 +157,11 @@ class DBStorage:
     def create_message_record(self, status: int, bot_wxid: str, contact_id: int, contact_type: int, contact_wxid: str, content_type: int, content: str, meta: dict, source_type: int, source_id: int, sub_source_id: int, organization_id: int) -> Optional[int]:
         conn = self._mysql.connection()
         try:
+            current_utc_time = datetime.now(timezone.utc)
+            formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
             meta_str = json.dumps(meta) if isinstance(meta, dict) else meta
-            sql_insert = "INSERT INTO message_records (status, bot_wxid, contact_id, contact_type, contact_wxid, content_type, content, meta, source_type, source_id, sub_source_id, organization_id, send_time, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW(), NOW())"
-            record_tuple = (status, bot_wxid, contact_id, contact_type, contact_wxid, content_type, content, meta_str, source_type, source_id, sub_source_id, organization_id)
+            sql_insert = "INSERT INTO message_records (status, bot_wxid, contact_id, contact_type, contact_wxid, content_type, content, meta, source_type, source_id, sub_source_id, organization_id, send_time, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            record_tuple = (status, bot_wxid, contact_id, contact_type, contact_wxid, content_type, content, meta_str, source_type, source_id, sub_source_id, organization_id, formatted_time, formatted_time, formatted_time)
 
             with conn.cursor() as cursor:
                 cursor.execute(sql_insert, record_tuple)
@@ -174,12 +177,14 @@ class DBStorage:
     def update_message_record(self, id: int, status: int, error_detail: str = None):
         conn = self._mysql.connection()
         try:
+            current_utc_time = datetime.now(timezone.utc)
+            formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
             if status == 3:
-                sql_update = "UPDATE message_records SET status = %s, send_time = NOW() WHERE id = %s"
-                record_tuple = (status, id)
+                sql_update = "UPDATE message_records SET status = %s, send_time = %s WHERE id = %s"
+                record_tuple = (status, formatted_time, id)
             elif status == 4:
-                sql_update = "UPDATE message_records SET status = %s, error_detail = %s, send_time = NOW() WHERE id = %s"
-                record_tuple = (status, error_detail, id)
+                sql_update = "UPDATE message_records SET status = %s, error_detail = %s, send_time = %s WHERE id = %s"
+                record_tuple = (status, error_detail, formatted_time, id)
             else:
                 sql_update = "UPDATE message_records SET status = %s WHERE id = %s"
                 record_tuple = (status, id)
@@ -232,8 +237,10 @@ class DBStorage:
 
                 logger.debug("[wxsop] add_label_ids: %s" % add_label_ids)
                 for label_id in add_label_ids:
-                    sql_insert = "INSERT INTO label_relationship (status, contact_id, label_id, organization_id, created_at, updated_at) VALUES (%s, %s, %s, %s, NOW(), NOW())"
-                    record_tuple = (1, contact_id, label_id, organization_id)
+                    current_utc_time = datetime.now(timezone.utc)
+                    formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
+                    sql_insert = "INSERT INTO label_relationship (status, contact_id, label_id, organization_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s)"
+                    record_tuple = (1, contact_id, label_id, organization_id, formatted_time, formatted_time, formatted_time)
                     cursor.execute(sql_insert, record_tuple)
 
                 logger.debug("[wxsop] rem_label_ids: %s" % rem_label_ids)
