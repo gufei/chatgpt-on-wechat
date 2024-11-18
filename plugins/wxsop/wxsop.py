@@ -445,8 +445,13 @@ def wx_hook_request(e_context: EventContext, path, data, private_ip, port):
             return res.json(strict=False)
         else:
             reply = Reply()
-            reply.type = ReplyType.TEXT
-            reply.content = data["msg"]
+            content = data.get("msg")
+            if content:
+                reply.type = ReplyType.TEXT
+                reply.content = content
+            else:
+                reply.type = ReplyType.FILE
+                reply.content = data.get("filepath")
 
             reply = e_context.econtext['channel']._decorate_reply(e_context.econtext['context'], reply)
             e_context.econtext['channel']._send_reply(e_context.econtext.get('context', {}), reply)

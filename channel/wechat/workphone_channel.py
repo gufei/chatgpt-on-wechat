@@ -13,6 +13,7 @@ from common.expired_dict import ExpiredDict
 from common.log import logger
 from common.singleton import singleton
 from lib.allow_block import check_allow_or_block_list
+from lib.itchat.components.messages import send_msg
 from lib.wsclient import WebSocketClient
 from workphone.DeviceAuthRsp_pb2 import DeviceAuthRspMessage
 from workphone.FriendTalkNotice_pb2 import FriendTalkNoticeMessage
@@ -199,31 +200,37 @@ class WorkPhoneChannel(ChatChannel):
         receiver = context["receiver"]
         is_group = context["isgroup"]
 
+        logger.debug("---------------context: {}".format(context))
+
         if reply.type == ReplyType.TEXT:
+            content_type = EnumContentType.Text
+        else:
+            content_type = EnumContentType.Picture
 
-            send_msg = TalkToFriendTaskMessage(
-                WeChatId=wx_account['wechatid'],
-                FriendId=receiver,
-                ContentType=EnumContentType.Text,
-                Content=reply.content.encode('utf-8'),
-            )
-            if is_group:
-                send_msg.Remark = context['session_id']
+        send_msg = TalkToFriendTaskMessage(
+            WeChatId=wx_account['wechatid'],
+            FriendId=receiver,
+            ContentType=content_type,
+            Content=reply.content.encode('utf-8'),
+        )
 
-            logger.info(f'[wx_hook] 发送文本消息: {send_msg}')
+        if is_group:
+            send_msg.Remark = context['session_id']
 
-            content = Any()
-            content.Pack(send_msg)
+        logger.info(f'[wx_hook] 发送文本消息: {send_msg}')
 
-            transport_message = TransportMessage(MsgType=EnumMsgType.TalkToFriendTask, Content=content)
+        content = Any()
+        content.Pack(send_msg)
 
-            transport_message_dict = MessageToDict(transport_message, preserving_proto_field_name=True)
+        transport_message = TransportMessage(MsgType=EnumMsgType.TalkToFriendTask, Content=content)
 
-            # 清理不必要的字段
-            del transport_message_dict['Content']['@type']
+        transport_message_dict = MessageToDict(transport_message, preserving_proto_field_name=True)
 
-            transport_message_json = json.dumps(transport_message_dict, indent=2)
+        # 清理不必要的字段
+        del transport_message_dict['Content']['@type']
 
-            self.wsCli.send(transport_message_json)
+        transport_message_json = json.dumps(transport_message_dict, indent=2)
+
+        self.wsCli.send(transport_message_json)
 
 

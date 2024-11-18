@@ -2,6 +2,7 @@
 
 import plugins
 from app import db_storage
+from bot.chatgpt.chat_gpt_bot import parse_markdown
 from bridge.context import ContextType
 from bridge.reply import Reply, ReplyType
 from plugins import *
@@ -89,9 +90,10 @@ class WXAgent(Plugin):
             bot_reply = self.bot.reply(content, e_context.econtext['context'], system_prompt)
             logger.debug("[wxagent] reply: %s" % bot_reply)
 
+            content = parse_markdown(bot_reply.content)
             reply = Reply()
             reply.type = ReplyType.TEXT
-            reply.content = bot_reply.content
+            reply.content = content
 
             reply = e_context.econtext['channel']._decorate_reply(e_context.econtext['context'], reply)
             e_context.econtext['channel']._send_reply(e_context.econtext.get('context', {}), reply)
