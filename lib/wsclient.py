@@ -191,12 +191,12 @@ class WebSocketClient(threading.Thread):
         logger.info('进行认证...')
         device_auth = DeviceAuthReqMessage(
             AuthType=DeviceAuthReqMessage.EnumAuthType.Username,
-            Credential=base64.b64encode("bwkf:rQRwCSOmplX3TtLJ".encode('utf-8')).decode('utf-8')
+            Credential=base64.b64encode("dev:rQRwCSOmplX3TtLJ".encode('utf-8')).decode('utf-8')
         )
 
         device_map = {
             "AuthType":2,
-            "Credential":base64.b64encode("bwkf:rQRwCSOmplX3TtLJ".encode('utf-8')).decode('utf-8')
+            "Credential":base64.b64encode("dev:rQRwCSOmplX3TtLJ".encode('utf-8')).decode('utf-8')
         }
 
         device_auth = ParseDict(device_map, device_auth)
