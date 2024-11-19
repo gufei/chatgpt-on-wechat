@@ -111,7 +111,7 @@ def chat_service_openai_like(dataset_id: str, text: str):
     args = {
         "datasetId": dataset_id,
         "text": text,
-        "limit": 100,
+        "limit": 2000,
         "similarity": 0.8,
         "searchMode": "mixedRecall",
         "usingReRank": False

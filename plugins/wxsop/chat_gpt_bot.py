@@ -80,17 +80,21 @@ class OpenaiBot(Bot, OpenAIImage):
     def reply_silent(self, context=None, system_prompt: str = None):
         # acquire reply content
         if context.type == ContextType.TEXT:
-            session_id = "chatId-{}".format(context["wxid"] + "_" + format(context["session_id"]))
-            session = self.sessions.build_session(session_id)
+            # session_id = "chatId-{}".format(context["wxid"] + "_" + format(context["session_id"]))
+            # session = self.sessions.build_session(session_id)
             new_args = self.args.copy()
-            if system_prompt is not None:
-                new_args["messages"] = [
-                    {**message, 'content': system_prompt} if message['role'] == 'system' else message
-                    for message in session.messages
-                ]
-            else:
-                new_args["messages"] = session.messages
+            # if system_prompt is not None:
+            #     new_args["messages"] = [
+            #         {**message, 'content': system_prompt} if message['role'] == 'system' else message
+            #         for message in session.messages
+            #     ]
+            # else:
+            #     new_args["messages"] = session.messages
 
+            new_args["messages"] = [{
+                "role": "user",
+                "content": system_prompt
+            }]
             reply_content = self.chat_service_openai_like(new_args)
 
             if reply_content is not None:
