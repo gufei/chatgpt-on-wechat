@@ -240,7 +240,7 @@ class DBStorage:
                     current_utc_time = datetime.now(timezone.utc)
                     formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
                     sql_insert = "INSERT INTO label_relationship (status, contact_id, label_id, organization_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s)"
-                    record_tuple = (1, contact_id, label_id, organization_id, formatted_time, formatted_time, formatted_time)
+                    record_tuple = (1, contact_id, label_id, organization_id, formatted_time, formatted_time)
                     cursor.execute(sql_insert, record_tuple)
 
                 logger.debug("[wxsop] rem_label_ids: %s" % rem_label_ids)
