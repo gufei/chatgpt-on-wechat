@@ -19,6 +19,7 @@ from workphone.DeviceAuthRsp_pb2 import DeviceAuthRspMessage
 from workphone.FriendTalkNotice_pb2 import FriendTalkNoticeMessage
 from workphone.TalkToFriendTask_pb2 import TalkToFriendTaskMessage
 from workphone.TransportMessage_pb2 import EnumContentType, TransportMessage, EnumMsgType
+import xml.etree.ElementTree as ET
 
 from google.protobuf.any_pb2 import Any
 
@@ -204,14 +205,33 @@ class WorkPhoneChannel(ChatChannel):
 
         if reply.type == ReplyType.TEXT:
             content_type = EnumContentType.Text
+            content = reply.content.encode('utf-8')
+        elif reply.type == ReplyType.LOCATION:
+            content_type = EnumContentType.Location
+            if reply.content.startswith('<?xml version'):
+                root = ET.fromstring(reply.content)
+                location_element = root.find('location')
+                if location_element is None:
+                    logger.error("定位格式错误，XML 中没有找到 <location> 元素")
+                    return
+                location_info = {
+                    "LocationX": location_element.get('x'),
+                    "LocationY": location_element.get('y'),
+                    "Label": location_element.get('label'),
+                    "Title": location_element.get('poiname')
+                }
+                content = json.dumps(location_info).encode('utf-8')
+            else:
+                content = reply.content.encode('utf-8')
         else:
             content_type = EnumContentType.Picture
+            content = reply.content.encode('utf-8')
 
         send_msg = TalkToFriendTaskMessage(
             WeChatId=wx_account['wechatid'],
             FriendId=receiver,
             ContentType=content_type,
-            Content=reply.content.encode('utf-8'),
+            Content=content,
         )
 
         if is_group:
