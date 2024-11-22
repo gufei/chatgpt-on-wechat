@@ -205,7 +205,7 @@ class WorkPhoneChannel(ChatChannel):
 
         if reply.type == ReplyType.TEXT:
             content_type = EnumContentType.Text
-            content = reply.content.encode('utf-8')
+            content = reply.content
         elif reply.type == ReplyType.LOCATION:
             content_type = EnumContentType.Location
             if reply.content.startswith('<?xml version'):
@@ -220,21 +220,21 @@ class WorkPhoneChannel(ChatChannel):
                     "Label": location_element.get('label'),
                     "Title": location_element.get('poiname')
                 }
-                content = json.dumps(location_info).encode('utf-8')
+                content = json.dumps(location_info)
             else:
-                content = reply.content.encode('utf-8')
+                content = reply.content
         else:
             content_type = EnumContentType.Picture
-            content = reply.content.encode('utf-8')
+            content = reply.content
 
         send_msg = TalkToFriendTaskMessage(
             WeChatId=wx_account['wechatid'],
             FriendId=receiver,
             ContentType=content_type,
-            Content=content,
+            Content=content.encode('utf-8'),
         )
 
-        if is_group:
+        if is_group and reply.type == ReplyType.TEXT:
             send_msg.Remark = context['session_id']
 
         logger.info(f'[wx_hook] 发送文本消息: {send_msg}')
