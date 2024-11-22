@@ -2,7 +2,7 @@
 import json
 import re
 import time
-
+import urllib.parse
 import openai
 import openai.error
 import requests
@@ -235,7 +235,7 @@ def parse_markdown(input_text):
         result.append({
             "type": "FILE",
             "content": image_url,
-            "diyfilename": image_filename
+            "diyfilename": urllib.parse.unquote(image_filename)
         })
 
         # 更新当前处理的位置

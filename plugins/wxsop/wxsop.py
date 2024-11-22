@@ -2,7 +2,7 @@
 import random
 import re
 import time
-
+import urllib.parse
 import requests
 
 import plugins
@@ -130,7 +130,7 @@ class WXSop(Plugin):
                                     "message": {
                                         "wxid": receiver,
                                         "filepath": message['content'],
-                                        "diyfilename": message['meta']['filename']
+                                        "diyfilename": urllib.parse.unquote(message['meta']['filename'])
                                     }
                                 })
 
@@ -175,7 +175,7 @@ class WXSop(Plugin):
                                             "message": {
                                                 "wxid": forward_wxid,
                                                 "filepath": message['content'],
-                                                "diyfilename": message['meta']['filename']
+                                                "diyfilename": urllib.parse.unquote(message['meta']['filename'])
                                             }
                                         })
                                 # _ = wx_hook_request("/SendFileMsg", data, server['private_ip'], wxinfo['port'])
@@ -281,7 +281,7 @@ class WXSop(Plugin):
                                 "message": {
                                     "wxid": contact_wxid,
                                     "filepath": message['content'],
-                                    "diyfilename": message['meta']['filename']
+                                    "diyfilename": urllib.parse.unquote(message['meta']['filename'])
                                 }
                             })
                         # lastrowid = db_storage.create_message_record(2, bot_wxid, contact_id, contact_type, contact_wxid,
@@ -332,7 +332,7 @@ class WXSop(Plugin):
                                         "message": {
                                             "wxid": forward_wxid,
                                             "filepath": message['content'],
-                                            "diyfilename": message['meta']['filename']
+                                            "diyfilename": urllib.parse.unquote(message['meta']['filename'])
                                         }
                                     })
             if haveVar:

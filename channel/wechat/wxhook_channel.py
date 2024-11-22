@@ -1,5 +1,5 @@
 import json
-
+import urllib.parse
 import requests
 import web
 
@@ -254,10 +254,11 @@ class WxHookChannel(ChatChannel):
             else:
                 logger.error(f"[wx_hook] send location failed")
         elif reply.type == ReplyType.FILE:
+            decoded_str = urllib.parse.unquote(context["diyfilename"])
             data = {
                 "wxid": context["receiver"],
                 "filepath": reply.content,
-                "diyfilename": context["diyfilename"]
+                "diyfilename": decoded_str
             }
             res = self.wx_hook_request("/SendFileMsg", data, private_ip, port)
 

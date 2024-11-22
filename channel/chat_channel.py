@@ -3,6 +3,7 @@ import random
 import re
 import threading
 import time
+import urllib.parse
 from asyncio import CancelledError
 from concurrent.futures import Future, ThreadPoolExecutor
 
@@ -307,7 +308,8 @@ class ChatChannel(Channel):
                     elif item["type"] == "IMAGE":
                         self._send_reply(context, Reply(ReplyType.IMAGE, item["content"]))
                     elif item["type"] == "FILE":
-                        context['diyfilename'] = item["diyfilename"]
+                        decoded_str = urllib.parse.unquote(item["diyfilename"])
+                        context['diyfilename'] = decoded_str
                         self._send_reply(context, Reply(ReplyType.FILE, item["content"]))
                     elif item["type"] == "VIDEO_URL":
                         self._send_reply(context, Reply(ReplyType.VIDEO_URL, item["content"]))
