@@ -220,7 +220,7 @@ class WorkPhoneChannel(ChatChannel):
                     "Label": location_element.get('label'),
                     "Title": location_element.get('poiname')
                 }
-                content = json.dumps(location_info)
+                content = json.dumps(location_info,ensure_ascii=False)
             else:
                 content = reply.content
         else:
