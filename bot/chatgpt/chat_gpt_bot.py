@@ -101,7 +101,17 @@ class ChatGPTBot(Bot, OpenAIImage):
             if reply_content["completion_tokens"] == 0 and len(reply_content["content"]) > 0:
                 reply = Reply(ReplyType.ERROR, reply_content["content"])
             elif reply_content["completion_tokens"] > 0:
-                self.sessions.session_reply(reply_content["content"], session_id, reply_content["total_tokens"])
+                if is_json_array(reply_content["content"]):
+                    dict_data = json.loads(reply_content["content"])
+                    session_content = ""
+                    for c in dict_data:
+                        if c.get("type") == "FILE" or c.get("type") == "IMAGE_URL" or c.get("type") == "IMAGE" or c.get("type") == "VIDEO_URL" or c.get("type") == "VIDEO":
+                            session_content += f'![]({c.get("content", "")})' + "\n\n"
+                        else:
+                            session_content += c.get("content", "") + "\n\n"
+                else:
+                    session_content = reply_content["content"]
+                self.sessions.session_reply(session_content, session_id, reply_content["total_tokens"])
                 reply = Reply(ReplyType.TEXT, reply_content["content"])
             else:
                 reply = Reply(ReplyType.ERROR, reply_content["content"])
