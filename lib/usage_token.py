@@ -15,7 +15,7 @@ def usage_storage(bot_type: int, bot_id: str, receiver_id: str, app: int, sessio
                 total_tokens += token
 
         if total_tokens:
-            db_storage.add_usage(bot_type, bot_id, receiver_id, app, session_id, detail, response["choices"][0]["message"]["content"], total_tokens,prompt_tokens, completion_tokens, organization_id)
+            db_storage.add_usage(bot_type, bot_id, receiver_id, app, session_id, detail, response["choices"][0]["message"]["content"], total_tokens, prompt_tokens, total_tokens, organization_id)
     else:
         usage = response.get("usage")
         if usage:
