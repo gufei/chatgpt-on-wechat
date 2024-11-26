@@ -331,3 +331,39 @@ class DBStorage:
             conn.rollback()
         finally:
             conn.close()
+
+    def add_usage(self, bot_type: int, bot_id: str, receiver_id: str, app: int, session_id: int, request: dict, response: str, total_tokens: int, prompt_tokens: int, completion_tokens: int, organization_id: int):
+        conn = self._mysql.connection()
+        try:
+            current_utc_time = datetime.now(timezone.utc)
+            formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
+            request_str = json.dumps(request)
+
+            sql_insert_detail = "INSERT INTO usage_detail (type, bot_id, receiver_id, app, session_id, request, response, total_tokens, prompt_tokens, completion_tokens, organization_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            detail_record_tuple = (bot_type, bot_id, receiver_id, app, session_id, request_str, response, total_tokens, prompt_tokens, completion_tokens, organization_id, formatted_time, formatted_time)
+
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(sql_insert_detail, detail_record_tuple)
+                detail_record_id = cursor.lastrowid
+
+                sql_query_total = "SELECT id, total_tokens FROM usage_total WHERE bot_id = %s"
+                record_tuple = (bot_id,)
+                cursor.execute(sql_query_total, record_tuple)
+                existing_record = cursor.fetchone()
+
+                if existing_record:
+                    # 如果存在记录，则更新记录
+                    sql_update_total = """UPDATE usage_total SET total_tokens = %s, end_index = %s, updated_at = %s WHERE id = %s"""
+                    record_tuple = (existing_record['total_tokens'] + total_tokens, detail_record_id, formatted_time, existing_record['id'])
+                    cursor.execute(sql_update_total, record_tuple)
+                else:
+                    # 如果不存在记录，则插入新记录
+                    sql_insert_total = """INSERT INTO usage_total (type, bot_id, total_tokens, start_index, end_index, organization_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
+                    record_tuple = (bot_type, bot_id, total_tokens, 0, detail_record_id, organization_id, formatted_time, formatted_time)
+                    cursor.execute(sql_insert_total, record_tuple)
+            conn.commit()
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()

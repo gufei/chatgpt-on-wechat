@@ -16,6 +16,7 @@ from bridge.reply import Reply, ReplyType
 from common.log import logger
 from common.token_bucket import TokenBucket
 from config import conf, load_config
+from lib.usage_token import usage_storage
 
 
 # OpenAI对话模型API (可用)
@@ -88,8 +89,9 @@ class ChatGPTBot(Bot, OpenAIImage):
 
             if "fastgpt" in api_base or "fastgpt" in api_key:
                 new_args["chatId"] = "chatId-{}".format(context["wxid"] + "_" + format(session.session_id))
+                new_args["detail"] = True
 
-            reply_content = self.reply_text(session, api_key, args=new_args)
+            reply_content = self.reply_text(session, api_key, args=new_args, context=context)
             logger.debug(
                 "[CHATGPT] new_query={}, session_id={}, reply_cont={}, completion_tokens={}".format(
                     session.messages,
@@ -130,7 +132,7 @@ class ChatGPTBot(Bot, OpenAIImage):
             reply = Reply(ReplyType.ERROR, "Bot不支持处理{}类型的消息".format(context.type))
             return reply
 
-    def reply_text(self, session: ChatGPTSession, api_key=None, args=None, retry_count=0) -> dict:
+    def reply_text(self, session: ChatGPTSession, api_key=None, args=None, retry_count=0, context=None) -> dict:
         """
         call openai's ChatCompletion to get the answer
         :param session: a conversation session
@@ -163,9 +165,11 @@ class ChatGPTBot(Bot, OpenAIImage):
             response = requests.post(api_base + "/chat/completions", headers=headers, json=args)
             response_json = response.json()
 
+            usage_storage(1, context["wxid"], context["session_id"], 1, 0, args["messages"], response_json, context["organization_id"])
+
             content = parse_markdown(response_json["choices"][0]["message"]["content"])
 
-            # logger.info("[ChatGPT] reply={}, total_tokens={}".format(response.choices[0]['message']['content'], response["usage"]["total_tokens"]))
+            logger.info("[ChatGPT] reply={}, response_json={}".format(response_json["choices"][0]['message']['content'], response_json))
             return {
                 "total_tokens": response_json["usage"]["total_tokens"],
                 "completion_tokens": response_json["usage"]["completion_tokens"],
@@ -201,7 +205,7 @@ class ChatGPTBot(Bot, OpenAIImage):
 
             if need_retry:
                 logger.warn("[CHATGPT] 第{}次重试".format(retry_count + 1))
-                return self.reply_text(session, api_key, args, retry_count + 1)
+                return self.reply_text(session, api_key, args, retry_count + 1, context)
             else:
                 return result
 

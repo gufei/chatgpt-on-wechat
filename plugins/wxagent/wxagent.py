@@ -54,9 +54,11 @@ class WXAgent(Plugin):
             contact_type = 2
 
         agent_info = db_storage.get_agent_info(bot_wxid)
-        logger.info("[WXAgent] agent_info={}".format(agent_info))
+
         # 调用 chatgpt 接口
         if agent_info:
+            logger.info("[WXAgent] agent_info={}".format(agent_info))
+            e_context.econtext['context']['organization_id'] = agent_info['organization_id']
             # 优化问题
             expand_system_prompt = f"""# 任务：
 请根据上下文信息，优化用户发送的最后一条消息，补齐消息中可能缺失的主语、谓语、宾语、定语、状语、补语句子成分。
@@ -65,7 +67,7 @@ class WXAgent(Plugin):
 
 # 回复要求
 1. 直接输出优化后的消息"""
-            expand_bot_reply = self.bot.reply_silent(e_context.econtext['context'], expand_system_prompt)
+            expand_bot_reply = self.bot.reply_silent(e_context.econtext['context'], expand_system_prompt, 2)
             logger.debug("[wxagent] expand_bot_reply: %s" % expand_bot_reply.content)
 
             answer = chat_service_openai_like(agent_info['dataset_id'], expand_bot_reply.content)
@@ -87,7 +89,7 @@ class WXAgent(Plugin):
 1. 直接以角色设定的角度回答问题，并以第一人称输出。
 2. 不要在回复前加角色、姓名。
 3. 回复要正式"""
-            bot_reply = self.bot.reply(content, e_context.econtext['context'], system_prompt)
+            bot_reply = self.bot.reply(content, e_context.econtext['context'], system_prompt, 2)
             logger.debug("[wxagent] reply: %s" % bot_reply)
 
             content = parse_markdown(bot_reply.content)

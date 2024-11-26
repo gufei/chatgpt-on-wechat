@@ -385,6 +385,7 @@ class WxHookController:
                 context['wxid'] = data.get("selfwxid")
                 context['private_ip'] = server['private_ip']
                 context['port'] = wxinfo['port']
+                context['organization_id'] = wxinfo['organization_id']
                 logger.debug(f"[wx_hook] open_ai_api_base, msg={wxinfo['api_base']}")
                 logger.debug(f"[wx_hook] open_ai_api_key, msg={wxinfo['api_key']}")
 

@@ -160,6 +160,7 @@ class WorkPhoneChannel(ChatChannel):
             # 增加需要的context
             context['wechat_account'] = wechat
             context['wxid'] = wechat['wechatid']
+            context['organization_id'] = wxinfo['organization_id']
 
             if wxinfo['agent_id'] == 0:
                 if wxinfo['api_base'] != '':
@@ -200,8 +201,6 @@ class WorkPhoneChannel(ChatChannel):
         wx_account = context['wechat_account']
         receiver = context["receiver"]
         is_group = context["isgroup"]
-
-        logger.debug("---------------context: {}".format(context))
 
         if reply.type == ReplyType.TEXT:
             content_type = EnumContentType.Text
