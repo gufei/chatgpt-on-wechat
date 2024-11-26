@@ -95,7 +95,7 @@ class WXSop(Plugin):
 - 如果命中节点：则仅回复节点 id 数字（如命中多个节点，则仅回复最小值）
 - 如果未命中节点：则仅回复一个单词: None"""
             if need_judge:
-                reply = self.bot.reply(prompt, e_context.econtext['context'], app=3)
+                reply = self.bot.reply(prompt, e_context.econtext['context'], app=4)
             else:
                 reply = Reply()
                 reply.content = "None"

@@ -89,7 +89,7 @@ class WXAgent(Plugin):
 1. 直接以角色设定的角度回答问题，并以第一人称输出。
 2. 不要在回复前加角色、姓名。
 3. 回复要正式"""
-            bot_reply = self.bot.reply(content, e_context.econtext['context'], system_prompt, 2)
+            bot_reply = self.bot.reply(content, e_context.econtext['context'], system_prompt, 3)
             logger.debug("[wxagent] reply: %s" % bot_reply)
 
             content = parse_markdown(bot_reply.content)
