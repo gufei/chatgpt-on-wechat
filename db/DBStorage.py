@@ -146,7 +146,7 @@ class DBStorage:
                     sop_nodes = cursor.fetchall()
                     return message_record, sop_nodes, message_record['source_type'], message_record['source_id']
 
-            return None, None
+            return None, None, None, None
         except Error as e:
             print(f"Error while connecting to MySQL: {e}")
             conn.rollback()
