@@ -144,7 +144,7 @@ class DBStorage:
                 with conn.cursor(dictionary=True) as cursor:
                     cursor.execute(sql_query, sop_node_tuple)
                     sop_nodes = cursor.fetchall()
-                    return message_record, sop_nodes
+                    return message_record, sop_nodes, message_record['source_type'], message_record['source_id']
 
             return None, None
         except Error as e:

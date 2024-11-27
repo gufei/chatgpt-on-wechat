@@ -57,7 +57,7 @@ class WXSop(Plugin):
         if not wxinfo:
             return
         server = db_storage.get_server_by_id(wxinfo['server_id'])
-        message_record, sop_nodes = db_storage.get_next_answers(bot_wxid, contact_wxid, contact_type)
+        message_record, sop_nodes, source_type, source_id = db_storage.get_next_answers(bot_wxid, contact_wxid, contact_type)
         logger.debug("[wxsop] on_handle_context. message_record: %s" % message_record)
         logger.debug("[wxsop] on_handle_context. sop_nodes: %s" % sop_nodes)
         e_context.econtext['context']['organization_id']= wxinfo['organization_id']
@@ -95,7 +95,11 @@ class WXSop(Plugin):
 - 如果命中节点：则仅回复节点 id 数字（如命中多个节点，则仅回复最小值）
 - 如果未命中节点：则仅回复一个单词: None"""
             if need_judge:
-                reply = self.bot.reply(prompt, e_context.econtext['context'], app=4)
+                if source_type == 3:
+                    app = 4
+                else:
+                    app = 5
+                reply = self.bot.reply_silent(e_context.econtext['context'], prompt, app=app, app_id=source_id)
             else:
                 reply = Reply()
                 reply.content = "None"

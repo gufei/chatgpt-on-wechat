@@ -42,7 +42,7 @@ class OpenaiBot(Bot, OpenAIImage):
             "stream": False,  # 是否开启流模式
         }
 
-    def reply(self, query, context=None, system_prompt: str = None, app: int = 3):
+    def reply(self, query, context=None, system_prompt: str = None, app: int = 3, app_id: int = 0):
         # acquire reply content
         if context.type == ContextType.TEXT:
             logger.info("[CHATGPT] query={}".format(query))
@@ -58,7 +58,7 @@ class OpenaiBot(Bot, OpenAIImage):
             else:
                 new_args["messages"] = session.messages
 
-            reply_content = self.chat_service_openai_like(new_args, app, context)
+            reply_content = self.chat_service_openai_like(new_args, app, context, app_id)
 
             if reply_content is not None:
                 self.sessions.session_reply(reply_content, session_id)
@@ -78,7 +78,7 @@ class OpenaiBot(Bot, OpenAIImage):
         else:
             reply = Reply(ReplyType.ERROR, "Bot不支持处理{}类型的消息".format(context.type))
             return reply
-    def reply_silent(self, context=None, system_prompt: str = None, app: int = 3):
+    def reply_silent(self, context=None, system_prompt: str = None, app: int = 3, app_id: int = 0):
         # acquire reply content
         if context.type == ContextType.TEXT:
             # session_id = "chatId-{}".format(context["wxid"] + "_" + format(context["session_id"]))
@@ -96,7 +96,7 @@ class OpenaiBot(Bot, OpenAIImage):
                 "role": "user",
                 "content": system_prompt
             }]
-            reply_content = self.chat_service_openai_like(new_args, app, context)
+            reply_content = self.chat_service_openai_like(new_args, app, context, app_id)
 
             if reply_content is not None:
                 reply = Reply(ReplyType.TEXT, reply_content)
@@ -107,7 +107,7 @@ class OpenaiBot(Bot, OpenAIImage):
             reply = Reply(ReplyType.ERROR, "Bot不支持处理{}类型的消息".format(context.type))
             return reply
 
-    def chat_service_openai_like(self, args=None, app: int = 3, context=None):
+    def chat_service_openai_like(self, args=None, app: int = 3, context=None, app_id: int = 0):
         headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + self.open_ai_api_key}
 
         logger.debug("[wxsop] self.open_ai_api_base: %s" % self.open_ai_api_base)
@@ -118,6 +118,6 @@ class OpenaiBot(Bot, OpenAIImage):
         logger.debug("[wxsop] response: %s" % response)
         if response.status_code == 200:
             response_json = response.json()
-            usage_storage(1, context["wxid"], context["session_id"], app, 0, args, response_json, context["organization_id"])
+            usage_storage(1, context["wxid"], context["session_id"], app, app_id, args, response_json, context["organization_id"])
             return response_json["choices"][0]["message"]["content"]
         return None
