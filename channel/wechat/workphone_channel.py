@@ -197,9 +197,12 @@ class WorkPhoneChannel(ChatChannel):
     def send(self, reply: Reply, context: Context):
         logger.info(f'[wx_hook] reply: {reply}')
         logger.info(f'[wx_hook] context: {context}')
-
         wx_account = context['wechat_account']
-        receiver = context["receiver"]
+
+        if reply.receiver:
+            receiver = reply.receiver
+        else:
+            receiver = context["receiver"]
         is_group = context["isgroup"]
 
         if reply.type == ReplyType.TEXT:

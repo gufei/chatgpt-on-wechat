@@ -459,6 +459,7 @@ def wx_hook_request(e_context: EventContext, path, data, private_ip, port):
                 reply.content = data.get("filepath")
 
             reply = e_context.econtext['channel']._decorate_reply(e_context.econtext['context'], reply)
+            reply.receiver = data.get("wxid")
             e_context.econtext['channel']._send_reply(e_context.econtext.get('context', {}), reply)
     except Exception as e:
         logger.error(f"[wx_hook] send message failed, error: {e}")
