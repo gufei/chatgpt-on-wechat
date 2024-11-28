@@ -13,6 +13,7 @@ from common.expired_dict import ExpiredDict
 from common.log import logger
 from common.singleton import singleton
 from lib.allow_block import check_allow_or_block_list
+from lib.file_tool import is_image_file
 from lib.itchat.components.messages import send_msg
 from lib.wsclient import WebSocketClient
 from workphone.DeviceAuthRsp_pb2 import DeviceAuthRspMessage
@@ -226,8 +227,11 @@ class WorkPhoneChannel(ChatChannel):
             else:
                 content = reply.content
         else:
-            content_type = EnumContentType.File
             content = reply.content
+            if is_image_file(content):
+                content_type = EnumContentType.Picture
+            else:
+                content_type = EnumContentType.File
 
         send_msg = TalkToFriendTaskMessage(
             WeChatId=wx_account['wechatid'],
