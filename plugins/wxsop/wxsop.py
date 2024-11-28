@@ -11,7 +11,8 @@ from bridge.context import ContextType
 from bridge.reply import Reply, ReplyType
 from plugins import *
 from plugins.wxsop.chat_gpt_bot import OpenaiBot
-
+from urllib.parse import urlparse
+from pathlib import Path
 
 @plugins.register(
     name="WXSop",
@@ -130,12 +131,19 @@ class WXSop(Plugin):
                                     }
                                 })
                             else:
+                                url = message['content']
+                                # 解析 URL
+                                parsed_url = urlparse(url)
+                                # 获取路径部分
+                                path = parsed_url.path
+                                # 使用 Path 类提取文件名
+                                filename = Path(path).name
                                 messages.append({
                                     "type": 2,
                                     "message": {
                                         "wxid": receiver,
                                         "filepath": message['content'],
-                                        "diyfilename": urllib.parse.unquote(message['meta']['filename'])
+                                        "diyfilename": urllib.parse.unquote(filename)
                                     }
                                 })
 
@@ -175,12 +183,19 @@ class WXSop(Plugin):
                                         })
                                         # _ = wx_hook_request("/SendTextMsg", data, server['private_ip'], wxinfo['port'])
                                     else:
+                                        url = message['content']
+                                        # 解析 URL
+                                        parsed_url = urlparse(url)
+                                        # 获取路径部分
+                                        path = parsed_url.path
+                                        # 使用 Path 类提取文件名
+                                        filename = Path(path).name
                                         forwards.append({
                                             "type": 2,
                                             "message": {
                                                 "wxid": forward_wxid,
                                                 "filepath": message['content'],
-                                                "diyfilename": urllib.parse.unquote(message['meta']['filename'])
+                                                "diyfilename": urllib.parse.unquote(filename)
                                             }
                                         })
                                 # _ = wx_hook_request("/SendFileMsg", data, server['private_ip'], wxinfo['port'])
@@ -281,12 +296,20 @@ class WXSop(Plugin):
                                 }
                             })
                         else:
+                            url = message['content']
+                            # 解析 URL
+                            parsed_url = urlparse(url)
+                            # 获取路径部分
+                            path = parsed_url.path
+                            # 使用 Path 类提取文件名
+                            filename = Path(path).name
+
                             messages.append({
                                 "type": 2,
                                 "message": {
                                     "wxid": contact_wxid,
                                     "filepath": message['content'],
-                                    "diyfilename": urllib.parse.unquote(message['meta']['filename'])
+                                    "diyfilename": urllib.parse.unquote(filename)
                                 }
                             })
                         # lastrowid = db_storage.create_message_record(2, bot_wxid, contact_id, contact_type, contact_wxid,
@@ -332,12 +355,20 @@ class WXSop(Plugin):
                                     })
                                     # _ = wx_hook_request("/SendTextMsg", data, server['private_ip'], wxinfo['port'])
                                 else:
+                                    url = message['content']
+                                    # 解析 URL
+                                    parsed_url = urlparse(url)
+                                    # 获取路径部分
+                                    path = parsed_url.path
+                                    # 使用 Path 类提取文件名
+                                    filename = Path(path).name
+
                                     forwards.append({
                                         "type": 2,
                                         "message": {
                                             "wxid": forward_wxid,
                                             "filepath": message['content'],
-                                            "diyfilename": urllib.parse.unquote(message['meta']['filename'])
+                                            "diyfilename": urllib.parse.unquote(filename)
                                         }
                                     })
             if haveVar:

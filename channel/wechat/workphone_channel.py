@@ -226,7 +226,7 @@ class WorkPhoneChannel(ChatChannel):
             else:
                 content = reply.content
         else:
-            content_type = EnumContentType.Picture
+            content_type = EnumContentType.File
             content = reply.content
 
         send_msg = TalkToFriendTaskMessage(
