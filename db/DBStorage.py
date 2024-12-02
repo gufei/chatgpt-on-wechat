@@ -367,3 +367,35 @@ class DBStorage:
             conn.rollback()
         finally:
             conn.close()
+
+    def add_wp_chatroom(self, wx_wxid: str, chat_rooms: list[tuple]):
+        conn = self._mysql.connection()
+        try:
+            task_query = "DELETE FROM wp_chatroom WHERE wx_wxid = %s"
+            task_tuple = (wx_wxid,)
+            sql_insert_detail = "INSERT INTO wp_chatroom (wx_wxid, chatroom_id, nickname, owner, avatar, member_list, show_name_list) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(task_query, task_tuple)
+                cursor.executemany(sql_insert_detail, chat_rooms)
+            conn.commit()
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
+    def add_wp_chatroom_member(self, wx_wxid: str, members: list[tuple]):
+        conn = self._mysql.connection()
+        try:
+            task_query = "DELETE FROM wp_chatroom_member WHERE wx_wxid = %s"
+            task_tuple = (wx_wxid,)
+            sql_insert_detail = "INSERT INTO wp_chatroom_member (wx_wxid, wxid, nickname, avatar) VALUES (%s, %s, %s, %s)"
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(task_query, task_tuple)
+                cursor.executemany(sql_insert_detail, members)
+            conn.commit()
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()

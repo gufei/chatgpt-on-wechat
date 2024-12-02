@@ -16,6 +16,8 @@ from lib.allow_block import check_allow_or_block_list
 from lib.file_tool import is_image_file
 from lib.itchat.components.messages import send_msg
 from lib.wsclient import WebSocketClient
+from workphone.ChatRoomAddNotice_pb2 import ChatRoomAddNoticeMessage
+from workphone.ChatRoomMembersNotice_pb2 import ChatRoomMembersNoticeMessage
 from workphone.DeviceAuthRsp_pb2 import DeviceAuthRspMessage
 from workphone.FriendTalkNotice_pb2 import FriendTalkNoticeMessage
 from workphone.TalkToFriendTask_pb2 import TalkToFriendTaskMessage
@@ -195,6 +197,18 @@ class WorkPhoneChannel(ChatChannel):
             msg_dict = json.loads(received_data['message'])
             return self.on_friend_talk_notice(ws,msg_dict)
 
+        # if received_data['msgType'] == 'ChatRoomAddNotice':
+        #     msg_dict = json.loads(received_data['message'])
+        #     return self.on_chat_room_add_notice(msg_dict)
+
+        if received_data['msgType'] == 'ChatRoomMembersNotice':
+            msg_dict = json.loads(received_data['message'])
+            return self.on_chat_room_members_notice(msg_dict)
+
+        if received_data['msgType'] == 'ChatroomPushNotice':
+            msg_dict = json.loads(received_data['message'])
+            return self.on_chatroom_push_notice(msg_dict)
+
     def send(self, reply: Reply, context: Context):
         logger.info(f'[wx_hook] reply: {reply}')
         logger.info(f'[wx_hook] context: {context}')
@@ -259,4 +273,60 @@ class WorkPhoneChannel(ChatChannel):
 
         self.wsCli.send(transport_message_json)
 
+    # def on_chat_room_add_notice(self, msg_dict):
+    #     """
+    #     处理聊天消息同步。
+    #
+    #     参数:
+    #     - ws: WebSocket连接对象，用于接收和发送消息。
+    #     - msg_dict: 字典类型的原始消息，包含好友聊天通知的所有信息。
+    #     """
+    #     # msg = ChatRoomAddNoticeMessage()
+    #     # msg = ParseDict(msg_dict, msg)
+    #     logger.info(f'ChatRoomAddNotice 收到的消息为: {msg_dict}')
+    #
+    #     if msg_dict["WeChatId"] not in self.wx_info:
+    #         logger.error('没有找到该微信，跳过')
+    #         return
+    #
+    #     db_storage.add_wp_chatroom(msg_dict["WeChatId"], msg_dict["ChatRoom"]["UserName"], msg_dict["ChatRoom"]["NickName"], msg_dict["ChatRoom"]["Owner"], msg_dict["ChatRoom"]["Avatar"], msg_dict["ChatRoom"]["MemberList"], msg_dict["ChatRoom"]["ShowNameList"])
 
+    def on_chat_room_members_notice(self, msg_dict):
+        """
+        处理聊天消息同步。
+
+        参数:
+        - ws: WebSocket连接对象，用于接收和发送消息。
+        - msg_dict: 字典类型的原始消息，包含好友聊天通知的所有信息。
+        """
+        msg = ChatRoomMembersNoticeMessage()
+        msg = ParseDict(msg_dict, msg)
+        logger.info(f'ChatRoomMembersNotice 收到的消息为: {msg}')
+
+        if msg_dict["WeChatId"] not in self.wx_info:
+            logger.error('没有找到该微信，跳过')
+            return
+
+        members_tuples = [(msg.WeChatId, member.Wxid, member.Nickname, member.Avatar) for member in
+                          msg.Members]
+        db_storage.add_wp_chatroom_member(msg.WeChatId, members_tuples)
+
+    def on_chatroom_push_notice(self, msg_dict):
+        """
+        处理聊天消息同步。
+
+        参数:
+        - ws: WebSocket连接对象，用于接收和发送消息。
+        - msg_dict: 字典类型的原始消息，包含好友聊天通知的所有信息。
+        """
+        # msg = ChatRoomMembersNoticeMessage()
+        # msg = ParseDict(msg_dict, msg)
+        logger.info(f'ChatroomPushNotice 收到的消息为: {msg_dict}')
+
+        if msg_dict["WeChatId"] not in self.wx_info:
+            logger.error('没有找到该微信，跳过')
+            return
+
+        members_tuples = [(msg_dict["WeChatId"], chat_room["UserName"], chat_room["NickName"], chat_room["Owner"], chat_room["Avatar"], json.dumps(chat_room["MemberList"]), json.dumps(chat_room["ShowNameList"])) for chat_room in
+                          msg_dict["ChatRooms"]]
+        db_storage.add_wp_chatroom(msg_dict["WeChatId"], members_tuples)
