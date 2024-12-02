@@ -266,6 +266,7 @@ class WXSop(Plugin):
                 organization_id, wxinfo, server):
         contact_label_ids = db_storage.add_contact_label(contact_id, action_label_add, action_label_del, organization_id)
         match_stages = []
+        unmatch_stages = []
         logger.debug("[wxsop] contact_label_ids: %s" % contact_label_ids)
         logger.debug("[wxsop] stages: %s" % stages)
         for stage in stages:
@@ -273,6 +274,8 @@ class WXSop(Plugin):
                 logger.debug("[wxsop] stage: %s" % stage)
                 if check_filter(stage, contact_label_ids):
                     match_stages.append(stage)
+                else:
+                    unmatch_stages.append(stage)
         for stage in match_stages:
             is_message_send = db_storage.check_message_record(contact_wxid, 3, stage["id"], 0)
             if is_message_send:
@@ -436,7 +439,7 @@ class WXSop(Plugin):
             if stage["action_label_add"] or stage["action_label_del"]:
                 add_labels = json.loads(stage['action_label_add'])
                 rem_labels = json.loads(stage['action_label_del'])
-                self.add_tag(e_context,bot_wxid, contact_id, contact_type, contact_wxid, add_labels, rem_labels, stages, context,
+                self.add_tag(e_context,bot_wxid, contact_id, contact_type, contact_wxid, add_labels, rem_labels, unmatch_stages, context,
                              organization_id, wxinfo, server)
 
     def get_help_text(self, **kwargs):
