@@ -340,7 +340,7 @@ class WXSop(Plugin):
 
             if stage["action_forward"]:
                 action_forward = json.loads(stage['action_forward'])
-                if action_forward['wxid'] != "":
+                if action_forward and action_forward.get('wxid', "") != "":
                     forward_wxids = split_string(action_forward['wxid'])
                     for forward_wxid in forward_wxids:
                         for index, message in enumerate(action_forward['action']):
