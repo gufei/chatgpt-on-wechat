@@ -166,7 +166,7 @@ class WXSop(Plugin):
 
                 if sop_nodes[node_order]['action_forward'] is not None:
                     action_forward = json.loads(sop_nodes[node_order]['action_forward'])
-                    if action_forward['wxid'] != "":
+                    if action_forward and action_forward.get('wxid', "") != "":
                         forward_wxids = split_string(action_forward['wxid'])
                         for forward_wxid in forward_wxids:
                             for index, message in enumerate(action_forward['action']):
