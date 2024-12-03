@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 from datetime import datetime, timezone
@@ -209,7 +210,6 @@ class DBStorage:
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
                 label_relationships = cursor.fetchall()
-                logger.debug("[wxsop] label_relationships: %s" % label_relationships)
                 add_label_ids = []
                 rem_label_ids = []
                 contact_label_ids = []
@@ -223,7 +223,7 @@ class DBStorage:
                     # if add_label_ids:
                     #     return contact_label_ids
                 else:
-                    add_label_ids = action_label_add
+                    add_label_ids = copy.copy(action_label_add)
                     for add_label_id in action_label_add:
                         if add_label_id not in action_label_del:
                             add_label_ids.append(add_label_id)
@@ -235,7 +235,6 @@ class DBStorage:
                     else:
                         rem_label_ids.append(contact_label_id)
 
-                logger.debug("[wxsop] add_label_ids: %s" % add_label_ids)
                 for label_id in add_label_ids:
                     current_utc_time = datetime.now(timezone.utc)
                     formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
@@ -243,7 +242,6 @@ class DBStorage:
                     record_tuple = (1, contact_id, label_id, organization_id, formatted_time, formatted_time)
                     cursor.execute(sql_insert, record_tuple)
 
-                logger.debug("[wxsop] rem_label_ids: %s" % rem_label_ids)
                 for label_id in rem_label_ids:
                     sql_delete = "DELETE FROM label_relationship WHERE contact_id = %s AND label_id = %s AND organization_id = %s"
                     record_tuple = (contact_id, label_id, organization_id)
