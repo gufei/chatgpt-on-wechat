@@ -170,7 +170,7 @@ class WorkPhoneChannel(ChatChannel):
                     context['open_ai_api_base'] = wxinfo['api_base']
                     context['open_ai_api_key'] = wxinfo['api_key']
                 else:
-                    context['open_ai_api_base'] = "https://newapi.gkscrm.com/v1"
+                    context['open_ai_api_base'] = "http://new-api.gkscrm.com/v1"
                     context['open_ai_api_key'] = "sk-wwttAtdLcTfeF7F2Eb9d3592Bd4c487f8e8fA544D6C4BbA9"
 
             # 不需要添加at
