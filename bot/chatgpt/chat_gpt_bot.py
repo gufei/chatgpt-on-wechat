@@ -50,7 +50,8 @@ class ChatGPTBot(Bot, OpenAIImage):
         if context.type == ContextType.TEXT:
             logger.info("[CHATGPT] query={}".format(query))
 
-            session_id = context["session_id"]
+            session_id = "chatId-{}".format(context["wxid"] + "_" + format(context["session_id"]))
+
             reply = None
             clear_memory_commands = conf().get("clear_memory_commands", ["#清除记忆"])
             if query in clear_memory_commands:
@@ -88,14 +89,16 @@ class ChatGPTBot(Bot, OpenAIImage):
             new_args['api_base'] = api_base
 
             if "fastgpt" in api_base or "fastgpt" in api_key:
-                new_args["chatId"] = "chatId-{}".format(context["wxid"] + "_" + format(session.session_id))
+                new_args["chatId"] = session.session_id
                 new_args["detail"] = True
-
+                new_args["messages"] = [session.messages[-1]]
+            else:
+                new_args["messages"] = session.messages
             reply_content = self.reply_text(session, api_key, args=new_args, context=context)
             logger.debug(
                 "[CHATGPT] new_query={}, session_id={}, reply_cont={}, completion_tokens={}".format(
-                    session.messages,
-                    session_id,
+                    new_args,
+                    session.session_id,
                     reply_content["content"],
                     reply_content["completion_tokens"],
                 )
@@ -113,7 +116,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                             session_content += c.get("content", "") + "\n\n"
                 else:
                     session_content = reply_content["content"]
-                self.sessions.session_reply(session_content, session_id, reply_content["total_tokens"])
+                self.sessions.session_reply(session_content, session.session_id, reply_content["total_tokens"])
                 reply = Reply(ReplyType.TEXT, reply_content["content"])
             else:
                 reply = Reply(ReplyType.ERROR, reply_content["content"])
@@ -148,10 +151,9 @@ class ChatGPTBot(Bot, OpenAIImage):
                 args = self.args
 
             # response = openai.ChatCompletion.create(api_key=api_key, messages=session.messages, **args)
-            args["messages"] = session.messages
+            # args["messages"] = [session.messages[-1]]
             # logger.debug("[CHATGPT] args={}".format(args))
             headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + api_key}
-
             api_base = args['api_base']
             # 清理不能传的参数
             if "api_base" in args:
