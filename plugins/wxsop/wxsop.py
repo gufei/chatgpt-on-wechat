@@ -278,8 +278,11 @@ class WXSop(Plugin):
                         is_send_message = self.add_tag(e_context, bot_wxid, contact_id, contact_type, contact_wxid,
                                      tagging_label_add, [],
                                      stages, e_context.econtext, organization_id, wxinfo, server)
-                        if is_send_message and not self.continue_on_miss:
+                        if is_send_message:
                             e_context.action = EventAction.BREAK_PASS
+                        else:
+                            if not self.continue_on_miss:
+                                e_context.action = EventAction.BREAK_PASS
                 else:
                     if not self.continue_on_miss:
                         e_context.action = EventAction.BREAK_PASS
@@ -297,8 +300,11 @@ class WXSop(Plugin):
                     is_send_message = self.add_tag(e_context, bot_wxid, contact_id, contact_type, contact_wxid,
                                  tagging_label_add, [],
                                  stages, e_context.econtext, organization_id, wxinfo, server)
-                    if is_send_message and not self.continue_on_miss:
+                    if is_send_message:
                         e_context.action = EventAction.BREAK_PASS
+                    else:
+                        if not self.continue_on_miss:
+                            e_context.action = EventAction.BREAK_PASS
             else:
                 if not self.continue_on_miss:
                     e_context.action = EventAction.BREAK_PASS
