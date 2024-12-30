@@ -1,6 +1,7 @@
 import copy
 import json
 import os
+import re
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -102,11 +103,15 @@ class DBStorage:
         finally:
             conn.close()
 
-    def get_contact_by_wxid(self, wxid: str):
+    def get_contact_by_wxid(self, wxid: str, bot_wxid: str = None):
         conn = self._mysql.connection()
         try:
-            sql_query = "SELECT * FROM contact WHERE wxid = %s ORDER BY id DESC LIMIT 1"
-            record_tuple = (wxid, )
+            if bot_wxid:
+                sql_query = "SELECT * FROM contact WHERE wxid = %s AND wx_wxid = %s ORDER BY id DESC LIMIT 1"
+                record_tuple = (wxid, bot_wxid)
+            else:
+                sql_query = "SELECT * FROM contact WHERE wxid = %s ORDER BY id DESC LIMIT 1"
+                record_tuple = (wxid, )
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
                 wx_record = cursor.fetchone()
@@ -120,6 +125,41 @@ class DBStorage:
         finally:
             conn.close()
 
+    def get_label_tagging_by_orgid(self, orgid: int):
+        label_tagging_info = self._redis.hget('label_tagging_info', str(orgid))
+        if label_tagging_info:
+            return json.loads(label_tagging_info)
+        conn = self._mysql.connection()
+        try:
+            sql_query = "SELECT id, organization_id, type, conditions, action_label_add, action_label_del FROM label_tagging WHERE organization_id = %s AND deleted_at IS NULL ORDER BY id DESC LIMIT 1"
+            record_tuple = (orgid, )
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(sql_query, record_tuple)
+                label_tagging_record = cursor.fetchall()
+
+            if label_tagging_record:
+                new_records = []
+                for record in label_tagging_record:
+                    keywords = record.get('conditions')
+                    if keywords:
+                        standard_keywords = re.sub(r'[,、\s]+', '|', keywords)
+                        # 将竖线 `|` 分隔的关键词列表
+                        split_keywords = standard_keywords.split('|')
+                        # 转义每个关键词中的特殊字符
+                        escaped_keywords = [re.escape(keyword) for keyword in split_keywords]
+                        # 组合成正则表达式
+                        record["conditions"] = '|'.join(escaped_keywords)
+                        new_records.append(record)
+                if new_records:
+                    self._redis.hset('label_tagging_info', str(orgid), json.dumps(label_tagging_record))
+                return new_records
+            else:
+                return None
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
 
 
     # 查询接下来带匹配的回答
@@ -210,6 +250,7 @@ class DBStorage:
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
                 label_relationships = cursor.fetchall()
+                logger.debug("[wxsop] label_relationships: %s" % label_relationships)
                 add_label_ids = []
                 rem_label_ids = []
                 contact_label_ids = []
@@ -235,6 +276,7 @@ class DBStorage:
                     else:
                         rem_label_ids.append(contact_label_id)
 
+                logger.debug("[wxsop] final_label_ids: %s" % final_label_ids)
                 for label_id in add_label_ids:
                     current_utc_time = datetime.now(timezone.utc)
                     formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')

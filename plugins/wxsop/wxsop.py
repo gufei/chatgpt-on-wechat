@@ -7,7 +7,6 @@ import requests
 
 import plugins
 from app import db_storage
-from bridge.context import ContextType
 from bridge.reply import Reply, ReplyType
 from plugins import *
 from plugins.wxsop.chat_gpt_bot import OpenaiBot
@@ -55,8 +54,18 @@ class WXSop(Plugin):
             contact_type = 2
 
         wxinfo = db_storage.get_info_by_wxid(bot_wxid)
+        logger.debug("[wxsop] wxinfo: %s" % wxinfo)
         if not wxinfo:
             return
+
+        tagging_label_add = []
+        organization_id = wxinfo.get("organization_id")
+        logger.debug("[wxsop] organization_id: %s" % organization_id)
+        if organization_id:
+            conditions_group = db_storage.get_label_tagging_by_orgid(organization_id)
+            if conditions_group:
+                tagging_label_add = match_text_with_conditions(content, conditions_group)
+
         server = db_storage.get_server_by_id(wxinfo['server_id'])
         message_record, sop_nodes, source_type, source_id = db_storage.get_next_answers(bot_wxid, contact_wxid, contact_type)
         logger.debug("[wxsop] on_handle_context. message_record: %s" % message_record)
@@ -67,7 +76,7 @@ class WXSop(Plugin):
         need_judge = False
         # 调用 chatgpt 接口
         if message_record and sop_nodes:
-            organization_id = message_record["organization_id"]
+            # organization_id = message_record["organization_id"]
             prompt = f"""# 任务
 请根据历史消息，判断用户回复的内容或深层意图，与哪个节点的意图相匹配。
 
@@ -204,7 +213,6 @@ class WXSop(Plugin):
                 else:
                     contactinfo = {}
                 for index, message in enumerate(messages):
-                    logger.debug("[wxsop] ------------message-----------: %s" % message)
                     # 随机睡眠
                     time.sleep(random.uniform(2.0, 5.0))
 
@@ -247,6 +255,8 @@ class WXSop(Plugin):
                         #                                      sop_nodes[node_order]["id"], index, organization_id)
 
                 action_label_add = json.loads(sop_nodes[node_order]['action_label_add'])
+                if tagging_label_add:
+                    action_label_add = action_label_add + tagging_label_add
                 action_label_del = json.loads(sop_nodes[node_order]['action_label_del'])
                 if action_label_add or action_label_del:
                     stages = db_storage.get_stage(organization_id)
@@ -255,15 +265,48 @@ class WXSop(Plugin):
 
                 e_context.action = EventAction.BREAK_PASS
             else:
+                if tagging_label_add:
+                    stages = db_storage.get_stage(organization_id)
+                    contact_id = 0
+                    if not message_record:
+                        contact_info = db_storage.get_contact_by_wxid(contact_wxid, bot_wxid)
+                        if contact_info:
+                            contact_id = contact_info.get("id")
+                    else:
+                        contact_id = message_record.get("contact_id", 0)
+                    if contact_id:
+                        is_send_message = self.add_tag(e_context, bot_wxid, contact_id, contact_type, contact_wxid,
+                                     tagging_label_add, [],
+                                     stages, e_context.econtext, organization_id, wxinfo, server)
+                        if is_send_message and not self.continue_on_miss:
+                            e_context.action = EventAction.BREAK_PASS
+                else:
+                    if not self.continue_on_miss:
+                        e_context.action = EventAction.BREAK_PASS
+        else:
+            if tagging_label_add:
+                stages = db_storage.get_stage(organization_id)
+                contact_id = 0
+                if not message_record:
+                    contact_info = db_storage.get_contact_by_wxid(contact_wxid, bot_wxid)
+                    if contact_info:
+                        contact_id = contact_info.get("id")
+                else:
+                    contact_id = message_record.get("contact_id", 0)
+                if contact_id:
+                    is_send_message = self.add_tag(e_context, bot_wxid, contact_id, contact_type, contact_wxid,
+                                 tagging_label_add, [],
+                                 stages, e_context.econtext, organization_id, wxinfo, server)
+                    if is_send_message and not self.continue_on_miss:
+                        e_context.action = EventAction.BREAK_PASS
+            else:
                 if not self.continue_on_miss:
                     e_context.action = EventAction.BREAK_PASS
-        else:
-            if not self.continue_on_miss:
-                e_context.action = EventAction.BREAK_PASS
 
     # 为联系人添加标签
     def add_tag(self, e_context: EventContext, bot_wxid, contact_id, contact_type, contact_wxid, action_label_add, action_label_del, stages, context,
                 organization_id, wxinfo, server):
+        is_send_message = False
         contact_label_ids = db_storage.add_contact_label(contact_id, action_label_add, action_label_del, organization_id)
         match_stages = []
         unmatch_stages = []
@@ -385,6 +428,7 @@ class WXSop(Plugin):
                     if haveVar:
                         message["message"]["msg"] = var_replace(message["message"]["msg"],
                                                                 contactinfo)
+                    is_send_message = True
                     _ = wx_hook_request(e_context,"/SendTextMsg", message["message"], server.get('private_ip') if server else None,
                                         wxinfo['port'])
 
@@ -395,6 +439,7 @@ class WXSop(Plugin):
                                                          stage["id"], index,
                                                          organization_id)
                 else:
+                    is_send_message = True
                     _ = wx_hook_request(e_context,"/SendFileMsg", message["message"], server.get('private_ip') if server else None,
                                         wxinfo['port'])
 
@@ -413,9 +458,11 @@ class WXSop(Plugin):
                 if message["type"] == 1:
                     if haveVar:
                         message["message"]["msg"] = var_replace(message["message"]["msg"], contactinfo)
+                    is_send_message = True
                     _ = wx_hook_request(e_context,"/SendTextMsg", message["message"], server.get('private_ip') if server else None,
                                         wxinfo['port'])
                 else:
+                    is_send_message = True
                     _ = wx_hook_request(e_context,"/SendFileMsg", message["message"], server.get('private_ip') if server else None,
                                         wxinfo['port'])
                                 # lastrowid = db_storage.create_message_record(2, bot_wxid, contact_id, contact_type, contact_wxid,
@@ -439,13 +486,37 @@ class WXSop(Plugin):
             if stage["action_label_add"] or stage["action_label_del"]:
                 add_labels = json.loads(stage['action_label_add'])
                 rem_labels = json.loads(stage['action_label_del'])
-                self.add_tag(e_context,bot_wxid, contact_id, contact_type, contact_wxid, add_labels, rem_labels, unmatch_stages, context,
+                is_send_message = self.add_tag(e_context,bot_wxid, contact_id, contact_type, contact_wxid, add_labels, rem_labels, unmatch_stages, context,
                              organization_id, wxinfo, server)
+        return is_send_message
 
     def get_help_text(self, **kwargs):
         help_text = "SOP 过滤"
         return help_text
 
+
+def match_text_with_conditions(text, conditions_group):
+    # 初始化一个列表用于存储所有命中的 action_label_add
+    matched_labels = []
+
+    # 遍历每个条件组
+    logger.debug("[wxsop] match_text_with_conditions group: %s" % text)
+    for group in conditions_group:
+        logger.debug("[wxsop] match_text_with_conditions group: %s" % group)
+        conditions = group.get("conditions", "")
+        action_label_add_str = group.get("action_label_add", [])
+        regex = re.compile(conditions)
+        # 检查当前条件组中的任意一个条件是否在文本中出现
+        logger.debug("[wxsop] match_text_with_conditions action_label_add: %s" % action_label_add_str)
+        logger.debug("[wxsop] match_text_with_conditions conditions: %s" % conditions)
+        logger.debug("[wxsop] match_text_with_conditions regex.search(text): %s" % regex.search(text))
+        logger.debug("[wxsop] match_text_with_conditions bool(regex.search(text): %s" % bool(regex.search(text)))
+        if bool(regex.search(text)):
+            # 如果命中，则将对应的 action_label_add 加入结果列表
+            action_label_add = json.loads(action_label_add_str)
+            matched_labels.extend(action_label_add)
+
+    return matched_labels
 
 def check_filter(filter, contact_label_ids):
     condition_operator = filter['condition_operator']
