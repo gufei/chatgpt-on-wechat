@@ -311,8 +311,8 @@ class WXSop(Plugin):
 
     # 为联系人添加标签
     def add_tag(self, e_context: EventContext, bot_wxid, contact_id, contact_type, contact_wxid, action_label_add, action_label_del, stages, context,
-                organization_id, wxinfo, server):
-        is_send_message = False
+                organization_id, wxinfo, server, is_send_message=False):
+        # is_send_message = False
         contact_label_ids = db_storage.add_contact_label(contact_id, action_label_add, action_label_del, organization_id)
         match_stages = []
         unmatch_stages = []
@@ -493,7 +493,7 @@ class WXSop(Plugin):
                 add_labels = json.loads(stage['action_label_add'])
                 rem_labels = json.loads(stage['action_label_del'])
                 is_send_message = self.add_tag(e_context,bot_wxid, contact_id, contact_type, contact_wxid, add_labels, rem_labels, unmatch_stages, context,
-                             organization_id, wxinfo, server)
+                             organization_id, wxinfo, server, is_send_message)
         return is_send_message
 
     def get_help_text(self, **kwargs):
