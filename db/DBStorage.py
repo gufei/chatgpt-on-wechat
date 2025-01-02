@@ -7,7 +7,7 @@ from typing import Optional
 
 import mysql.connector
 import redis
-from mysql.connector import Error
+from mysql.connector import Error, errorcode
 from DBUtils.PooledDB import PooledDB
 
 from common.log import logger
@@ -280,9 +280,16 @@ class DBStorage:
                 for label_id in add_label_ids:
                     current_utc_time = datetime.now(timezone.utc)
                     formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
-                    sql_insert = "INSERT INTO label_relationship (status, contact_id, label_id, organization_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s)"
-                    record_tuple = (1, contact_id, label_id, organization_id, formatted_time, formatted_time)
-                    cursor.execute(sql_insert, record_tuple)
+                    try:
+                        sql_insert = "INSERT INTO label_relationship (status, contact_id, label_id, organization_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s)"
+                        record_tuple = (1, contact_id, label_id, organization_id, formatted_time, formatted_time)
+                        cursor.execute(sql_insert, record_tuple)
+                    except mysql.connector.Error as err:
+                        if err.errno == errorcode.ER_DUP_ENTRY:
+                            print(f"Duplicate entry found: {err}")
+                            # 这里可以选择记录日志或者执行其他操作，但不抛出异常
+                        else:
+                            raise err  # 如果是其他错误，重新抛出异常
 
                 for label_id in rem_label_ids:
                     sql_delete = "DELETE FROM label_relationship WHERE contact_id = %s AND label_id = %s AND organization_id = %s"
