@@ -131,7 +131,7 @@ class DBStorage:
             return json.loads(label_tagging_info)
         conn = self._mysql.connection()
         try:
-            sql_query = "SELECT id, organization_id, type, conditions, action_label_add, action_label_del FROM label_tagging WHERE organization_id = %s AND deleted_at IS NULL ORDER BY id DESC LIMIT 1"
+            sql_query = "SELECT id, organization_id, type, conditions, action_label_add, action_label_del FROM label_tagging WHERE organization_id = %s AND deleted_at IS NULL"
             record_tuple = (orgid, )
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
