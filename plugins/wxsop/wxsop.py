@@ -65,9 +65,10 @@ class WXSop(Plugin):
             conditions_group = db_storage.get_label_tagging_by_orgid(organization_id)
             if conditions_group:
                 tagging_label_add = match_text_with_conditions(content, conditions_group)
-
+        logger.debug("[wxsop] tagging_label_add: %s" % tagging_label_add)
         server = db_storage.get_server_by_id(wxinfo['server_id'])
         message_record, sop_nodes, source_type, source_id = db_storage.get_next_answers(bot_wxid, contact_wxid, contact_type)
+        organization_id = wxinfo.get("organization_id")
         logger.debug("[wxsop] on_handle_context. message_record: %s" % message_record)
         logger.debug("[wxsop] on_handle_context. sop_nodes: %s" % sop_nodes)
         e_context.econtext['context']['organization_id']= wxinfo['organization_id']
@@ -288,6 +289,7 @@ class WXSop(Plugin):
                         e_context.action = EventAction.BREAK_PASS
         else:
             if tagging_label_add:
+                logger.debug("[wxsop] tagging_label_add2: %s" % tagging_label_add)
                 stages = db_storage.get_stage(organization_id)
                 contact_id = 0
                 if not message_record:
@@ -296,6 +298,7 @@ class WXSop(Plugin):
                         contact_id = contact_info.get("id")
                 else:
                     contact_id = message_record.get("contact_id", 0)
+                logger.debug("[wxsop] contact_id: %s" % contact_id)
                 if contact_id:
                     is_send_message = self.add_tag(e_context, bot_wxid, contact_id, contact_type, contact_wxid,
                                  tagging_label_add, [],
