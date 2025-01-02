@@ -322,7 +322,7 @@ class WXSop(Plugin):
         logger.debug("[wxsop] contact_label_ids: %s" % contact_label_ids)
         logger.debug("[wxsop] stages: %s" % stages)
         for stage in stages:
-            if stage["condition_type"] == 1:
+            if stage["condition_type"] == 1 and contact_label_ids:
                 logger.debug("[wxsop] stage: %s" % stage)
                 if check_filter(stage, contact_label_ids):
                     match_stages.append(stage)
