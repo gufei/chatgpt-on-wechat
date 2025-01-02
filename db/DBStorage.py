@@ -142,7 +142,7 @@ class DBStorage:
                 for record in label_tagging_record:
                     keywords = record.get('conditions')
                     if keywords:
-                        standard_keywords = re.sub(r'[,、\s]+', '|', keywords)
+                        standard_keywords = re.sub(r'[,、，｜\s]+', '|', keywords)
                         # 将竖线 `|` 分隔的关键词列表
                         split_keywords = standard_keywords.split('|')
                         # 转义每个关键词中的特殊字符
