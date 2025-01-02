@@ -5,36 +5,48 @@ import time
 import openai
 import openai.error
 from bot.bot import Bot
+from bot.minimax.minimax_session import MinimaxSession
 from bot.session_manager import SessionManager
-from bridge.context import ContextType
+from bridge.context import Context, ContextType
 from bridge.reply import Reply, ReplyType
 from common.log import logger
 from config import conf, load_config
-from .moonshot_session import MoonshotSession
+from bot.chatgpt.chat_gpt_session import ChatGPTSession
 import requests
+from common import const
 
 
 # ZhipuAI对话模型API
-class MoonshotBot(Bot):
+class MinimaxBot(Bot):
     def __init__(self):
         super().__init__()
-        self.sessions = SessionManager(MoonshotSession, model=conf().get("model") or "moonshot-v1-128k")
-        model = conf().get("model") or "moonshot-v1-128k"
-        if model == "moonshot":
-            model = "moonshot-v1-32k"
         self.args = {
-            "model": model,  # 对话模型的名称
+            "model": conf().get("model") or "abab6.5",  # 对话模型的名称
             "temperature": conf().get("temperature", 0.3),  # 如果设置，值域须为 [0, 1] 我们推荐 0.3，以达到较合适的效果。
-            "top_p": conf().get("top_p", 1.0),  # 使用默认值
+            "top_p": conf().get("top_p", 0.95),  # 使用默认值
         }
-        self.api_key = conf().get("moonshot_api_key")
-        self.base_url = conf().get("moonshot_base_url", "https://api.moonshot.cn/v1/chat/completions")
+        self.api_key = conf().get("Minimax_api_key")
+        self.group_id = conf().get("Minimax_group_id")
+        self.base_url = conf().get("Minimax_base_url", f"https://api.minimax.chat/v1/text/chatcompletion_pro?GroupId={self.group_id}")
+        # tokens_to_generate/bot_setting/reply_constraints可自行修改
+        self.request_body = {
+            "model": self.args["model"],
+            "tokens_to_generate": 2048,
+            "reply_constraints": {"sender_type": "BOT", "sender_name": "MM智能助理"},
+            "messages": [],
+            "bot_setting": [
+                {
+                    "bot_name": "MM智能助理",
+                    "content": "MM智能助理是一款由MiniMax自研的，没有调用其他产品的接口的大型语言模型。MiniMax是一家中国科技公司，一直致力于进行大模型相关的研究。",
+                }
+            ],
+        }
+        self.sessions = SessionManager(MinimaxSession, model=const.MiniMax)
 
-    def reply(self, query, context=None):
+    def reply(self, query, context: Context = None) -> Reply:
         # acquire reply content
+        logger.info("[Minimax_AI] query={}".format(query))
         if context.type == ContextType.TEXT:
-            logger.info("[MOONSHOT_AI] query={}".format(query))
-
             session_id = context["session_id"]
             reply = None
             clear_memory_commands = conf().get("clear_memory_commands", ["#清除记忆"])
@@ -50,9 +62,9 @@ class MoonshotBot(Bot):
             if reply:
                 return reply
             session = self.sessions.session_query(query, session_id)
-            logger.debug("[MOONSHOT_AI] session query={}".format(session.messages))
+            logger.debug("[Minimax_AI] session query={}".format(session))
 
-            model = context.get("moonshot_model")
+            model = context.get("Minimax_model")
             new_args = self.args.copy()
             if model:
                 new_args["model"] = model
@@ -62,7 +74,7 @@ class MoonshotBot(Bot):
 
             reply_content = self.reply_text(session, args=new_args)
             logger.debug(
-                "[MOONSHOT_AI] new_query={}, session_id={}, reply_cont={}, completion_tokens={}".format(
+                "[Minimax_AI] new_query={}, session_id={}, reply_cont={}, completion_tokens={}".format(
                     session.messages,
                     session_id,
                     reply_content["content"],
@@ -76,13 +88,13 @@ class MoonshotBot(Bot):
                 reply = Reply(ReplyType.TEXT, reply_content["content"])
             else:
                 reply = Reply(ReplyType.ERROR, reply_content["content"])
-                logger.debug("[MOONSHOT_AI] reply {} used 0 tokens.".format(reply_content))
+                logger.debug("[Minimax_AI] reply {} used 0 tokens.".format(reply_content))
             return reply
         else:
             reply = Reply(ReplyType.ERROR, "Bot不支持处理{}类型的消息".format(context.type))
             return reply
 
-    def reply_text(self, session: MoonshotSession, args=None, retry_count=0) -> dict:
+    def reply_text(self, session: MinimaxSession, args=None, retry_count=0) -> dict:
         """
         call openai's ChatCompletion to get the answer
         :param session: a conversation session
@@ -91,37 +103,30 @@ class MoonshotBot(Bot):
         :return: {}
         """
         try:
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + self.api_key
-            }
-            body = args
-            body["messages"] = session.messages
-            # logger.debug("[MOONSHOT_AI] response={}".format(response))
-            # logger.info("[MOONSHOT_AI] reply={}, total_tokens={}".format(response.choices[0]['message']['content'], response["usage"]["total_tokens"]))
-            res = requests.post(
-                self.base_url,
-                headers=headers,
-                json=body
-            )
+            headers = {"Content-Type": "application/json", "Authorization": "Bearer " + self.api_key}
+            self.request_body["messages"].extend(session.messages)
+            logger.info("[Minimax_AI] request_body={}".format(self.request_body))
+            # logger.info("[Minimax_AI] reply={}, total_tokens={}".format(response.choices[0]['message']['content'], response["usage"]["total_tokens"]))
+            res = requests.post(self.base_url, headers=headers, json=self.request_body)
+
+            # self.request_body["messages"].extend(response.json()["choices"][0]["messages"])
             if res.status_code == 200:
                 response = res.json()
                 return {
                     "total_tokens": response["usage"]["total_tokens"],
-                    "completion_tokens": response["usage"]["completion_tokens"],
-                    "content": response["choices"][0]["message"]["content"]
+                    "completion_tokens": response["usage"]["total_tokens"],
+                    "content": response["reply"],
                 }
             else:
                 response = res.json()
                 error = response.get("error")
-                logger.error(f"[MOONSHOT_AI] chat failed, status_code={res.status_code}, "
-                             f"msg={error.get('message')}, type={error.get('type')}")
+                logger.error(f"[Minimax_AI] chat failed, status_code={res.status_code}, " f"msg={error.get('message')}, type={error.get('type')}")
 
                 result = {"completion_tokens": 0, "content": "提问太快啦，请休息一下再问我吧"}
                 need_retry = False
                 if res.status_code >= 500:
                     # server error, need retry
-                    logger.warn(f"[MOONSHOT_AI] do retry, times={retry_count}")
+                    logger.warn(f"[Minimax_AI] do retry, times={retry_count}")
                     need_retry = retry_count < 2
                 elif res.status_code == 401:
                     result["content"] = "授权失败，请检查API Key是否正确"
