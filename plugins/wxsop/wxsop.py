@@ -514,7 +514,7 @@ def match_text_with_conditions(text, conditions_group):
         logger.debug("[wxsop] match_text_with_conditions group: %s" % group)
         conditions = group.get("conditions", "")
         action_label_add_str = group.get("action_label_add", [])
-        regex = re.compile(conditions)
+        regex = re.compile(re.sub(r'[， 、,｜]', '|', conditions))
         # 检查当前条件组中的任意一个条件是否在文本中出现
         logger.debug("[wxsop] match_text_with_conditions action_label_add: %s" % action_label_add_str)
         logger.debug("[wxsop] match_text_with_conditions conditions: %s" % conditions)
