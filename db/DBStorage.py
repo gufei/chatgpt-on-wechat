@@ -103,6 +103,28 @@ class DBStorage:
         finally:
             conn.close()
 
+    def get_wainfo_by_phone(self, phone: str):
+        # wa_info = self._redis.hget('wa_info', phone)
+        # if wa_info:
+        #     return json.loads(wa_info)
+        conn = self._mysql.connection()
+        try:
+            sql_query = "SELECT * FROM whatsapp WHERE phone = %s LIMIT 1"
+            record_tuple = (phone, )
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(sql_query, record_tuple)
+                wa_record = cursor.fetchone()
+            if wa_record:
+                # self._redis.hset('wa_info', phone, json.dumps(wa_record))
+                return wa_record
+            else:
+                return None
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
     def get_contact_by_wxid(self, wxid: str, bot_wxid: str = None):
         conn = self._mysql.connection()
         try:
