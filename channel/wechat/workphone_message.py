@@ -9,7 +9,7 @@ from workphone.TransportMessage_pb2 import EnumContentType
 
 
 class WorkPhoneMessage(ChatMessage):
-    def __init__(self, message:FriendTalkNoticeMessage,wechat:dict,wxinfo:dict):
+    def __init__(self, message:FriendTalkNoticeMessage,wechat:dict):
         super().__init__(message)
 
         self.msg_id = message.MsgId
@@ -42,7 +42,7 @@ class WorkPhoneMessage(ChatMessage):
             self.actual_user_id = lines[0]
             # todo 实际发送者昵称，需要获取群成员信息后才能拿到
             self.actual_user_nickname = lines[0]
-            self.self_display_name = wxinfo['nickname']
+            self.self_display_name = wechat['wechatnick']
 
             self.is_at = False
             if message.Ext:
@@ -50,8 +50,8 @@ class WorkPhoneMessage(ChatMessage):
                 if message.WeChatId in at_list:
                     self.is_at = True
             else:
-                if "@" + wxinfo['nickname'] in self.content:
-                    self.content = self.content.replace("@" + wxinfo['nickname'], "")
+                if "@" + wechat['wechatnick'] in self.content:
+                    self.content = self.content.replace("@" + wechat['wechatnick'], "")
                     self.is_at = True
 
         else:

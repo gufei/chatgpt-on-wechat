@@ -129,10 +129,7 @@ class WorkPhoneChannel(ChatChannel):
         wechat = self.wx_info[msg.WeChatId]
         logger.info(f'当前处理的微信为: {wechat}')
 
-        # 获取wxinfo账号信息
-        wxinfo = db_storage.get_info_by_wxid(msg.WeChatId)
-
-        workphone_msg = WorkPhoneMessage(msg,wechat,wxinfo)
+        workphone_msg = WorkPhoneMessage(msg,wechat)
 
         logger.debug("[wx_hook] wx_hook_msg message: {}".format(workphone_msg))
 
@@ -142,6 +139,9 @@ class WorkPhoneChannel(ChatChannel):
             logger.error("无法识别的消息类型，跳过")
             return
 
+
+        # 获取wxinfo账号信息
+        wxinfo = db_storage.get_info_by_wxid(msg.WeChatId)
 
         logger.debug(f"[wx_hook] 获取到的账号信息: wxinfo: {wxinfo}")
 
