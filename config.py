@@ -164,7 +164,10 @@ available_setting = {
     "linkai_api_key": "",
     "linkai_app_code": "",
     "linkai_api_base": "https://api.link-ai.chat",  # linkAI服务地址，若国内无法访问或延迟较高可改为 https://api.link-ai.tech
-
+    # Telegram配置
+    "telegram_token": "",
+    "telegram_id": "",
+    "telegram_name": "",
 
     "wx_hook_ip": "172.23.24.97",
     "wx_hook_port": 30006,
