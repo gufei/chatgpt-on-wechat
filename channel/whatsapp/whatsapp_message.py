@@ -23,7 +23,7 @@ class WaHookMessage(ChatMessage):
         self.content = data.get("Message")
 
         self.from_user_id = data.get("From")
-        self.from_user_nickname = data.get("DisplayName")
+        self.from_user_nickname = channel.name
         self.to_user_id = data.get("To")
         self.to_user_nickname = data.get("Name")
 

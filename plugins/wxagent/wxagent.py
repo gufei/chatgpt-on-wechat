@@ -52,8 +52,10 @@ class WXAgent(Plugin):
             contact_type = 1
         else:
             contact_type = 2
+        logger.info(f"[wxagent] channel: {e_context.econtext['channel']}")
+        channel_type = e_context.econtext['channel'].channel_type
 
-        agent_info = db_storage.get_agent_info(bot_wxid)
+        agent_info = db_storage.get_agent_info(bot_wxid, channel_type)
 
         # 调用 chatgpt 接口
         if agent_info:
