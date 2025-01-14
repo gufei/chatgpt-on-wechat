@@ -103,6 +103,29 @@ class DBStorage:
         finally:
             conn.close()
 
+    def get_wainfo_by_phone(self, phone: str):
+        wa_info = self._redis.hget('wa_info', phone)
+        if wa_info:
+            return json.loads(wa_info)
+        conn = self._mysql.connection()
+        try:
+            sql_query = "SELECT ak, sk, agent_id, nickname, account, phone, organization_id, api_base, api_key, allow_list, group_allow_list, block_list, group_block_list FROM whatsapp WHERE phone = %s LIMIT 1"
+            record_tuple = (phone, )
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(sql_query, record_tuple)
+                wa_record = cursor.fetchone()
+                logger.debug(f"[wx_hook] wa_record: {wa_record}")
+            if wa_record:
+                self._redis.hset('wa_info', phone, json.dumps(wa_record))
+                return wa_record
+            else:
+                return None
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
     def get_contact_by_wxid(self, wxid: str, bot_wxid: str = None):
         conn = self._mysql.connection()
         try:
@@ -350,12 +373,15 @@ class DBStorage:
         finally:
             conn.close()
 
-    def get_agent_info(self, bot_wxid: str):
+    def get_agent_info(self, bot_wxid: str, channel_type):
         logger.debug(f"[wx_hook] --------------------bot_wxid-----------------, msg={bot_wxid}")
         conn = self._mysql.connection()
         try:
-            # 在message_records表中，查询bot_wxid == selfwxid and contact_wxid == fromid contact_type == 1 source_type == 3 status == 1 的最新一条记录，按created_at字段排序
-            sql_query = "SELECT * FROM wx WHERE deleted_at IS NULL AND wxid = %s ORDER BY created_at DESC LIMIT 1"
+            if channel_type == "whatsapp":
+                # 在message_records表中，查询bot_wxid == selfwxid and contact_wxid == fromid contact_type == 1 source_type == 3 status == 1 的最新一条记录，按created_at字段排序
+                sql_query = "SELECT * FROM whatsapp WHERE deleted_at IS NULL AND phone = %s ORDER BY created_at DESC LIMIT 1"
+            else:
+                sql_query = "SELECT * FROM wx WHERE deleted_at IS NULL AND wxid = %s ORDER BY created_at DESC LIMIT 1"
             record_tuple = (bot_wxid,)
 
             with conn.cursor(dictionary=True) as cursor:

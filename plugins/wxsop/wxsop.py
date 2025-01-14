@@ -43,6 +43,7 @@ class WXSop(Plugin):
             raise e
 
     def on_handle_context(self, e_context: EventContext):
+
         bot_wxid = e_context.econtext['context'].kwargs['wxid']
         contact_wxid = e_context.econtext['context'].kwargs['session_id']
         receiver = e_context.econtext['context'].kwargs['receiver']
