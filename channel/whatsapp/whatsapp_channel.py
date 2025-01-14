@@ -63,7 +63,8 @@ class WaHookChannel(ChatChannel):
             '/whatsapp/receiveChatBotMsg', 'channel.whatsapp.whatsapp_channel.WaHookController'
         )
         app = web.application(urls, globals(), autoreload=False)
-        web.httpserver.runsimple(app.wsgifunc(), ("0.0.0.0", 9020))
+        port = conf().get("wx_hook_callback_port", 9007)
+        web.httpserver.runsimple(app.wsgifunc(), ("0.0.0.0", port))
 
     def send(self, reply: Reply, context: Context):
         access_key_id = context["access_key_id"]
