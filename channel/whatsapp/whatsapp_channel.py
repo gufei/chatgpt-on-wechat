@@ -131,7 +131,7 @@ class WaHookController:
             channel.user_id = data.get("To")
 
             if wainfo is not None:
-                channel.name = wainfo['nickname']
+                channel.name = wainfo['phone_name']
 
             # if "cmdId" in msg and msg.get("msgtype") not in ["1", "34"]:
             #     return "this is a cmd message"

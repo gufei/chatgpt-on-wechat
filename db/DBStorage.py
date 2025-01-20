@@ -109,13 +109,24 @@ class DBStorage:
             return json.loads(wa_info)
         conn = self._mysql.connection()
         try:
-            sql_query = "SELECT ak, sk, agent_id, nickname, account, phone, organization_id, api_base, api_key, allow_list, group_allow_list, block_list, group_block_list FROM whatsapp WHERE phone = %s LIMIT 1"
+            sql_query = "SELECT wa_id, agent_id, phone, phone_name, api_base, api_key, allow_list, group_allow_list, block_list, group_block_list FROM whatsapp WHERE phone = %s LIMIT 1"
             record_tuple = (phone, )
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
                 wa_record = cursor.fetchone()
                 logger.debug(f"[wx_hook] wa_record: {wa_record}")
             if wa_record:
+                sql_query = "SELECT * FROM whatsapp_channel WHERE deleted_at IS NULL AND wa_id = %s AND status = 1"
+                sop_node_tuple = (wa_record['wa_id'], )
+
+                with conn.cursor(dictionary=True) as cursor:
+                    cursor.execute(sql_query, sop_node_tuple)
+                    channel_info = cursor.fetchone()
+                    logger.debug("[wxagent] channel_info: %s" % channel_info)
+            if wa_record and channel_info:
+                wa_record["ak"] = channel_info["ak"]
+                wa_record["sk"] = channel_info["sk"]
+                wa_record["organization_id"] = channel_info["organization_id"]
                 self._redis.hset('wa_info', phone, json.dumps(wa_record))
                 return wa_record
             else:
