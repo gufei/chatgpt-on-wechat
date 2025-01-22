@@ -158,9 +158,6 @@ class WaHookController:
                 if context is None:
                     return self.FAILED_MSG
 
-                if check_allow_or_block_list(context, wainfo) is False:
-                    logger.debug(f"[wx_hook] check_allow_or_block_list failed")
-                    return self.FAILED_MSG
 
                 # 增加需要的context
                 context['wa_hook_msg'] = wa_hook_msg
@@ -178,6 +175,10 @@ class WaHookController:
                     context["wxid"] = data.get("To")
                     context["session_id"] = data.get("From")
                     context["receiver"] = data.get("From")
+
+                if check_allow_or_block_list(context, wainfo) is False:
+                    logger.debug(f"[wx_hook] check_allow_or_block_list failed")
+                    return self.FAILED_MSG
 
                 if context:
                     logger.debug(f"[wx_hook] context session_id is {context['session_id']}")
