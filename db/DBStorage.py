@@ -109,7 +109,7 @@ class DBStorage:
             return json.loads(wa_info)
         conn = self._mysql.connection()
         try:
-            sql_query = "SELECT wa_id, agent_id, cc_phone, phone_name, api_base, api_key, allow_list, group_allow_list, block_list, group_block_list FROM whatsapp WHERE cc_phone = %s LIMIT 1"
+            sql_query = "SELECT wa_id, agent_id, phone, phone_name, api_base, api_key, allow_list, group_allow_list, block_list, group_block_list FROM whatsapp WHERE phone = %s LIMIT 1"
             record_tuple = (phone, )
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
@@ -390,7 +390,7 @@ class DBStorage:
         try:
             if channel_type == "whatsapp":
                 # 在message_records表中，查询bot_wxid == selfwxid and contact_wxid == fromid contact_type == 1 source_type == 3 status == 1 的最新一条记录，按created_at字段排序
-                sql_query = "SELECT * FROM whatsapp WHERE deleted_at IS NULL AND cc_phone = %s ORDER BY created_at DESC LIMIT 1"
+                sql_query = "SELECT * FROM whatsapp WHERE deleted_at IS NULL AND phone = %s ORDER BY created_at DESC LIMIT 1"
             else:
                 sql_query = "SELECT * FROM wx WHERE deleted_at IS NULL AND wxid = %s ORDER BY created_at DESC LIMIT 1"
             record_tuple = (bot_wxid,)
