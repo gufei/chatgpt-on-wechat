@@ -118,6 +118,10 @@ class OpenaiBot(Bot, OpenAIImage):
         logger.debug("[wxsop] response: %s" % response)
         if response.status_code == 200:
             response_json = response.json()
-            usage_storage(1, context["wxid"], context["session_id"], app, app_id, args, response_json, context["organization_id"])
+            if conf().get("channel_type", "wx_hook") == "whatsapp":
+                bot_type = 3
+            else:
+                bot_type = 1
+            usage_storage(bot_type, context["wxid"], context["session_id"], app, app_id, args, response_json, context["organization_id"])
             return response_json["choices"][0]["message"]["content"]
         return None

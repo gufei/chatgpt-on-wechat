@@ -167,7 +167,11 @@ class ChatGPTBot(Bot, OpenAIImage):
             response = requests.post(api_base + "/chat/completions", headers=headers, json=args)
             response_json = response.json()
 
-            usage_storage(1, context["wxid"], context["session_id"], 1, 0, args, response_json, context["organization_id"])
+            if conf().get("channel_type", "wx_hook") == "whatsapp":
+                bot_type = 3
+            else:
+                bot_type = 1
+            usage_storage(bot_type, context["wxid"], context["session_id"], 1, 0, args, response_json, context["organization_id"])
 
             content = parse_markdown(response_json["choices"][0]["message"]["content"])
 
