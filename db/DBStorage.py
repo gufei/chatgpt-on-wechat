@@ -386,6 +386,7 @@ class DBStorage:
 
     def get_agent_info(self, bot_wxid: str, channel_type):
         logger.debug(f"[wx_hook] --------------------bot_wxid-----------------, msg={bot_wxid}")
+        logger.debug(f"[wx_hook] --------------------channel_type-----------------, msg={channel_type}")
         conn = self._mysql.connection()
         try:
             if channel_type == "whatsapp":
