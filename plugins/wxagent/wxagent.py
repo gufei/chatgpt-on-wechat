@@ -53,7 +53,7 @@ class WXAgent(Plugin):
         else:
             contact_type = 2
         logger.info(f"[wxagent] channel: {e_context.econtext['channel']}")
-        channel_type = e_context.econtext['channel'].channel_type
+        channel_type = conf().get("channel_type", "wx_hook")
 
         agent_info = db_storage.get_agent_info(bot_wxid, channel_type)
 
