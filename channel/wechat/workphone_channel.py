@@ -51,27 +51,28 @@ class WorkPhoneChannel(ChatChannel):
             logger.error('Error while fetching the wechats')
 
         for wx_info in res['data']:
+            wechatid = wx_info.get("wechatid")
+            if wechatid:
+                self.wx_info[wechatid] = wx_info
 
-            self.wx_info[wx_info['wechatid']] = wx_info
+                redis_conn.hset('workphone_wechat_info', wechatid, json.dumps(wx_info))
 
-            redis_conn.hset('workphone_wechat_info', wx_info['wechatid'], json.dumps(wx_info))
+                url = "http://chat.gkscrm.com:13086/pc/GetWechatFriendList?cid=" + str(wx_info['cid']) + "&wechatid=" + wx_info[
+                    'wechatid']
+                response = requests.request("POST", url)
+                if response.status_code != 200:
+                    logger.error("Error while fetching the friends")
+                    continue
+                res = response.json()
+                for friend in res['data']:
+                    if friend['type'] == 0:
+                        redis_conn.hset('workphone_contact_info_' + wechatid, friend['friendid'],
+                                        json.dumps(friend))
+                    elif friend['type'] == 1:
+                        redis_conn.hset('workphone_group_info_' + wechatid, friend['friendid'],
+                                        json.dumps(friend))
 
-            url = "http://chat.gkscrm.com:13086/pc/GetWechatFriendList?cid=" + str(wx_info['cid']) + "&wechatid=" + wx_info[
-                'wechatid']
-            response = requests.request("POST", url)
-            if response.status_code != 200:
-                logger.error("Error while fetching the friends")
-                continue
-            res = response.json()
-            for friend in res['data']:
-                if friend['type'] == 0:
-                    redis_conn.hset('workphone_contact_info_' + wx_info['wechatid'], friend['friendid'],
-                                    json.dumps(friend))
-                elif friend['type'] == 1:
-                    redis_conn.hset('workphone_group_info_' + wx_info['wechatid'], friend['friendid'],
-                                    json.dumps(friend))
-
-            wx = redis_conn.hget('workphone_wechat_info',wx_info['wechatid'])
+                wx = redis_conn.hget('workphone_wechat_info',wechatid)
 
         logger.info(f"初始化账号数据完成")
 
