@@ -1,0 +1,30 @@
+syntax = "proto3";
+package Im.Scrm.Ww.Proto; //命名空间约定
+
+// 定义消息类型 GetWeChatsResp
+message GetWeChatsRespMessage {
+  string msgType = 1;           // 对应msgType字段
+  repeated Message message = 2; // 对应message字段, 是个Json数组，使用repeated类型
+}
+
+// 定义单个微信用户的消息格式
+message Message {
+  int32 accountid = 1;     // 对应accountid字段
+  string alias = 2;        // 对应alias字段
+  string avatar = 3;       // 对应avatar字段
+  string brand = 4;        // 对应brand字段
+  int32 cid = 5;           // 对应cid字段
+  string corpid = 6;       // 对应corpid字段
+  string deviceid = 7;     // 对应deviceid字段
+  string devnickname = 8;  // 对应devnickname字段
+  int32 gender = 9;        // 对应gender字段
+  int32 id = 10;           // 对应id字段
+  int32 isonline = 11;     // 对应isonline字段
+  string job = 12;         // 对应job字段
+  int64 login_time = 13;   // 对应login_time字段（作为时间戳）
+  int64 modify_time = 14;  // 对应modify_time字段（作为时间戳）
+  string module = 15;      // 对应module字段
+  string name = 16;        // 对应name字段
+  string phone = 17;       // 对应phone字段
+  string wxid = 18;        // 对应wxid字段
+}

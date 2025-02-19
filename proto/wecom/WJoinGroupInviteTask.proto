@@ -1,0 +1,11 @@
+syntax = "proto3";
+package Im.Scrm.Ww.Proto; //命名空间约定
+import "WTransport.proto";
+
+message JoinGroupInviteTaskMessage {
+    int64 WxId = 1; // 设备企业WX号
+    int64 ConvId = 2; //会话 RemoteId
+    int64 Sender = 3; //消息发送者RemoteId
+    string Url = 4; // 邀请链接
+    int64 TaskId = 5; // 发送给手机端的时候需要赋值，
+}

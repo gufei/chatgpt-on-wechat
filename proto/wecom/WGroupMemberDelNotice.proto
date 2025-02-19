@@ -1,0 +1,11 @@
+syntax = "proto3";
+package Im.Scrm.Ww.Proto; //命名空间约定
+import "WConversationPushNotice.proto";
+
+message GroupMemberDelNoticeMessage {
+    int64 WxId = 1; // 设备企业WX号
+    int64 ConvId = 2; // 群聊remoteId
+    string ConvName = 3;
+    repeated ConvMemberMessage Members = 4; // 群成员
+}
+

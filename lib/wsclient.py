@@ -32,8 +32,9 @@ class WebSocketClient(threading.Thread):
 
     heart_beat_event = threading.Event()
 
-    def __init__(self, url):
+    def __init__(self, url, credential):
         self.url = url
+        self.credential = credential
         threading.Thread.__init__(self)
         self.daemon = True
 
@@ -191,12 +192,12 @@ class WebSocketClient(threading.Thread):
         logger.info('进行认证...')
         device_auth = DeviceAuthReqMessage(
             AuthType=DeviceAuthReqMessage.EnumAuthType.Username,
-            Credential=base64.b64encode("dev:rQRwCSOmplX3TtLJ".encode('utf-8')).decode('utf-8')
+            Credential=base64.b64encode(self.credential.encode('utf-8')).decode('utf-8')
         )
 
         device_map = {
             "AuthType":2,
-            "Credential":base64.b64encode("dev:rQRwCSOmplX3TtLJ".encode('utf-8')).decode('utf-8')
+            "Credential":base64.b64encode(self.credential.encode('utf-8')).decode('utf-8')
         }
 
         device_auth = ParseDict(device_map, device_auth)

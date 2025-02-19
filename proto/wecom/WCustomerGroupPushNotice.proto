@@ -1,0 +1,23 @@
+syntax = "proto3";
+package Im.Scrm.Ww.Proto; //命名空间约定
+import "WTransport.proto";
+
+message CustomerGroupPushNoticeMessage {
+    int64 WxId = 1; // 设备企业WX号
+    bool Success = 2; // 是否成功
+    repeated CustomerGroupMessage Groups = 3; // 客户群列表
+    int64 TaskId = 4;
+}
+
+message CustomerGroupMessage {
+    int64 Id = 1; // 会话id
+    int64 RemoteId = 2; // 会话RemoteId
+    string Name = 3; // 群名
+    string Avatar = 4;
+    int64 Owner = 6; //群主Id
+    int32 CreateTime = 7; //创建时间
+    int32 UpdateTime = 8; // 最后更新时间
+    int32 Flag = 10; //
+    int32 MemberCnt = 11; //群成员数
+}
+

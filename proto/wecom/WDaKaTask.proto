@@ -1,0 +1,11 @@
+syntax = "proto3";
+package Im.Scrm.Ww.Proto; //命名空间约定
+
+message DaKaTaskMessage {
+    int64 WxId = 1; // 设备企业WX号
+    int32 Type = 2; // 1 上班打卡 2 下班打卡 （未使用）
+    bool Force = 3; // 强制打卡（更新打卡）
+    int32 Flag = 4; // 保留字段，未使用 （检查时间，不允许早退等）
+    int64 TaskId = 5;
+}
+
