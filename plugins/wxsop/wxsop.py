@@ -212,7 +212,7 @@ class WXSop(Plugin):
                                         })
                                 # _ = wx_hook_request("/SendFileMsg", data, server['private_ip'], wxinfo['port'])
                 if haveVar:
-                    contactinfo = db_storage.get_contact_by_wxid(receiver)
+                    contactinfo = db_storage.get_contact_by_wxid(receiver, bot_wxid)
                 else:
                     contactinfo = {}
                 for index, message in enumerate(messages):
@@ -429,7 +429,7 @@ class WXSop(Plugin):
                                         }
                                     })
             if haveVar:
-                contactinfo = db_storage.get_contact_by_wxid(contact_wxid)
+                contactinfo = db_storage.get_contact_by_wxid(contact_wxid, bot_wxid)
             else:
                 contactinfo = {}
             for index, message in enumerate(messages):
@@ -588,7 +588,27 @@ def contains_placeholder(s: str) -> bool:
 
 
 def var_replace(s: str, contactinfo: dict) -> str:
-    s = s.replace("${nickname}", contactinfo["nickname"])
+    s = s.replace("${nickname}", contactinfo.get("nickname", ""))
+    s = s.replace("${cname}", contactinfo.get("cname", ""))
+    s = s.replace("${ctitle}", contactinfo.get("ctitle", ""))
+    s = s.replace("${cidcard_no}", contactinfo.get("cidcard_no", ""))
+    s = s.replace("${carea}", contactinfo.get("carea", ""))
+    s = s.replace("${cbirtharea}", contactinfo.get("cbirtharea", ""))
+    s = s.replace("${cbirthday}", contactinfo.get("cbirthday", ""))
+
+    sex_index = contactinfo.get("sex", 0)
+    sex = ""
+    if sex_index == 1:
+        sex = "男"
+    elif sex_index == 2:
+        sex = "女"
+    s = s.replace("${sex}", sex)
+
+    age_index = contactinfo.get("cage", 0)
+    age = ""
+    if age_index:
+        age = str(age_index)
+    s = s.replace("${cage}", age)
     return s
 
 
