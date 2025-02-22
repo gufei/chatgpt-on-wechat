@@ -22,7 +22,7 @@ from workphone.ChatRoomAddNotice_pb2 import ChatRoomAddNoticeMessage
 from wecom.WDeviceAuthRsp_pb2 import DeviceAuthRspMessage
 from wecom.WFriendTalkNotice_pb2 import FriendTalkNoticeMessage
 from wecom.WTalkToFriendTask_pb2 import TalkToFriendTaskMessage
-from wecom.WTransport_pb2 import EnumContentType, TransportMessage, EnumMsgType
+from wecom.WTransport_pb2 import EnumContentType, TransportMessage, EnumMsgType, EnumAccountType
 from wecom.WGetWeChatsReq_pb2 import GetWeChatsReqMessage
 import xml.etree.ElementTree as ET
 
@@ -39,7 +39,7 @@ class WorkPhoneChannel(ChatChannel):
         self.receivedMsgs = ExpiredDict(60 * 60)
 
 
-    def get_wx_info(self):
+    def on_get_wechats(self, wechats):
         # logger.info(f"初始化账号数据")
         # url = "http://chat.gkscrm.com:13086/pc/GetWeChatsReq?id=13"
         # response = requests.request("POST", url)
@@ -51,29 +51,7 @@ class WorkPhoneChannel(ChatChannel):
         #
         # if res.get('code') != 0:
         #     logger.error('Error while fetching the wechats')
-        res = [
-            {
-                "accountid": 42,
-                "alias": "",
-                "avatar": "http://mmhead.c2c.wechat.com/mmhead/Uoy7p4DLBYtMYdhNBAXzmrgjHnJIkiac6c1zln10777mMuFo5w3iaNbuEs0AGvCedqmh9SMjvlMWY/0",
-                "brand": "",
-                "cid": 7,
-                "corpid": "1970326732995166",
-                "deviceid": "d522269139cc998c",
-                "devnickname": "",
-                "gender": 0,
-                "id": 234,
-                "isonline": 1,
-                "job": "",
-                "login_time": 1739024624000,
-                "modify_time": 1739024624000,
-                "module": "",
-                "name": "宋伯文",
-                "phone": "17600917383",
-                "wxid": "1688856818598875"
-            }
-        ]
-        for wx_info in res:
+        for wx_info in wechats:
 
             self.wx_info[wx_info['wxid']] = wx_info
             print(wx_info['wxid'])
@@ -123,10 +101,10 @@ class WorkPhoneChannel(ChatChannel):
 
 
     def startup(self):
-        self.wsCli = WecomClient("ws://chat.jubotech.com:15088", "guanke:123456")
+        self.wsCli = WecomClient("ws://wecom.gkscrm.com:15088", "bwkf:rQRwCSOmplX3TtLJ")
         self.wsCli.start()
         self.wsCli.ws.on_message = self.on_message
-        self.get_wx_info()
+        # self.get_wx_info()
 
     def on_device_auth(self, ws, msg_dict):
         """
@@ -143,9 +121,7 @@ class WorkPhoneChannel(ChatChannel):
             "Id": 1001,
             "MsgType": "HeartBeatReq",
             "AccessToken": self.access_token,
-            "Content": {
-                "token": self.access_token
-            }
+            "Content": {}
         }
 
         thread = threading.Thread(
@@ -154,7 +130,7 @@ class WorkPhoneChannel(ChatChannel):
         thread.start()
 
         logger.info('发送心跳')
-
+        self.get_wechats_resp()
         return
 
     def on_friend_talk_notice(self,ws, msg_dict):
@@ -236,6 +212,9 @@ class WorkPhoneChannel(ChatChannel):
         if 'msgType' not in received_data:
             return
 
+        if received_data['msgType'] == 'GetWeChatsResp':
+            msg_dict = json.loads(received_data['message'])
+            return self.on_get_wechats(ws, msg_dict)
 
         if received_data['msgType'] == 'DeviceAuthRsp':
             msg_dict = json.loads(received_data['message'])
@@ -321,25 +300,16 @@ class WorkPhoneChannel(ChatChannel):
 
         self.wsCli.send(transport_message_json)
 
-    def get_wechats_resp(self, reply: Reply, context: Context):
+    def get_wechats_resp(self):
         send_msg = GetWeChatsReqMessage(
-            id=self.union_id,
-            AccountType=receiver,
+            id=str(self.union_id),
+            AccountType=EnumAccountType.SubUser,
         )
-        send_msg = GetWeChatsReqMessage(
-            id=self.union_id,
-            AccountType=receiver,
-        )
-
-        if is_group and reply.type == ReplyType.TEXT:
-            send_msg.Remark = context['session_id']
-
-        logger.info(f'[wx_hook] 发送文本消息: {send_msg}')
 
         content = Any()
         content.Pack(send_msg)
 
-        transport_message = TransportMessage(MsgType=EnumMsgType.TalkToFriendTask, Content=content)
+        transport_message = TransportMessage(MsgType=EnumMsgType.GetWeChatsReq, Content=content)
 
         transport_message_dict = MessageToDict(transport_message, preserving_proto_field_name=True)
 

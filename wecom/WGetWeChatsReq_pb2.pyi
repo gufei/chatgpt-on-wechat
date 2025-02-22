@@ -3,6 +3,7 @@
 isort:skip_file
 命名空间约定"""
 
+import WTransport_pb2
 import builtins
 import google.protobuf.descriptor
 import google.protobuf.message
@@ -16,39 +17,18 @@ class GetWeChatsReqMessage(google.protobuf.message.Message):
 
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    CONTENT_FIELD_NUMBER: builtins.int
-    @property
-    def content(self) -> global___Content:
-        """包含一个Content消息"""
-
-    def __init__(
-        self,
-        *,
-        content: global___Content | None = ...,
-    ) -> None: ...
-    def HasField(self, field_name: typing.Literal["content", b"content"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing.Literal["content", b"content"]) -> None: ...
-
-global___GetWeChatsReqMessage = GetWeChatsReqMessage
-
-@typing.final
-class Content(google.protobuf.message.Message):
-    """定义Content消息"""
-
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
     ACCOUNTTYPE_FIELD_NUMBER: builtins.int
     ID_FIELD_NUMBER: builtins.int
-    AccountType: builtins.str
+    AccountType: WTransport_pb2.EnumAccountType.ValueType
     """对应AccountType字段"""
     id: builtins.str
     """对应id字段"""
     def __init__(
         self,
         *,
-        AccountType: builtins.str = ...,
+        AccountType: WTransport_pb2.EnumAccountType.ValueType = ...,
         id: builtins.str = ...,
     ) -> None: ...
     def ClearField(self, field_name: typing.Literal["AccountType", b"AccountType", "id", b"id"]) -> None: ...
 
-global___Content = Content
+global___GetWeChatsReqMessage = GetWeChatsReqMessage

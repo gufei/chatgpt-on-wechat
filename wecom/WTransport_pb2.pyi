@@ -50,6 +50,8 @@ class _EnumMsgTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._En
     DeviceAuthResult: _EnumMsgType.ValueType  # 1018
     PhoneActionTask: _EnumMsgType.ValueType  # 1020
     """通知手机端执行特定任务"""
+    GetWeChatsReq: _EnumMsgType.ValueType  # 1021
+    GetWeChatsResp: _EnumMsgType.ValueType  # 1022
     ConfigPushNotice: _EnumMsgType.ValueType  # 1030
     ConfigSetting: _EnumMsgType.ValueType  # 1031
     WwOnlineNotice: _EnumMsgType.ValueType  # 1100
@@ -285,6 +287,8 @@ TriggerDeviceInfo: EnumMsgType.ValueType  # 1017
 DeviceAuthResult: EnumMsgType.ValueType  # 1018
 PhoneActionTask: EnumMsgType.ValueType  # 1020
 """通知手机端执行特定任务"""
+GetWeChatsReq: EnumMsgType.ValueType  # 1021
+GetWeChatsResp: EnumMsgType.ValueType  # 1022
 ConfigPushNotice: EnumMsgType.ValueType  # 1030
 ConfigSetting: EnumMsgType.ValueType  # 1031
 WwOnlineNotice: EnumMsgType.ValueType  # 1100

@@ -22,17 +22,16 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+import WTransport_pb2 as WTransport__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14WGetWeChatsReq.proto\x12\x10Im.Scrm.Ww.Proto\"B\n\x14GetWeChatsReqMessage\x12*\n\x07\x63ontent\x18\x01 \x01(\x0b\x32\x19.Im.Scrm.Ww.Proto.Content\"*\n\x07\x43ontent\x12\x13\n\x0b\x41\x63\x63ountType\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\tb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14WGetWeChatsReq.proto\x12\x10Im.Scrm.Ww.Proto\x1a\x10WTransport.proto\"Z\n\x14GetWeChatsReqMessage\x12\x36\n\x0b\x41\x63\x63ountType\x18\x01 \x01(\x0e\x32!.Im.Scrm.Ww.Proto.EnumAccountType\x12\n\n\x02id\x18\x02 \x01(\tb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'WGetWeChatsReq_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_GETWECHATSREQMESSAGE']._serialized_start=42
-  _globals['_GETWECHATSREQMESSAGE']._serialized_end=108
-  _globals['_CONTENT']._serialized_start=110
-  _globals['_CONTENT']._serialized_end=152
+  _globals['_GETWECHATSREQMESSAGE']._serialized_start=60
+  _globals['_GETWECHATSREQMESSAGE']._serialized_end=150
 # @@protoc_insertion_point(module_scope)

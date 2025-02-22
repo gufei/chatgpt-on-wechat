@@ -35,6 +35,10 @@ enum EnumMsgType {
 
     PhoneActionTask = 1020; // 通知手机端执行特定任务
 
+    GetWeChatsReq = 1021;
+    GetWeChatsResp = 1022;
+
+
     ConfigPushNotice = 1030;
     ConfigSetting = 1031;
 

@@ -484,3 +484,22 @@ class DBStorage:
             conn.rollback()
         finally:
             conn.close()
+
+    # def create_wx_record(self, bot_wxid: str, contact_id: int, contact_type: int, contact_wxid: str, content_type: int, content: str, meta: dict, source_type: int, source_id: int, sub_source_id: int, organization_id: int) -> Optional[int]:
+    #     conn = self._mysql.connection()
+    #     try:
+    #         current_utc_time = datetime.now(timezone.utc)
+    #         formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
+    #         meta_str = json.dumps(meta) if isinstance(meta, dict) else meta
+    #         sql_insert = "INSERT INTO wx (status, bot_wxid, contact_id, contact_type, contact_wxid, content_type, content, meta, source_type, source_id, sub_source_id, organization_id, send_time, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    #         record_tuple = (status, bot_wxid, contact_id, contact_type, contact_wxid, content_type, content, meta_str, source_type, source_id, sub_source_id, organization_id, formatted_time, formatted_time, formatted_time)
+    #
+    #         with conn.cursor() as cursor:
+    #             cursor.execute(sql_insert, record_tuple)
+    #             conn.commit()
+    #             return cursor.lastrowid
+    #     except Error as e:
+    #         print(f"Error while connecting to MySQL: {e}")
+    #         conn.rollback()
+    #     finally:
+    #         conn.close()
