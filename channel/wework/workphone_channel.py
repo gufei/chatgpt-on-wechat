@@ -14,16 +14,13 @@ from common.log import logger
 from common.singleton import singleton
 from lib.allow_block import check_allow_or_block_list
 from lib.file_tool import is_image_file
-from lib.itchat.components.messages import send_msg
 from lib.wecom_client import WecomClient
-from lib.wsclient import WebSocketClient
-from workphone.ChatRoomAddNotice_pb2 import ChatRoomAddNoticeMessage
-# from workphone.ChatRoomMembersNotice_pb2 import ChatRoomMembersNoticeMessage
 from wecom.WDeviceAuthRsp_pb2 import DeviceAuthRspMessage
 from wecom.WFriendTalkNotice_pb2 import FriendTalkNoticeMessage
 from wecom.WTalkToFriendTask_pb2 import TalkToFriendTaskMessage
 from wecom.WTransport_pb2 import EnumContentType, TransportMessage, EnumMsgType, EnumAccountType
 from wecom.WGetWeChatsReq_pb2 import GetWeChatsReqMessage
+from wecom.WTriggerCustomerPushTask_pb2 import TriggerCustomerPushTaskMessage
 import xml.etree.ElementTree as ET
 
 from google.protobuf.any_pb2 import Any
@@ -40,68 +37,54 @@ class WorkPhoneChannel(ChatChannel):
 
 
     def on_get_wechats(self, wechats):
-        # logger.info(f"初始化账号数据")
-        # url = "http://chat.gkscrm.com:13086/pc/GetWeChatsReq?id=13"
-        # response = requests.request("POST", url)
-        #
-        # if response.status_code != 200:
-        #     logger.error("Error while fetching the wechats")
-        #
-        # res = response.json()
-        #
-        # if res.get('code') != 0:
-        #     logger.error('Error while fetching the wechats')
         for wx_info in wechats:
-
+            print(f"wx_info['wxid']: {wx_info['wxid']}")
+            wxinfo = db_storage.get_info_by_wxid(wx_info['wxid'])
+            print(f"wxinfo2: {wxinfo}")
+            if wxinfo:
+                # 更新
+                organization_id = wxinfo["organization_id"]
+                db_storage.update_wx_record(wx_info.get('wxid', ""), wx_info.get('deviceid', ""), "11", "", wx_info.get('name', ""), wx_info.get('phone', ""), wx_info.get('avatar', ""))
+            else:
+                print(f"创建")
+                # 创建
+                print(f"wx_info.get('deviceid', ''): {wx_info.get('deviceid', '')}")
+                organization_id = 1
+                db_storage.create_wx_record(wx_info.get('deviceid', ''), "11", wx_info.get('wxid', ""), "", wx_info.get('name', ""), wx_info.get('phone', ""), wx_info.get('avatar', ""), 2)
+            wx_info["organization_id"] = organization_id
             self.wx_info[wx_info['wxid']] = wx_info
-            print(wx_info['wxid'])
-            redis_conn.hset('workphone_wecom_info', wx_info['wxid'], json.dumps(wx_info))
-            # res = [
-            #     {
-            #         "RemoteId": "7881300704367474",
-            #         "Name": "轻马小助手",
-            #         "Alias": "轻马小助手",
-            #         "Avatar": "http://wx.qlogo.cn/mmhead/4h0Uv4XOMvMLOjSqkFc2ybFSy15Gjz9UL4X9mB69x1q1Dj8ibnow8xUibzEA7BnBgIk4iaob3lVTrE/0",
-            #         "UnionId": "ozynqshODh23k_--FBwS0gvouftQ",
-            #         "CorpId": "1970325134026788",
-            #         "AddTime": 1739023608,
-            #         "Source": 2,
-            #         "Suffix": "微信"
-            #     },
-            #     {
-            #         "RemoteId": "7881302495311662",
-            #         "Name": "博闻",
-            #         "Alias": "测试",
-            #         "Avatar": "http://wx.qlogo.cn/mmhead/N4HWkmwbSVQ4XaEgTEXQkfwXWTetQEohouDIOmFY88VucglrbJd9jrdTZ1cFglU73Ch3a1qXibCs/0",
-            #         "UnionId": "ozynqsgWEmfT2kUhbJ4ghV_K84Qk",
-            #         "CorpId": "1970325134026788",
-            #         "AddTime": 1739020596,
-            #         "Source": 2,
-            #         "LabelIds": [
-            #             "14073751373919870",
-            #             "14073751373920062"
-            #         ],
-            #         "Suffix": "微信",
-            #         "Remark": "测试"
-            #     }
-            # ]
-            #
-            # for friend in res:
-            #     if friend['type'] == 0:
-            #         redis_conn.hset('workphone_contact_info_' + wx_info['wechatid'], friend['friendid'],
-            #                         json.dumps(friend))
-            #     elif friend['type'] == 1:
-            #         redis_conn.hset('workphone_group_info_' + wx_info['wechatid'], friend['friendid'],
-            #                         json.dumps(friend))
-            #
-            # wx = redis_conn.hget('workphone_wecom_info',wx_info['wechatid'])
+            print(f"wx_info: {wx_info}")
+            self.get_customer_push_notice(wx_info['wxid'])
+
+            # 获取联系人
+
 
         logger.info(f"初始化账号数据完成")
 
+    def on_get_customer_push_notice(self, wechats):
+        if not wechats:
+            return None
+        wx_wxid = wechats.get("WxId")
+        if not wx_wxid:
+            return None
+        for wx_info in wechats.get("Contacts"):
+            if not self.wx_info.get(wx_wxid):
+                return None
+            organization_id = self.wx_info[wx_wxid].get("organization_id", 0)
+            labelIds = ", ".join(wx_info.get('LabelIds', []))
+            wxinfo = db_storage.get_contact_by_wxid(wx_info['RemoteId'], wx_wxid)
+            if wxinfo:
+                print(f"更新")
+                # 更新
+                db_storage.update_contact_record(wx_wxid, wx_info.get('RemoteId', ""), "", wx_info.get('Name', ""), wx_info.get('Alias', ""), wx_info.get('Avatar', ""), labelIds, "", "", organization_id, wx_info.get('Mobile', ""))
+            else:
+                print(f"创建")
+                # 创建
+                db_storage.create_contact_record(wx_wxid, 1, wx_info.get('RemoteId', ""), "", wx_info.get('Name', ""), wx_info.get('Alias', ""), wx_info.get('Avatar', ""), labelIds, "", "", organization_id, 3, wx_info.get('Mobile', ""))
 
 
     def startup(self):
-        self.wsCli = WecomClient("ws://wecom.gkscrm.com:15088", "bwkf:rQRwCSOmplX3TtLJ")
+        self.wsCli = WecomClient("ws://wecom.gkscrm.com:15088", "pctest:rQRwCSOmplX3TtLJ")
         self.wsCli.start()
         self.wsCli.ws.on_message = self.on_message
         # self.get_wx_info()
@@ -144,8 +127,6 @@ class WorkPhoneChannel(ChatChannel):
         msg = FriendTalkNoticeMessage()
         msg = ParseDict(msg_dict, msg)
         logger.info(f'FriendTalkNoticeMessage 收到的消息为: {msg}')
-        print(f"msg.WxId: {msg.WxId}")
-        print(f"self.wx_info: {self.wx_info}")
         if str(msg.WxId) not in self.wx_info:
             logger.error('没有找到该微信，跳过')
             return
@@ -176,19 +157,19 @@ class WorkPhoneChannel(ChatChannel):
         if wxinfo['server_id'] > 0:
             logger.error("不是工作手机的账号")
             return
-
         # 黑白名单处理
         if check_allow_or_block_list(context, wxinfo) is False:
             logger.debug(f"[wx_hook] check_allow_or_block_list failed")
             return self
 
-
         if context:
             # 增加需要的context
+            print(f"wechat: {wechat}")
+            print(f"wechat['wechatid']: {wechat['wxid']}")
+            print(f"wxinfo['organization_id']: {wxinfo['organization_id']}")
             context['wechat_account'] = wechat
-            context['wxid'] = wechat['wechatid']
+            context['wxid'] = wechat['wxid']
             context['organization_id'] = wxinfo['organization_id']
-
             if wxinfo['agent_id'] == 0:
                 if wxinfo['api_base'] != '':
                     context['open_ai_api_base'] = wxinfo['api_base']
@@ -212,17 +193,21 @@ class WorkPhoneChannel(ChatChannel):
         if 'msgType' not in received_data:
             return
 
+        if received_data['msgType'] == 'FriendTalkNotice':
+            msg_dict = json.loads(received_data['message'])
+            return self.on_friend_talk_notice(ws,msg_dict)
+
         if received_data['msgType'] == 'GetWeChatsResp':
             msg_dict = json.loads(received_data['message'])
-            return self.on_get_wechats(ws, msg_dict)
+            return self.on_get_wechats(msg_dict)
+
+        if received_data['msgType'] == 'CustomerPushNotice':
+            msg_dict = json.loads(received_data['message'])
+            return self.on_get_customer_push_notice(msg_dict)
 
         if received_data['msgType'] == 'DeviceAuthRsp':
             msg_dict = json.loads(received_data['message'])
             return self.on_device_auth(ws, msg_dict)
-
-        if received_data['msgType'] == 'FriendTalkNotice':
-            msg_dict = json.loads(received_data['message'])
-            return self.on_friend_talk_notice(ws,msg_dict)
 
         # if received_data['msgType'] == 'ChatRoomAddNotice':
         #     msg_dict = json.loads(received_data['message'])
@@ -275,7 +260,7 @@ class WorkPhoneChannel(ChatChannel):
                 content_type = EnumContentType.File
 
         send_msg = TalkToFriendTaskMessage(
-            WxId=wx_account['wechatid'],
+            WxId=int(wx_account['wxid']),
             ConvId=receiver,
             ContentType=content_type,
             Content=content.encode('utf-8'),
@@ -318,6 +303,25 @@ class WorkPhoneChannel(ChatChannel):
 
         transport_message_json = json.dumps(transport_message_dict, indent=2)
 
+        self.wsCli.send(transport_message_json)
+
+    def get_customer_push_notice(self, wx_id):
+        send_msg = TriggerCustomerPushTaskMessage(
+            WxId=wx_id,
+        )
+
+        content = Any()
+        content.Pack(send_msg)
+
+        transport_message = TransportMessage(MsgType=EnumMsgType.TriggerCustomerPushTask, Content=content)
+
+        transport_message_dict = MessageToDict(transport_message, preserving_proto_field_name=True)
+
+        # 清理不必要的字段
+        del transport_message_dict['Content']['@type']
+
+        transport_message_json = json.dumps(transport_message_dict, indent=2)
+        print(f"transport_message_json: {transport_message_json}")
         self.wsCli.send(transport_message_json)
 
     # def on_chat_room_add_notice(self, msg_dict):

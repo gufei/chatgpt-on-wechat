@@ -1,11 +1,6 @@
 syntax = "proto3";
 package Im.Scrm.Ww.Proto; //命名空间约定
 
-// 定义消息类型 GetWeChatsReq
-// message GetWeChatsReqMessage {
-//   Content content = 1; // 包含一个Content消息
-// }
-
 import "WTransport.proto";
 // 定义消息类型 GetWeChatsReq
 message GetWeChatsReqMessage {
