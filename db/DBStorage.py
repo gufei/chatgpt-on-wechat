@@ -87,7 +87,7 @@ class DBStorage:
             return json.loads(wx_info)
         conn = self._mysql.connection()
         try:
-            sql_query = "SELECT id, status, port, process_id, callback, wxid, account, nickname, server_id, organization_id, agent_id, api_base, api_key, allow_list, group_allow_list, block_list, group_block_list, server_id FROM wx WHERE wxid = %s ORDER BY id DESC LIMIT 1"
+            sql_query = "SELECT id, status, port, process_id, callback, wxid, account, nickname, server_id, organization_id, agent_id, api_base, api_key, allow_list, group_allow_list, block_list, group_block_list, server_id, ctype FROM wx WHERE wxid = %s ORDER BY id DESC LIMIT 1"
             record_tuple = (wxid, )
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
@@ -490,7 +490,7 @@ class DBStorage:
         try:
             # current_utc_time = datetime.now(timezone.utc)
             # formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
-            sql_insert = "INSERT INTO wx (`port`, `process_id`, `wxid`, `account`, `nickname`, `tel`, `head_big`, `type`, `allow_list`, `group_allow_list`, `block_list`, `group_block_list`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            sql_insert = "INSERT INTO wx (`port`, `process_id`, `wxid`, `account`, `nickname`, `tel`, `head_big`, `ctype`, `allow_list`, `group_allow_list`, `block_list`, `group_block_list`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
             record_tuple = (port, process_id, wxid, account, nickname, tel, head_big, type, '[]', '[]', '[]', '[]')
 
             with conn.cursor() as cursor:

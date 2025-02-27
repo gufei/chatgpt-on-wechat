@@ -50,7 +50,7 @@ class WorkPhoneChannel(ChatChannel):
                 # 创建
                 print(f"wx_info.get('deviceid', ''): {wx_info.get('deviceid', '')}")
                 organization_id = 1
-                db_storage.create_wx_record(wx_info.get('deviceid', ''), "11", wx_info.get('wxid', ""), "", wx_info.get('name', ""), wx_info.get('phone', ""), wx_info.get('avatar', ""), 2)
+                db_storage.create_wx_record(wx_info.get('deviceid', ''), "11", wx_info.get('wxid', ""), "", wx_info.get('name', ""), wx_info.get('phone', ""), wx_info.get('avatar', ""), 3)
             wx_info["organization_id"] = organization_id
             self.wx_info[wx_info['wxid']] = wx_info
             print(f"wx_info: {wx_info}")
