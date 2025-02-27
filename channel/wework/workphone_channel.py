@@ -93,6 +93,8 @@ class WorkPhoneChannel(ChatChannel):
         for Conver_info in wechats.get("Convers"):
             if Conver_info.get('RemoteId', "") == wx_wxid:
                 continue
+            if Conver_info.get('Type', 0) != 1:
+                continue
             if not self.wx_info.get(wx_wxid):
                 return None
             organization_id = self.wx_info[wx_wxid].get("organization_id", 0)
