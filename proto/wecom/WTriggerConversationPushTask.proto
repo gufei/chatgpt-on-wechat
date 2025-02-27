@@ -1,0 +1,7 @@
+syntax = "proto3";
+package Im.Scrm.Ww.Proto; //命名空间约定
+
+// 定义消息类型 TriggerConversationPushTask
+message TriggerConversationPushTaskMessage {
+  string WxId = 1;
+}

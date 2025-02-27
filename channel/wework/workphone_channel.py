@@ -21,6 +21,7 @@ from wecom.WTalkToFriendTask_pb2 import TalkToFriendTaskMessage
 from wecom.WTransport_pb2 import EnumContentType, TransportMessage, EnumMsgType, EnumAccountType
 from wecom.WGetWeChatsReq_pb2 import GetWeChatsReqMessage
 from wecom.WTriggerCustomerPushTask_pb2 import TriggerCustomerPushTaskMessage
+from wecom.WTriggerConversationPushTask_pb2 import TriggerConversationPushTaskMessage
 import xml.etree.ElementTree as ET
 
 from google.protobuf.any_pb2 import Any
@@ -55,6 +56,7 @@ class WorkPhoneChannel(ChatChannel):
             self.wx_info[wx_info['wxid']] = wx_info
             print(f"wx_info: {wx_info}")
             self.get_customer_push_notice(wx_info['wxid'])
+            self.get_conversation_push_notice(wx_info['wxid'])
 
             # 获取联系人
 
@@ -81,6 +83,29 @@ class WorkPhoneChannel(ChatChannel):
                 print(f"创建")
                 # 创建
                 db_storage.create_contact_record(wx_wxid, 1, wx_info.get('RemoteId', ""), "", wx_info.get('Name', ""), wx_info.get('Alias', ""), wx_info.get('Avatar', ""), labelIds, "", "", organization_id, 3, wx_info.get('Mobile', ""))
+
+    def on_get_conversation_push_notice(self, wechats):
+        if not wechats:
+            return None
+        wx_wxid = wechats.get("WxId")
+        if not wx_wxid:
+            return None
+        for Conver_info in wechats.get("Convers"):
+            if Conver_info.get('RemoteId', "") == wx_wxid:
+                continue
+            if not self.wx_info.get(wx_wxid):
+                return None
+            organization_id = self.wx_info[wx_wxid].get("organization_id", 0)
+            # labelIds = ", ".join(Conver_info.get('LabelIds', []))
+            wxinfo = db_storage.get_contact_by_wxid(Conver_info['RemoteId'], wx_wxid)
+            if wxinfo:
+                print(f"更新")
+                # 更新
+                db_storage.update_contact_record(wx_wxid, Conver_info.get('RemoteId', ""), "", Conver_info.get('Name', ""), Conver_info.get('Alias', ""), Conver_info.get('Avatar', ""), "", "", "", organization_id, Conver_info.get('Mobile', ""))
+            else:
+                print(f"创建")
+                # 创建
+                db_storage.create_contact_record(wx_wxid, 2, Conver_info.get('RemoteId', ""), "", Conver_info.get('Name', ""), Conver_info.get('Alias', ""), Conver_info.get('Avatar', ""), "", "", "", organization_id, 3, Conver_info.get('Mobile', ""))
 
 
     def startup(self):
@@ -205,6 +230,10 @@ class WorkPhoneChannel(ChatChannel):
             msg_dict = json.loads(received_data['message'])
             return self.on_get_customer_push_notice(msg_dict)
 
+        if received_data['msgType'] == 'ConversationPushNotice':
+            msg_dict = json.loads(received_data['message'])
+            return self.on_get_conversation_push_notice(msg_dict)
+
         if received_data['msgType'] == 'DeviceAuthRsp':
             msg_dict = json.loads(received_data['message'])
             return self.on_device_auth(ws, msg_dict)
@@ -324,6 +353,25 @@ class WorkPhoneChannel(ChatChannel):
         print(f"transport_message_json: {transport_message_json}")
         self.wsCli.send(transport_message_json)
 
+    def get_conversation_push_notice(self, wx_id):
+        send_msg = TriggerConversationPushTaskMessage(
+            WxId=wx_id,
+        )
+
+        content = Any()
+        content.Pack(send_msg)
+
+        transport_message = TransportMessage(MsgType=EnumMsgType.TriggerConversationPushTask, Content=content)
+
+        transport_message_dict = MessageToDict(transport_message, preserving_proto_field_name=True)
+
+        # 清理不必要的字段
+        del transport_message_dict['Content']['@type']
+
+        transport_message_json = json.dumps(transport_message_dict, indent=2)
+        print(f"transport_message_json: {transport_message_json}")
+        self.wsCli.send(transport_message_json)
+
     # def on_chat_room_add_notice(self, msg_dict):
     #     """
     #     处理聊天消息同步。
@@ -342,42 +390,42 @@ class WorkPhoneChannel(ChatChannel):
     #
     #     db_storage.add_wp_chatroom(msg_dict["WeChatId"], msg_dict["ChatRoom"]["UserName"], msg_dict["ChatRoom"]["NickName"], msg_dict["ChatRoom"]["Owner"], msg_dict["ChatRoom"]["Avatar"], msg_dict["ChatRoom"]["MemberList"], msg_dict["ChatRoom"]["ShowNameList"])
 
-    def on_chat_room_members_notice(self, msg_dict):
-        """
-        处理聊天消息同步。
+    # def on_chat_room_members_notice(self, msg_dict):
+    #     """
+    #     处理聊天消息同步。
+    #
+    #     参数:
+    #     - ws: WebSocket连接对象，用于接收和发送消息。
+    #     - msg_dict: 字典类型的原始消息，包含好友聊天通知的所有信息。
+    #     """
+    #     msg = ChatRoomMembersNoticeMessage()
+    #     msg = ParseDict(msg_dict, msg)
+    #     logger.info(f'ChatRoomMembersNotice 收到的消息为: {msg}')
+    #
+    #     if msg_dict["WeChatId"] not in self.wx_info:
+    #         logger.error('没有找到该微信，跳过')
+    #         return
+    #
+    #     members_tuples = [(msg.WeChatId, member.Wxid, member.SenderName, member.Avatar) for member in
+    #                       msg.Members]
+    #     db_storage.add_wp_chatroom_member(msg.WeChatId, members_tuples)
 
-        参数:
-        - ws: WebSocket连接对象，用于接收和发送消息。
-        - msg_dict: 字典类型的原始消息，包含好友聊天通知的所有信息。
-        """
-        msg = ChatRoomMembersNoticeMessage()
-        msg = ParseDict(msg_dict, msg)
-        logger.info(f'ChatRoomMembersNotice 收到的消息为: {msg}')
-
-        if msg_dict["WeChatId"] not in self.wx_info:
-            logger.error('没有找到该微信，跳过')
-            return
-
-        members_tuples = [(msg.WeChatId, member.Wxid, member.SenderName, member.Avatar) for member in
-                          msg.Members]
-        db_storage.add_wp_chatroom_member(msg.WeChatId, members_tuples)
-
-    def on_chatroom_push_notice(self, msg_dict):
-        """
-        处理聊天消息同步。
-
-        参数:
-        - ws: WebSocket连接对象，用于接收和发送消息。
-        - msg_dict: 字典类型的原始消息，包含好友聊天通知的所有信息。
-        """
-        # msg = ChatRoomMembersNoticeMessage()
-        # msg = ParseDict(msg_dict, msg)
-        logger.info(f'ChatroomPushNotice 收到的消息为: {msg_dict}')
-
-        if msg_dict["WeChatId"] not in self.wx_info:
-            logger.error('没有找到该微信，跳过')
-            return
-
-        members_tuples = [(msg_dict["WeChatId"], chat_room["UserName"], chat_room["NickName"], chat_room["Owner"], chat_room["Avatar"], json.dumps(chat_room["MemberList"]), json.dumps(chat_room["ShowNameList"])) for chat_room in
-                          msg_dict["ChatRooms"]]
-        db_storage.add_wp_chatroom(msg_dict["WeChatId"], members_tuples)
+    # def on_chatroom_push_notice(self, msg_dict):
+    #     """
+    #     处理聊天消息同步。
+    #
+    #     参数:
+    #     - ws: WebSocket连接对象，用于接收和发送消息。
+    #     - msg_dict: 字典类型的原始消息，包含好友聊天通知的所有信息。
+    #     """
+    #     # msg = ChatRoomMembersNoticeMessage()
+    #     # msg = ParseDict(msg_dict, msg)
+    #     logger.info(f'ChatroomPushNotice 收到的消息为: {msg_dict}')
+    #
+    #     if msg_dict["WeChatId"] not in self.wx_info:
+    #         logger.error('没有找到该微信，跳过')
+    #         return
+    #
+    #     members_tuples = [(msg_dict["WeChatId"], chat_room["UserName"], chat_room["NickName"], chat_room["Owner"], chat_room["Avatar"], json.dumps(chat_room["MemberList"]), json.dumps(chat_room["ShowNameList"])) for chat_room in
+    #                       msg_dict["ChatRooms"]]
+    #     db_storage.add_wp_chatroom(msg_dict["WeChatId"], members_tuples)
