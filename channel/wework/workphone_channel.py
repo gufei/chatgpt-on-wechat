@@ -84,7 +84,7 @@ class WorkPhoneChannel(ChatChannel):
 
 
     def startup(self):
-        self.wsCli = WecomClient("ws://wecom.gkscrm.com:15088", "pctest:rQRwCSOmplX3TtLJ")
+        self.wsCli = WecomClient("ws://wecom.gkscrm.com:15088", "debug:rQRwCSOmplX3TtLJ")
         self.wsCli.start()
         self.wsCli.ws.on_message = self.on_message
         # self.get_wx_info()
