@@ -1,0 +1,16 @@
+syntax = "proto3";
+package Im.Scrm.Ww.Proto; //命名空间约定
+import "WTransport.proto";
+
+message SnsMsgNoticeMessage {
+    int64 WxId = 1; //
+    int32 Type = 2; // 类型：1 评论，2 点赞
+    int64 SnsId = 3;
+    int64 FriendId = 4; // 评论人的微信号
+    string Content = 5; // 评论内容
+    int64 CommentId = 6; // 微信本地数据库的id
+    int64 ReplyCommentId = 7; // 回复的微信本地数据库的id
+    int64 ReplyWxId = 8; // 评论对象的微信号
+    int32 Time = 9; // 评论时间
+    string PostId = 10; // sns postid
+}

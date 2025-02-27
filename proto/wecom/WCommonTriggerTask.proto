@@ -1,0 +1,14 @@
+syntax = "proto3";
+package Im.Scrm.Ww.Proto; //命名空间约定
+
+// 通用Trigger任务消息
+message CommonTriggerTaskMessage {
+    int64 WxId = 1; //
+    // 同步会话，0：所有会话；1 已加载的会话 2 下一页会话, &512 忽略群成员 &1024 忽略消息概要
+    // 同步客户：Flag=1 只推送单向客户id
+    int32 Flag = 2;
+    int64 Time = 3; // 备用
+    int32 Offset = 4;
+    int32 Limit = 5;
+    int64 TaskId = 8;
+}

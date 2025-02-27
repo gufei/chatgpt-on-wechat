@@ -1,0 +1,9 @@
+syntax = "proto3";
+package Im.Scrm.Ww.Proto; //命名空间约定
+
+message SendFriendVerifyTaskMessage {
+    int64 WxId = 1; //
+    int64 RemoteId = 2; // 客户RemoteId
+    string Msg = 3; // 招呼语, 缺省：我是xxx公司的xxx，添加我的企业微信与我联系吧。
+    int64 TaskId = 4;
+}

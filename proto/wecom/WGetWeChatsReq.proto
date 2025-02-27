@@ -1,0 +1,9 @@
+syntax = "proto3";
+package Im.Scrm.Ww.Proto; //命名空间约定
+
+import "WTransport.proto";
+// 定义消息类型 GetWeChatsReq
+message GetWeChatsReqMessage {
+  EnumAccountType AccountType = 1; // 对应AccountType字段
+  string id = 2;          // 对应id字段
+}

@@ -24,6 +24,9 @@ def create_channel(channel_type) -> Channel:
     elif channel_type == "workphone":
         from channel.wechat.workphone_channel import WorkPhoneChannel
         ch = WorkPhoneChannel()
+    elif channel_type == "workphone_wecom":
+        from channel.wework.workphone_channel import WorkPhoneChannel
+        ch = WorkPhoneChannel()
     elif channel_type == "whatsapp":
         from channel.whatsapp.whatsapp_channel import WaHookChannel
         ch = WaHookChannel()

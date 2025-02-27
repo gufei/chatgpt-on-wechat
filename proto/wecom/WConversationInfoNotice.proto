@@ -1,0 +1,12 @@
+syntax = "proto3";
+package Im.Scrm.Ww.Proto; //命名空间约定
+import "WConversationPushNotice.proto";
+
+message ConversationInfoNoticeMessage {
+    int64 WxId = 1; // 设备企业WX号
+    bool Success = 2; // 是否成功
+    string ErrMsg = 3; // 错误内容描述 获取 成功时附带的结果内容
+    int64 TaskId = 4;
+    ConversationMessage Conver = 5; // 会话
+}
+

@@ -1,0 +1,10 @@
+syntax = "proto3";
+package Im.Scrm.Ww.Proto; //命名空间约定
+
+import "WConfigPushNotice.proto";
+message ConfigSettingMessage {
+    int64 WxId = 1; //
+    repeated BoolConfigMessage BoolConfs = 3;
+    repeated IntConfigMessage IntConfs = 4;
+    repeated StrConfigMessage StrConfs = 5;
+}

@@ -484,3 +484,67 @@ class DBStorage:
             conn.rollback()
         finally:
             conn.close()
+
+    def create_wx_record(self, port: str, process_id: str, wxid: str, account: str, nickname: str, tel: str, head_big: str, type: int):
+        conn = self._mysql.connection()
+        try:
+            # current_utc_time = datetime.now(timezone.utc)
+            # formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
+            sql_insert = "INSERT INTO wx (`port`, `process_id`, `wxid`, `account`, `nickname`, `tel`, `head_big`, `type`, `allow_list`, `group_allow_list`, `block_list`, `group_block_list`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            record_tuple = (port, process_id, wxid, account, nickname, tel, head_big, type, '[]', '[]', '[]', '[]')
+
+            with conn.cursor() as cursor:
+                cursor.execute(sql_insert, record_tuple)
+                conn.commit()
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
+    def update_wx_record(self, wxid: str, port: str, process_id: str, account: str, nickname: str, tel: str, head_big: str):
+        conn = self._mysql.connection()
+        try:
+            # current_utc_time = datetime.now(timezone.utc)
+            # formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
+            sql_update = "UPDATE wx SET `port` = %s, `process_id` = %s, `account` = %s, `nickname` = %s, `tel` = %s, `head_big` = %s WHERE `wxid` = %s"
+            record_tuple = (port, process_id, account, nickname, tel, head_big, wxid)
+
+            with conn.cursor() as cursor:
+                cursor.execute(sql_update, record_tuple)
+                conn.commit()
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
+    def create_contact_record(self, wx_wxid: str, type: int, wxid: str, account: str, nickname: str, markname: str, headimg: str, lag: str, gid: str, gname: str, organization_id: int, ctype: int, phone: str):
+        conn = self._mysql.connection()
+        try:
+            sql_insert = "INSERT INTO contact (`wx_wxid`, `type`, `wxid`, `account`, `nickname`, `markname`, `headimg`, `lag`, `gid`, `gname`, `organization_id`, `ctype`, `phone`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            record_tuple = (wx_wxid, type, wxid, account, nickname, markname, headimg, lag, gid, gname, organization_id, ctype, phone)
+
+            with conn.cursor() as cursor:
+                cursor.execute(sql_insert, record_tuple)
+                conn.commit()
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
+    def update_contact_record(self, wx_wxid: str, wxid: str, account: str, nickname: str, markname: str, headimg: str, lag: str, gid: str, gname: str, organization_id: int, phone: str):
+        conn = self._mysql.connection()
+        try:
+            sql_update = "UPDATE contact SET `account` = %s, `nickname` = %s, `markname` = %s, `headimg` = %s, `lag` = %s, `gid` = %s, `gname` = %s, `organization_id` = %s, `phone` = %s WHERE `wx_wxid` = %s AND `wxid` = %s"
+            record_tuple = (account, nickname, markname, headimg, lag, gid, gname, organization_id, phone, wx_wxid, wxid)
+
+            with conn.cursor() as cursor:
+                cursor.execute(sql_update, record_tuple)
+                conn.commit()
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
