@@ -7,11 +7,8 @@ import requests
 import websocket
 from google.protobuf.json_format import MessageToDict, ParseDict
 
-from app import redis_conn
 from wecom.WDeviceAuthReq_pb2 import DeviceAuthReqMessage
 from wecom.WFriendTalkNotice_pb2 import FriendTalkNoticeMessage
-from workphone.HeartBeat_pb2 import HeartBeatMessage
-from wecom.WTalkToFriendTask_pb2 import TalkToFriendTaskMessage
 from wecom.WTransport_pb2 import TransportMessage, EnumMsgType, EnumContentType
 
 from wecom.WDeviceAuthRsp_pb2 import DeviceAuthRspMessage
