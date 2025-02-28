@@ -298,7 +298,7 @@ class WorkPhoneChannel(ChatChannel):
         )
 
         if is_group and reply.type == ReplyType.TEXT:
-            send_msg.Remark = context['session_id']
+            send_msg.AtSomeOne.append(context['session_id'])
 
         logger.info(f'[wx_hook] 发送文本消息: {send_msg}')
 

@@ -115,6 +115,7 @@ class WecomClient(threading.Thread):
             logger.info('微信信息')
             logger.info(wechat)
 
+
             # if "@chatroom" in msg.FriendId:
             #     logger.info('收到群消息')
             #     if msg.ContentType == EnumContentType.Text:
