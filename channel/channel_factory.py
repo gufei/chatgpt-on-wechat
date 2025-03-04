@@ -51,6 +51,9 @@ def create_channel(channel_type) -> Channel:
     elif channel_type == const.DINGTALK:
         from channel.dingtalk.dingtalk_channel import DingTalkChanel
         ch = DingTalkChanel()
+    elif channel_type == "wework_hook":
+        from channel.wework.weworkhook_channel import WeworkHookChannel
+        ch = WeworkHookChannel()
     else:
         raise RuntimeError
     ch.channel_type = channel_type

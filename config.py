@@ -174,6 +174,14 @@ available_setting = {
 
     "single_name_white_list": [],  # 用户昵称白名单
 
+    "wework_app_key": "codbb6140f1f3844b4",
+    "wework_app_secret": "Lh8LwOrchFCGxVpWa67nn8H6Yom1sr8LCOlSf6bEPXEWNn1sXq8x",
+    "wework_token": "8e46cf909c6041479ecfbfa96229299e",
+    "wework_encoding_key": "a84f5c038fed44fcba1fe9d3be51cef8",
+    "wework_hook_ip": "172.23.24.97",
+    "wework_hook_port": 9030,
+    "wework_hook_callback_port": 9040,
+
     "open_voice_api_key": "",  # openai api key
     "open_voice_api_base": "https://api.openai.com/v1"
 }

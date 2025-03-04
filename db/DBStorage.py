@@ -548,3 +548,39 @@ class DBStorage:
             conn.rollback()
         finally:
             conn.close()
+
+    def get_xunji_contact(self, robot_id: str, account_id: str):
+        conn = self._mysql.connection()
+        try:
+            sql_query = "SELECT robot_id, account_id, nickname, avatar FROM xunji_contact WHERE account_id = %s AND robot_id=%s AND status=1 LIMIT 1"
+            record_tuple = (account_id, robot_id)
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(sql_query, record_tuple)
+                xunji_contact = cursor.fetchone()
+                if xunji_contact:
+                    return xunji_contact
+                else:
+                    return None
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
+    def add_xunji_contact(self, robot_id: str, account_id: str, nickname: str, avatar: str):
+        conn = self._mysql.connection()
+        try:
+            current_utc_time = datetime.now(timezone.utc)
+            formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
+            sql_insert = "INSERT INTO xunji_contact (status, robot_id, account_id, nickname, avatar, created_at, updated_at) VALUES (%s, %s, %s, %s, %s,%s,%s)"
+            record_tuple = (1, robot_id, account_id, nickname, avatar, formatted_time, formatted_time)
+
+            with conn.cursor() as cursor:
+                cursor.execute(sql_insert, record_tuple)
+                conn.commit()
+                return cursor.lastrowid
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
