@@ -79,7 +79,7 @@ class WorkPhoneChannel(ChatChannel):
 
 
     def startup(self):
-        self.wsCli = WebSocketClient("ws://chat.gkscrm.com:13088", "dev:rQRwCSOmplX3TtLJ")
+        self.wsCli = WebSocketClient("ws://chat.gkscrm.com:13088", "bwkf:rQRwCSOmplX3TtLJ")
         self.wsCli.start()
         self.wsCli.ws.on_message = self.on_message
 
@@ -246,7 +246,11 @@ class WorkPhoneChannel(ChatChannel):
             if is_image_file(content):
                 content_type = EnumContentType.Picture
             else:
-                content_type = EnumContentType.File
+                if content.lower().endswith(('.mp4', '.mov')):
+                    content_type = EnumContentType.Video
+                else:
+                    content_type = EnumContentType.File
+
 
         send_msg = TalkToFriendTaskMessage(
             WeChatId=wx_account['wechatid'],
