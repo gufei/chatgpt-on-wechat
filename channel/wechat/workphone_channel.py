@@ -224,6 +224,9 @@ class WorkPhoneChannel(ChatChannel):
         if reply.type == ReplyType.TEXT:
             content_type = EnumContentType.Text
             content = reply.content
+        elif reply.type == ReplyType.ShiPinHao:
+            content_type = EnumContentType.ShiPinHao
+            content = reply.content
         elif reply.type == ReplyType.LOCATION:
             content_type = EnumContentType.Location
             if reply.content.startswith('<?xml version'):
