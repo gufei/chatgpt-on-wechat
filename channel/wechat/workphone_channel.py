@@ -1,3 +1,4 @@
+import base64
 import json
 import threading
 
@@ -226,7 +227,11 @@ class WorkPhoneChannel(ChatChannel):
             content = reply.content
         elif reply.type == ReplyType.ShiPinHao:
             content_type = EnumContentType.ShiPinHao
-            content = reply.content
+
+            # 解码为字节串
+            decoded_bytes = base64.b64decode(reply.content)
+            # 解码为字符串
+            content = decoded_bytes.decode('utf-8')
         elif reply.type == ReplyType.LOCATION:
             content_type = EnumContentType.Location
             if reply.content.startswith('<?xml version'):
@@ -259,7 +264,7 @@ class WorkPhoneChannel(ChatChannel):
             WeChatId=wx_account['wechatid'],
             FriendId=receiver,
             ContentType=content_type,
-            Content=content.encode('utf-8'),
+            Content=content.encode('utf-8')
         )
 
         if is_group and reply.type == ReplyType.TEXT:

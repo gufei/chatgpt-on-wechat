@@ -316,8 +316,7 @@ class ChatChannel(Channel):
                     elif item["type"] == "LOCATION":
                         self._send_reply(context, Reply(ReplyType.LOCATION, item["content"]))
                     elif item["type"] == "ShiPinHao":
-                        shipinhao_content = json.dumps(item["content"])
-                        self._send_reply(context, Reply(ReplyType.ShiPinHao, shipinhao_content))
+                        self._send_reply(context, Reply(ReplyType.ShiPinHao, item["content"]))
                     else:
                         logger.warning("[WX] unknown reply type: {}, content: {}".format(item["type"], item["content"]))
 
