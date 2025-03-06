@@ -288,7 +288,10 @@ class WorkPhoneChannel(ChatChannel):
             if is_image_file(content):
                 content_type = EnumContentType.Picture
             else:
-                content_type = EnumContentType.File
+                if content.lower().endswith(('.mp4', '.mov')):
+                    content_type = EnumContentType.Video
+                else:
+                    content_type = EnumContentType.File
 
         send_msg = TalkToFriendTaskMessage(
             WxId=int(wx_account['wxid']),
