@@ -111,7 +111,7 @@ class WorkPhoneChannel(ChatChannel):
 
 
     def startup(self):
-        self.wsCli = WecomClient("ws://wecom.gkscrm.com:15088", "pctest:rQRwCSOmplX3TtLJ")
+        self.wsCli = WecomClient("ws://wecom.gkscrm.com:15088", "")
         self.wsCli.start()
         self.wsCli.ws.on_message = self.on_message
         # self.get_wx_info()
@@ -288,7 +288,10 @@ class WorkPhoneChannel(ChatChannel):
             if is_image_file(content):
                 content_type = EnumContentType.Picture
             else:
-                content_type = EnumContentType.File
+                if content.lower().endswith(('.mp4', '.mov')):
+                    content_type = EnumContentType.Video
+                else:
+                    content_type = EnumContentType.File
 
         send_msg = TalkToFriendTaskMessage(
             WxId=int(wx_account['wxid']),
