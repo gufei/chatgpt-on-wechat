@@ -67,12 +67,13 @@ class WorkPhoneChannel(ChatChannel):
         if not wechats:
             return None
         wx_wxid = wechats.get("WxId")
+        wx_wxinfo = db_storage.get_info_by_wxid(wx_wxid)
         if not wx_wxid:
             return None
         for wx_info in wechats.get("Contacts"):
             if not self.wx_info.get(wx_wxid):
                 return None
-            organization_id = self.wx_info[wx_wxid].get("organization_id", 0)
+            organization_id = wx_wxinfo.get("organization_id", 0)
             labelIds = ", ".join(wx_info.get('LabelIds', []))
             wxinfo = db_storage.get_contact_by_wxid(wx_info['RemoteId'], wx_wxid)
             if wxinfo:
@@ -88,6 +89,7 @@ class WorkPhoneChannel(ChatChannel):
         if not wechats:
             return None
         wx_wxid = wechats.get("WxId")
+        wx_wxinfo = db_storage.get_info_by_wxid(wx_wxid)
         if not wx_wxid:
             return None
         for Conver_info in wechats.get("Convers"):
@@ -97,7 +99,7 @@ class WorkPhoneChannel(ChatChannel):
                 continue
             if not self.wx_info.get(wx_wxid):
                 return None
-            organization_id = self.wx_info[wx_wxid].get("organization_id", 0)
+            organization_id = wx_wxinfo.get("organization_id", 0)
             # labelIds = ", ".join(Conver_info.get('LabelIds', []))
             wxinfo = db_storage.get_contact_by_wxid(Conver_info['RemoteId'], wx_wxid)
             if wxinfo:
