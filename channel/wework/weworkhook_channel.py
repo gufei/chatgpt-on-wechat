@@ -324,13 +324,9 @@ class WeworkHookController:
         context['href'] = data.get('href', '')
         context['title'] = data.get('title', '')
         context['desc'] = data.get('desc', '')
-        context['open_ai_api_base'] = conf().get('open_ai_api_base')
-        context['open_ai_api_key'] = conf().get('open_ai_api_key')
+        context['open_ai_api_base'] = wxinfo.get('api_base')
+        context['open_ai_api_key'] = wxinfo.get('api_key')
         context['content'] = wework_hook_msg.content
-
-        #TODO 这里也要改成从用户信息里取
-        context['organization_id'] = wxinfo.get('organization_id', 1)
-        context["gpt_model"] = "gpt-3.5-turbo"
 
         # logger.debug(f"[wework_hook] context is {context}")
         if context:
