@@ -555,7 +555,7 @@ class DBStorage:
     def get_xunji_token(self, app_key: str, token: str):
         conn = self._mysql.connection()
         try:
-            sql_query = "SELECT app_key, token, encoding_key, organization_id, agent_id, api_key, api_base FROM xunji_token WHERE app_key = %s AND token=%s AND status=1 LIMIT 1"
+            sql_query = "SELECT app_key, token, encoding_key, organization_id, agent_id, api_key, api_base FROM xunji WHERE app_key = %s AND token=%s AND status=1 LIMIT 1"
             record_tuple = (app_key, token)
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
