@@ -392,6 +392,8 @@ class DBStorage:
             if channel_type == "whatsapp":
                 # 在message_records表中，查询bot_wxid == selfwxid and contact_wxid == fromid contact_type == 1 source_type == 3 status == 1 的最新一条记录，按created_at字段排序
                 sql_query = "SELECT * FROM whatsapp WHERE deleted_at IS NULL AND cc_phone = %s ORDER BY created_at DESC LIMIT 1"
+            elif channel_type == "wework_hook":
+                sql_query = "SELECT * FROM xunji_token WHERE deleted_at IS NULL AND wxid = %s ORDER BY created_at DESC LIMIT 1"
             else:
                 sql_query = "SELECT * FROM wx WHERE deleted_at IS NULL AND wxid = %s ORDER BY created_at DESC LIMIT 1"
             record_tuple = (bot_wxid,)
@@ -549,36 +551,19 @@ class DBStorage:
         finally:
             conn.close()
 
-    def get_xunji_contact(self, robot_id: str, account_id: str):
+    # 获取用户的圈量配置信息
+    def get_xunji_token(self, app_key: str, token: str):
         conn = self._mysql.connection()
         try:
-            sql_query = "SELECT robot_id, account_id, nickname, avatar FROM xunji_contact WHERE account_id = %s AND robot_id=%s AND status=1 LIMIT 1"
-            record_tuple = (account_id, robot_id)
+            sql_query = "SELECT app_key, token, encoding_key,organization_id,agent_id FROM xunji_token WHERE app_key = %s AND token=%s AND status=1 LIMIT 1"
+            record_tuple = (app_key, token)
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_query, record_tuple)
-                xunji_contact = cursor.fetchone()
-                if xunji_contact:
-                    return xunji_contact
+                xunji_token = cursor.fetchone()
+                if xunji_token:
+                    return xunji_token
                 else:
                     return None
-        except Error as e:
-            print(f"Error while connecting to MySQL: {e}")
-            conn.rollback()
-        finally:
-            conn.close()
-
-    def add_xunji_contact(self, robot_id: str, account_id: str, nickname: str, avatar: str):
-        conn = self._mysql.connection()
-        try:
-            current_utc_time = datetime.now(timezone.utc)
-            formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
-            sql_insert = "INSERT INTO xunji_contact (status, robot_id, account_id, nickname, avatar, created_at, updated_at) VALUES (%s, %s, %s, %s, %s,%s,%s)"
-            record_tuple = (1, robot_id, account_id, nickname, avatar, formatted_time, formatted_time)
-
-            with conn.cursor() as cursor:
-                cursor.execute(sql_insert, record_tuple)
-                conn.commit()
-                return cursor.lastrowid
         except Error as e:
             print(f"Error while connecting to MySQL: {e}")
             conn.rollback()
