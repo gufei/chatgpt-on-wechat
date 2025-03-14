@@ -323,7 +323,7 @@ class WorkPhoneChannel(ChatChannel):
 
     def get_wechats_resp(self):
         send_msg = GetWeChatsReqMessage(
-            id=str(self.union_id),
+            id=str(0),
             AccountType=EnumAccountType.SubUser,
         )
 
@@ -338,7 +338,7 @@ class WorkPhoneChannel(ChatChannel):
         del transport_message_dict['Content']['@type']
 
         transport_message_json = json.dumps(transport_message_dict, indent=2)
-
+        logger.info(f'[wx_hook] 获取微信列表: {send_msg}')
         self.wsCli.send(transport_message_json)
 
     def get_customer_push_notice(self, wx_id):

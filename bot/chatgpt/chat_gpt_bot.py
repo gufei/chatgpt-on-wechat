@@ -221,8 +221,7 @@ def parse_markdown(input_text):
     if is_json_array(input_text):
         return input_text
     # 定义正则表达式来匹配Markdown格式的图片
-    image_pattern = re.compile(r'!\[(.*?)\]\((.*?)\)')
-
+    image_pattern = re.compile(r'!?\[(.*?)\]\((.*?)\)')
     # 定义正则表达式来匹配两个以上的换行符
     split_pattern = re.compile(r'\n{2,}')
 
