@@ -254,7 +254,7 @@ class WorkPhoneChannel(ChatChannel):
             if is_image_file(content):
                 content_type = EnumContentType.Picture
             else:
-                if content.lower().endswith(('.mp4', '.mov')):
+                if content.lower().endswith(('.mp4', '.mov', '.avi', '.wmv', '.mpg', '.mpeg')):
                     content_type = EnumContentType.Video
                 else:
                     content_type = EnumContentType.File

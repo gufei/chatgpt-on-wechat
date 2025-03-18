@@ -251,11 +251,17 @@ def parse_markdown(input_text):
         image_url = match.group(2)
         image_filename = image_url.split('/')[-1]
 
-        result.append({
-            "type": "FILE",
-            "content": image_url,
-            "diyfilename": urllib.parse.unquote(image_filename)
-        })
+        if image_url.lower().endswith(('.mp4', '.mov', '.avi', '.wmv', '.mpg', '.mpeg', '.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif', '.wav')):
+            result.append({
+                "type": "FILE",
+                "content": image_url,
+                "diyfilename": urllib.parse.unquote(image_filename)
+            })
+        else:
+            result.append({
+                "type": "TEXT",
+                "content": image_url
+            })
 
         # 更新当前处理的位置
         last_pos = match.end()
