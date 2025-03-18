@@ -6,7 +6,7 @@ import hashlib
 from Crypto.Cipher import AES
 import base64
 import uuid
-
+import os
 
 from bridge.context import Context, ContextType
 from channel.chat_channel import ChatChannel
@@ -157,7 +157,9 @@ class WeworkHookChannel(ChatChannel):
 
     def send(self, reply: Reply, context: Context):
 
-        logger.info(f"[wework_hook] in send_function reply={reply}")
+        logger.info(f"[wework_hook] in send_function reply.type={reply.type} content={reply.content}")
+        if reply.type == ReplyType.ERROR:
+            return
 
         if reply.type == ReplyType.TEXT or reply.type == ReplyType.TEXT_:
             content_type = 1
@@ -236,6 +238,27 @@ class WeworkHookController:
 
         return result.decode('utf-8', errors='ignore')
 
+    # 下载音频文件
+    def download_voice(self, url, filename):
+        # 确定保存视频的目录
+        directory = os.path.join(os.getcwd(), "tmp")
+        # 如果目录不存在，则创建目录
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        # 下载视频
+        response = requests.get(url, stream=True)
+        total_size = 0
+
+        voice_path = os.path.join(directory, f"{filename}.wav")
+
+        with open(voice_path, 'wb') as f:
+            for block in response.iter_content(1024):
+                total_size += len(block)
+                f.write(block)
+
+        return voice_path
+
     # 这里要改成根据 app_key 和 token 去获取当前这人的 encoding_key
     def get_encoding_key(self, app_key: str, token: str):
         if app_key is None or token is None:
@@ -288,7 +311,7 @@ class WeworkHookController:
             return self.FAILED_MSG
 
         # 只处理文本+语音+图片+视频
-        validTypes = (1, 2, 3, 4)
+        validTypes = (1, 2, 3, 4, 5)
         if data.get("msg_type") not in validTypes:
             logger.debug(f"[wework_hook] not a valid wework message, msg_type={data.get('msg_type')}")
             return self.FAILED_MSG
@@ -297,11 +320,18 @@ class WeworkHookController:
             logger.warning(f"[wework_hook] repeat msg filtered, msg_id={data.get('msg_id')}")
             return self.SUCCESS_MSG
 
+        # 语音消息要下载语音文件
+        voice_path = ''
+        if data.get('msg_type') == 5:
+            voice_name = str(uuid.uuid4())
+            voice_path = self.download_voice(data.get('msg_content'), voice_name)
+
+
         channel.receivedMsgs[data.get("msg_id")] = True
 
         isgroup = event_type == 20002
         isat = event_type == 20002
-        wework_hook_msg = WeworkHookMessage(data, channel, isgroup, isat)
+        wework_hook_msg = WeworkHookMessage(data, channel, isgroup, isat, voice_path)
 
         logger.debug("[wework_hook] wework_hook_msg message: {}".format(wework_hook_msg))
 

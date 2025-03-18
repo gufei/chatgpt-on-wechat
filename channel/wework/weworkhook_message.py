@@ -5,7 +5,7 @@ from common.log import logger
 
 
 class WeworkHookMessage(ChatMessage):
-    def __init__(self, msg, channel, isgroup, isat):
+    def __init__(self, msg, channel, isgroup, isat, voice_path):
         super().__init__(msg)
 
         selfwxid = msg.get('sender_id')
@@ -30,6 +30,9 @@ class WeworkHookMessage(ChatMessage):
         elif msg.get("msg_type") == 4:
             self.ctype = ContextType.VIDEO
             self.content = msg.get("msg_content")
+        elif msg.get("msg_type") == 5:
+            self.ctype = ContextType.VOICE
+            self.content = voice_path
         else:
             raise NotImplementedError("Unsupported message type: {}".format(msg.get("msgtype")))
 
