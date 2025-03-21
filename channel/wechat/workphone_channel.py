@@ -82,7 +82,8 @@ class WorkPhoneChannel(ChatChannel):
 
 
     def startup(self):
-        self.wsCli = WebSocketClient("ws://chat.gkscrm.com:13088", "bwkf:rQRwCSOmplX3TtLJ")
+        # 测试 credential: bwkf:rQRwCSOmplX3TtLJ
+        self.wsCli = WebSocketClient("ws://chat.gkscrm.com:13088", "")
         self.wsCli.start()
         self.wsCli.ws.on_message = self.on_message
 
@@ -225,7 +226,7 @@ class WorkPhoneChannel(ChatChannel):
         else:
             return ''
 
-        # 把silk文件转wam文件
+        # 把silk文件转wav文件
         from voice.audio_convert import any_to_wav
         any_to_wav(silk_path, wav_path)
         return wav_path

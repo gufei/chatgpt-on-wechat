@@ -114,7 +114,8 @@ class WorkPhoneChannel(ChatChannel):
 
 
     def startup(self):
-        self.wsCli = WecomClient("ws://wecom.gkscrm.com:15088", "bwkf:rQRwCSOmplX3TtLJ")
+        # 测试 credential: bwkf:rQRwCSOmplX3TtLJ
+        self.wsCli = WecomClient("ws://wecom.gkscrm.com:15088", "")
         self.wsCli.start()
         self.wsCli.ws.on_message = self.on_message
         # self.get_wx_info()
@@ -170,10 +171,10 @@ class WorkPhoneChannel(ChatChannel):
 
             # 以下内容是本地开发语音识别功能时的适配代码
             # 需要从线上把语音文件（amr或mp3）文件挪到本地对应目录里
-            # voice_url = 'http://chat.gkscrm.com:14086/juliao/20250320/1224CA2AE1976C14A5D93503BB7B0D1C.mp3?duration=2880'
-            # voice_path = self.download_voice(voice_url)
+            # voice_info = "{\"duration\":2,\"size\":4118,\"thumbSize\":0,\"url\":\"http://chat.gkscrm.com:14086/juliao/20250321/F01A0EDF3CE06A9D927F8236043266FD.mp3\"}"
+            # voice_path = self.download_voice(voice_info)
 
-        workphone_msg = WorkPhoneMessage(msg,wechat,voice_path)
+        workphone_msg = WorkPhoneMessage(msg, wechat, voice_path)
 
         logger.debug("[wx_hook] wx_hook_msg message: {}".format(workphone_msg))
 
@@ -224,8 +225,11 @@ class WorkPhoneChannel(ChatChannel):
             self.produce(context)
 
     # 获取文件路径
-    def download_voice(self, url):
+    def download_voice(self, voice_info):
         # 解析 URL
+        voice_info = json.loads(voice_info)
+        logger.info(f"voice_info: {voice_info}")
+        url = voice_info['url']
         parsed_url = urlparse(url)
 
         # 获取路径部分，并提取文件名
@@ -254,7 +258,7 @@ class WorkPhoneChannel(ChatChannel):
         else:
             return ''
 
-        # 把silk文件转wam文件
+        # 把silk文件转wav文件
         from voice.audio_convert import any_to_wav
         any_to_wav(silk_path, wav_path)
         return wav_path

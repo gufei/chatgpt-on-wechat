@@ -289,7 +289,7 @@ def _find_sum_id(context):
 
 
 def _find_file_id(context):
-    user_id = _find_user_id(context)
+    user_id = str(_find_user_id(context))
     if user_id:
         return USER_FILE_MAP.get(user_id + "-file_id")
 

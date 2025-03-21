@@ -61,7 +61,10 @@ class WorkPhoneMessage(ChatMessage):
             self.to_user_nickname = wechat['name']
             self.other_user_id = message.ConvId
             self.other_user_nickname = message.SenderName
-            self.content = message.Content.decode('utf-8')
+            if message.ContentType == EnumContentType.Text:
+                self.content = message.Content.decode('utf-8')
+            elif message.ContentType == EnumContentType.Voice:
+                self.content = voice_path
 
 
 
