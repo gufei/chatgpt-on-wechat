@@ -9,7 +9,7 @@ from wecom.WTransport_pb2 import EnumContentType
 
 
 class WorkPhoneMessage(ChatMessage):
-    def __init__(self, message:FriendTalkNoticeMessage,wechat:dict):
+    def __init__(self, message:FriendTalkNoticeMessage,wechat:dict,voice_path:str):
         super().__init__(message)
 
         self.msg_id = message.MsgId
@@ -23,6 +23,9 @@ class WorkPhoneMessage(ChatMessage):
         if message.ContentType == EnumContentType.Text:
             self.ctype = ContextType.TEXT
             self.content = message.Content.decode('utf-8')
+        elif message.ContentType == EnumContentType.Voice:
+            self.ctype = ContextType.VOICE
+            self.content = voice_path
 
 
         if self.is_group:

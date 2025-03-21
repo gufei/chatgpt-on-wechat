@@ -313,7 +313,7 @@ class WeworkHookController:
         # 只处理文本+语音+图片+视频
         validTypes = (1, 2, 3, 4, 5)
         if data.get("msg_type") not in validTypes:
-            logger.debug(f"[wework_hook] not a valid wework message, msg_type={data.get('msg_type')}")
+            logger.debug(f"[wework_hook] This is not a valid wework message, msg_type={data.get('msg_type')}")
             return self.FAILED_MSG
 
         if channel.receivedMsgs.get(data.get("msg_id")):
