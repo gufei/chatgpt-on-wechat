@@ -223,8 +223,7 @@ def parse_markdown(input_text):
     if is_json_array(input_text):
         return input_text
     # 定义正则表达式来匹配Markdown格式的图片
-    image_pattern = re.compile(r'!\[(.*?)\]\((.*?)\)')
-
+    image_pattern = re.compile(r'!?\[(.*?)\]\((.*?)\)')
     # 定义正则表达式来匹配两个以上的换行符
     split_pattern = re.compile(r'\n{2,}')
 
@@ -254,11 +253,17 @@ def parse_markdown(input_text):
         image_url = match.group(2)
         image_filename = image_url.split('/')[-1]
 
-        result.append({
-            "type": "FILE",
-            "content": image_url,
-            "diyfilename": urllib.parse.unquote(image_filename)
-        })
+        if image_url.lower().endswith(('.mp4', '.mov', '.avi', '.wmv', '.mpg', '.mpeg', '.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif', '.wav')):
+            result.append({
+                "type": "FILE",
+                "content": image_url,
+                "diyfilename": urllib.parse.unquote(image_filename)
+            })
+        else:
+            result.append({
+                "type": "TEXT",
+                "content": image_url
+            })
 
         # 更新当前处理的位置
         last_pos = match.end()

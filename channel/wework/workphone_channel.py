@@ -68,12 +68,13 @@ class WorkPhoneChannel(ChatChannel):
         if not wechats:
             return None
         wx_wxid = wechats.get("WxId")
+        wx_wxinfo = db_storage.get_info_by_wxid(wx_wxid)
         if not wx_wxid:
             return None
         for wx_info in wechats.get("Contacts"):
             if not self.wx_info.get(wx_wxid):
                 return None
-            organization_id = self.wx_info[wx_wxid].get("organization_id", 0)
+            organization_id = wx_wxinfo.get("organization_id", 0)
             labelIds = ", ".join(wx_info.get('LabelIds', []))
             wxinfo = db_storage.get_contact_by_wxid(wx_info['RemoteId'], wx_wxid)
             if wxinfo:
@@ -89,6 +90,7 @@ class WorkPhoneChannel(ChatChannel):
         if not wechats:
             return None
         wx_wxid = wechats.get("WxId")
+        wx_wxinfo = db_storage.get_info_by_wxid(wx_wxid)
         if not wx_wxid:
             return None
         for Conver_info in wechats.get("Convers"):
@@ -98,7 +100,7 @@ class WorkPhoneChannel(ChatChannel):
                 continue
             if not self.wx_info.get(wx_wxid):
                 return None
-            organization_id = self.wx_info[wx_wxid].get("organization_id", 0)
+            organization_id = wx_wxinfo.get("organization_id", 0)
             # labelIds = ", ".join(Conver_info.get('LabelIds', []))
             wxinfo = db_storage.get_contact_by_wxid(Conver_info['RemoteId'], wx_wxid)
             if wxinfo:
@@ -333,7 +335,10 @@ class WorkPhoneChannel(ChatChannel):
             if is_image_file(content):
                 content_type = EnumContentType.Picture
             else:
-                content_type = EnumContentType.File
+                if content.lower().endswith(('.mp4', '.mov')):
+                    content_type = EnumContentType.Video
+                else:
+                    content_type = EnumContentType.File
 
         send_msg = TalkToFriendTaskMessage(
             WxId=int(wx_account['wxid']),
@@ -363,7 +368,7 @@ class WorkPhoneChannel(ChatChannel):
 
     def get_wechats_resp(self):
         send_msg = GetWeChatsReqMessage(
-            id=str(self.union_id),
+            id=str(0),
             AccountType=EnumAccountType.SubUser,
         )
 
@@ -378,7 +383,7 @@ class WorkPhoneChannel(ChatChannel):
         del transport_message_dict['Content']['@type']
 
         transport_message_json = json.dumps(transport_message_dict, indent=2)
-
+        logger.info(f'[wx_hook] 获取微信列表: {send_msg}')
         self.wsCli.send(transport_message_json)
 
     def get_customer_push_notice(self, wx_id):

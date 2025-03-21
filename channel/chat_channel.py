@@ -284,7 +284,7 @@ class ChatChannel(Channel):
                     reply.content = re.sub('\n+', '\n', reply_text)
                 elif reply.type == ReplyType.ERROR or reply.type == ReplyType.INFO:
                     reply.content = "[" + str(reply.type) + "]\n" + reply.content
-                elif reply.type == ReplyType.IMAGE_URL or reply.type == ReplyType.VOICE or reply.type == ReplyType.IMAGE or reply.type == ReplyType.FILE or reply.type == ReplyType.VIDEO or reply.type == ReplyType.VIDEO_URL or reply.type == ReplyType.CARD or reply.type == ReplyType.INVITE_ROOM or reply.type == ReplyType.MINIAPP or reply.type == ReplyType.JSON_MULTIPLE_RESP:
+                elif reply.type in [ReplyType.IMAGE_URL,ReplyType.VOICE,ReplyType.IMAGE,ReplyType.FILE,ReplyType.VIDEO,ReplyType.VIDEO_URL,ReplyType.CARD,ReplyType.INVITE_ROOM,ReplyType.MINIAPP,ReplyType.JSON_MULTIPLE_RESP]:
                     pass
                 else:
                     logger.error("[WX] unknown reply type: {}".format(reply.type))
@@ -315,6 +315,8 @@ class ChatChannel(Channel):
                         self._send_reply(context, Reply(ReplyType.VIDEO_URL, item["content"]))
                     elif item["type"] == "LOCATION":
                         self._send_reply(context, Reply(ReplyType.LOCATION, item["content"]))
+                    elif item["type"] == "ShiPinHao":
+                        self._send_reply(context, Reply(ReplyType.ShiPinHao, item["content"]))
                     else:
                         logger.warning("[WX] unknown reply type: {}, content: {}".format(item["type"], item["content"]))
 

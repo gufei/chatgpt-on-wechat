@@ -1,3 +1,4 @@
+import base64
 import json
 import threading
 import os
@@ -272,6 +273,13 @@ class WorkPhoneChannel(ChatChannel):
         if reply.type == ReplyType.TEXT:
             content_type = EnumContentType.Text
             content = reply.content
+        elif reply.type == ReplyType.ShiPinHao:
+            content_type = EnumContentType.ShiPinHao
+
+            # 解码为字节串
+            decoded_bytes = base64.b64decode(reply.content)
+            # 解码为字符串
+            content = decoded_bytes.decode('utf-8')
         elif reply.type == ReplyType.LOCATION:
             content_type = EnumContentType.Location
             if reply.content.startswith('<?xml version'):
@@ -294,13 +302,17 @@ class WorkPhoneChannel(ChatChannel):
             if is_image_file(content):
                 content_type = EnumContentType.Picture
             else:
-                content_type = EnumContentType.File
+                if content.lower().endswith(('.mp4', '.mov', '.avi', '.wmv', '.mpg', '.mpeg')):
+                    content_type = EnumContentType.Video
+                else:
+                    content_type = EnumContentType.File
+
 
         send_msg = TalkToFriendTaskMessage(
             WeChatId=wx_account['wechatid'],
             FriendId=receiver,
             ContentType=content_type,
-            Content=content.encode('utf-8'),
+            Content=content.encode('utf-8')
         )
 
         if is_group and reply.type == ReplyType.TEXT:
