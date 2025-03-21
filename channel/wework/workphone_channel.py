@@ -168,6 +168,9 @@ class WorkPhoneChannel(ChatChannel):
         voice_path = ''
         if msg.ContentType == EnumContentType.Voice:
             voice_path = self.download_voice(msg.Content)
+            if voice_path == '':
+                logger.error("音频文件过长，不处理")
+                return
 
             # 以下内容是本地开发语音识别功能时的适配代码
             # 需要从线上把语音文件（amr或mp3）文件挪到本地对应目录里
@@ -230,6 +233,11 @@ class WorkPhoneChannel(ChatChannel):
         voice_info = json.loads(voice_info)
         logger.info(f"voice_info: {voice_info}")
         url = voice_info['url']
+
+        # 如果音频文件过长 直接不处理
+        if int(voice_info['duration']) > 60:
+            return ''
+
         parsed_url = urlparse(url)
 
         # 获取路径部分，并提取文件名

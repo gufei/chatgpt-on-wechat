@@ -26,7 +26,7 @@ from workphone.FriendTalkNotice_pb2 import FriendTalkNoticeMessage
 from workphone.TalkToFriendTask_pb2 import TalkToFriendTaskMessage
 from workphone.TransportMessage_pb2 import EnumContentType, TransportMessage, EnumMsgType
 import xml.etree.ElementTree as ET
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 from google.protobuf.any_pb2 import Any
 
 
@@ -205,6 +205,13 @@ class WorkPhoneChannel(ChatChannel):
         file_name = os.path.splitext(file_name_with_ext)[0]
         if isinstance(file_name, bytes):
             file_name = file_name.decode("utf-8")
+
+        # #检查语音时长
+        # parsed_params = parse_qs(parsed_url.query)
+        # duration = parsed_params['duration'][0]
+        # seconds = int(duration)/1000
+        # if seconds > 60:
+        #     return ''
 
         # 把amr文件重命名为silk文件
         date = datetime.now().strftime("%Y%m%d")
