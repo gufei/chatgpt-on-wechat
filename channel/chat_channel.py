@@ -213,6 +213,8 @@ class ChatChannel(Channel):
                     wav_path = file_path
                 # 语音识别
                 reply = super().build_voice_to_text(wav_path)
+                reply.type = ReplyType.TEXT
+                logger.debug("[wx_hook] reply: {}".format(reply.content))
                 # 删除临时文件
                 try:
                     os.remove(file_path)
