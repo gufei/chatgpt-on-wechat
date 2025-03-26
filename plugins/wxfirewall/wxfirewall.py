@@ -32,9 +32,9 @@ class WXFirewall(Plugin):
         # bot_wxid = e_context.econtext['context'].kwargs['wxid']
         contact_wxid = e_context.econtext['context'].kwargs['session_id']
         # receiver = e_context.econtext['context'].kwargs['receiver']
-
+        logger.debug("[WXFirewall] contact_wxid: {}".format(contact_wxid))
         agent_info = db_storage.get_info_by_wxid(contact_wxid)
-
+        logger.debug("[WXFirewall] agent_info: {}".format(agent_info))
         if agent_info:
             logger.info("[WXFirewall] 对方为机器问不回复")
             e_context.action = EventAction.BREAK_PASS
