@@ -225,11 +225,8 @@ class WorkPhoneChannel(ChatChannel):
         # 下载视频
         date = datetime.now().strftime("%Y%m%d")
         amr_url = f"http://chat.gkscrm.com:14086/juliao/{date}/{file_name}.amr"
-        logger.info(f"amr_url={amr_url}")
         silk_path = os.path.join(directory, f"{file_name}.silk")
         wav_path = os.path.join(directory, f"{file_name}.wav")
-        logger.info(f"silk_path={silk_path}")
-        logger.info(f"wav_path={wav_path}")
 
         try:
             response = requests.get(amr_url)
