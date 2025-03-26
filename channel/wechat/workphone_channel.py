@@ -83,7 +83,7 @@ class WorkPhoneChannel(ChatChannel):
 
     def startup(self):
         # 测试 credential: bwkf:rQRwCSOmplX3TtLJ
-        self.wsCli = WebSocketClient("ws://chat.gkscrm.com:13088", "")
+        self.wsCli = WebSocketClient("ws://chat.gkscrm.com:13088", "bwkf:rQRwCSOmplX3TtLJ")
         self.wsCli.start()
         self.wsCli.ws.on_message = self.on_message
 
@@ -213,24 +213,21 @@ class WorkPhoneChannel(ChatChannel):
         # if seconds > 60:
         #     return ''
 
-        # 把amr文件重命名为silk文件
-        date = datetime.now().strftime("%Y%m%d")
-        amr_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.amr"
-        mp3_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.mp3"
-        silk_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.silk"
-        wav_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.wav"
+        # 下载视频
+        amr_url = f"http://chat.gkscrm.com:14086/juliao/{file_name}.amr"
+        silk_path = os.path.join(directory, f"{file_name}.silk")
+        wav_path = os.path.join(directory, f"{file_name}.wav")
 
-        # 以下内容是本地开发语音识别功能时的适配代码
-        # amr_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.amr"
-        # mp3_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.mp3"
-        # silk_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.silk"
-        # wav_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.wav"
+        try:
+            response = requests.get(amr_url, stream=True)
+            total_size = 0
 
-        if os.path.exists(amr_path):
-            os.rename(amr_path, silk_path)
-        elif os.path.exists(mp3_path):
-            os.rename(mp3_path, silk_path)
-        else:
+            with open(silk_path, 'wb') as f:
+                for block in response.iter_content(1024):
+                    total_size += len(block)
+                    f.write(block)
+        except Exception as e:
+            print(e)
             return ''
 
         # 把silk文件转wav文件
