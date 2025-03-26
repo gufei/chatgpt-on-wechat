@@ -221,8 +221,16 @@ class WorkPhoneChannel(ChatChannel):
 
         # 下载视频
         amr_url = f"http://chat.gkscrm.com:14086/juliao/{file_name}.amr"
+        silk_path = os.path.join(directory, f"{file_name}.amr")
+        wav_path = os.path.join(directory, f"{file_name}.wav")
+
         response = requests.get(amr_url, stream=True)
         total_size = 0
+
+        with open(silk_path, 'wb') as f:
+            for block in response.iter_content(1024):
+                total_size += len(block)
+                f.write(block)
 
 
         # 把amr文件重命名为silk文件
@@ -246,8 +254,6 @@ class WorkPhoneChannel(ChatChannel):
         #     return ''
 
         # 把silk文件转wav文件
-        silk_path = os.path.join(directory, f"{file_name}.amr")
-        wav_path = os.path.join(directory, f"{file_name}.wav")
         from voice.audio_convert import any_to_wav
         any_to_wav(silk_path, wav_path)
 
