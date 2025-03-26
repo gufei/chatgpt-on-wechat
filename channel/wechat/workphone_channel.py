@@ -2,6 +2,7 @@ import base64
 import json
 import threading
 import os
+import time
 from datetime import datetime
 
 import requests
@@ -197,6 +198,14 @@ class WorkPhoneChannel(ChatChannel):
 
     # 获取文件路径
     def download_voice(self, url):
+        logger.info("start download amr file...")
+
+        # 确定保存图片的目录
+        directory = os.path.join(os.getcwd(), "tmp")
+        # 如果目录不存在，则创建目录
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
         # 解析 URL
         parsed_url = urlparse(url)
 
@@ -214,19 +223,21 @@ class WorkPhoneChannel(ChatChannel):
         #     return ''
 
         # 下载视频
-        amr_url = f"http://chat.gkscrm.com:14086/juliao/{file_name}.amr"
+        date = datetime.now().strftime("%Y%m%d")
+        amr_url = f"http://chat.gkscrm.com:14086/juliao/{date}/{file_name}.amr"
+        logger.info(f"amr_url={amr_url}")
         silk_path = os.path.join(directory, f"{file_name}.silk")
         wav_path = os.path.join(directory, f"{file_name}.wav")
+        logger.info(f"silk_path={silk_path}")
+        logger.info(f"wav_path={wav_path}")
 
         try:
-            response = requests.get(amr_url, stream=True)
-            total_size = 0
+            response = requests.get(amr_url)
+            with open(silk_path, "wb") as f:
+                f.write(response.content)
 
-            with open(silk_path, 'wb') as f:
-                for block in response.iter_content(1024):
-                    total_size += len(block)
-                    f.write(block)
         except Exception as e:
+            print("保存文件失败：")
             print(e)
             return ''
 
