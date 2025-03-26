@@ -234,9 +234,15 @@ class WorkPhoneChannel(ChatChannel):
         logger.info(f"voice_info: {voice_info}")
         url = voice_info['url']
 
-        # 如果音频文件过长 直接不处理
-        if int(voice_info['duration']) > 60:
-            return ''
+        # 确定保存图片的目录
+        directory = os.path.join(os.getcwd(), "tmp")
+        # 如果目录不存在，则创建目录
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        # # 如果音频文件过长 直接不处理
+        # if int(voice_info['duration']) > 60:
+        #     return ''
 
         parsed_url = urlparse(url)
 
@@ -248,22 +254,18 @@ class WorkPhoneChannel(ChatChannel):
 
         # 把amr文件重命名为silk文件
         date = datetime.now().strftime("%Y%m%d")
-        amr_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.amr"
-        mp3_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.mp3"
-        silk_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.silk"
-        wav_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.wav"
+        amr_url = f"http://chat.gkscrm.com:14086/juliao/{date}/{file_name}.amr"
+        silk_path = os.path.join(directory, f"{file_name}.silk")
+        wav_path = os.path.join(directory, f"{file_name}.wav")
 
-        # 以下内容是本地开发语音识别功能时的适配代码
-        # amr_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.amr"
-        # mp3_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.mp3"
-        # silk_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.silk"
-        # wav_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.wav"
+        try:
+            response = requests.get(amr_url)
+            with open(silk_path, "wb") as f:
+                f.write(response.content)
 
-        if os.path.exists(amr_path):
-            os.rename(amr_path, silk_path)
-        elif os.path.exists(mp3_path):
-            os.rename(mp3_path, silk_path)
-        else:
+        except Exception as e:
+            print("保存文件失败：")
+            print(e)
             return ''
 
         # 把silk文件转wav文件

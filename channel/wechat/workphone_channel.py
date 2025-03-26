@@ -2,6 +2,7 @@ import base64
 import json
 import threading
 import os
+import time
 from datetime import datetime
 
 import requests
@@ -197,7 +198,7 @@ class WorkPhoneChannel(ChatChannel):
 
     # 获取文件路径
     def download_voice(self, url):
-        # 确定保存视频的目录
+        # 确定保存的目录
         directory = os.path.join(os.getcwd(), "tmp")
         # 如果目录不存在，则创建目录
         if not os.path.exists(directory):
@@ -220,38 +221,20 @@ class WorkPhoneChannel(ChatChannel):
         #     return ''
 
         # 下载视频
-        amr_url = f"http://chat.gkscrm.com:14086/juliao/{file_name}.amr"
-        silk_path = os.path.join(directory, f"{file_name}.amr")
+        date = datetime.now().strftime("%Y%m%d")
+        amr_url = f"http://chat.gkscrm.com:14086/juliao/{date}/{file_name}.amr"
+        silk_path = os.path.join(directory, f"{file_name}.silk")
         wav_path = os.path.join(directory, f"{file_name}.wav")
 
-        response = requests.get(amr_url, stream=True)
-        total_size = 0
+        try:
+            response = requests.get(amr_url)
+            with open(silk_path, "wb") as f:
+                f.write(response.content)
 
-        with open(silk_path, 'wb') as f:
-            for block in response.iter_content(1024):
-                total_size += len(block)
-                f.write(block)
-
-
-        # 把amr文件重命名为silk文件
-        # date = datetime.now().strftime("%Y%m%d")
-        # amr_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.amr"
-        # mp3_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.mp3"
-        # silk_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.silk"
-        # wav_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.wav"
-
-        # 以下内容是本地开发语音识别功能时的适配代码
-        # amr_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.amr"
-        # mp3_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.mp3"
-        # silk_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.silk"
-        # wav_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.wav"
-
-        # if os.path.exists(amr_path):
-        #     os.rename(amr_path, silk_path)
-        # elif os.path.exists(mp3_path):
-        #     os.rename(mp3_path, silk_path)
-        # else:
-        #     return ''
+        except Exception as e:
+            print("保存文件失败：")
+            print(e)
+            return ''
 
         # 把silk文件转wav文件
         from voice.audio_convert import any_to_wav
