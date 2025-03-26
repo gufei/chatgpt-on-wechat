@@ -392,6 +392,8 @@ class DBStorage:
             if channel_type == "whatsapp":
                 # 在message_records表中，查询bot_wxid == selfwxid and contact_wxid == fromid contact_type == 1 source_type == 3 status == 1 的最新一条记录，按created_at字段排序
                 sql_query = "SELECT * FROM whatsapp WHERE deleted_at IS NULL AND cc_phone = %s ORDER BY created_at DESC LIMIT 1"
+            elif channel_type == "wework_hook":
+                sql_query = "SELECT * FROM xunji_service WHERE deleted_at IS NULL AND wxid = %s ORDER BY created_at DESC LIMIT 1"
             else:
                 sql_query = "SELECT * FROM wx WHERE deleted_at IS NULL AND wxid = %s ORDER BY created_at DESC LIMIT 1"
             record_tuple = (bot_wxid,)
@@ -543,6 +545,25 @@ class DBStorage:
             with conn.cursor() as cursor:
                 cursor.execute(sql_update, record_tuple)
                 conn.commit()
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
+    # 获取用户的圈量配置信息
+    def get_xunji_token(self, app_key: str, token: str):
+        conn = self._mysql.connection()
+        try:
+            sql_query = "SELECT app_key, token, encoding_key, organization_id FROM xunji WHERE app_key = %s AND token=%s AND status=1 LIMIT 1"
+            record_tuple = (app_key, token)
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(sql_query, record_tuple)
+                xunji_token = cursor.fetchone()
+                if xunji_token:
+                    return xunji_token
+                else:
+                    return None
         except Error as e:
             print(f"Error while connecting to MySQL: {e}")
             conn.rollback()

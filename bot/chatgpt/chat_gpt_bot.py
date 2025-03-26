@@ -169,6 +169,8 @@ class ChatGPTBot(Bot, OpenAIImage):
 
             if conf().get("channel_type", "wx_hook") == "whatsapp":
                 bot_type = 3
+            elif conf().get("channel_type", "wx_hook") == "wework_hook":
+                bot_type = 4
             else:
                 bot_type = 1
             usage_storage(bot_type, context["wxid"], context["session_id"], 1, 0, args, response_json, context["organization_id"])

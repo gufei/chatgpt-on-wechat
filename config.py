@@ -174,6 +174,14 @@ available_setting = {
 
     "single_name_white_list": [],  # 用户昵称白名单
 
+    "wework_app_key": "",
+    "wework_app_secret": "",
+    "wework_token": "",
+    "wework_encoding_key": "",
+    "wework_hook_ip": "172.23.24.97",
+    "wework_hook_port": 9030,
+    "wework_hook_callback_port": 9040,
+
     "open_voice_api_key": "",  # openai api key
     "open_voice_api_base": "https://api.openai.com/v1"
 }

@@ -1,6 +1,7 @@
 import json
 import threading
-
+import os
+from datetime import datetime
 import requests
 from google.protobuf.json_format import ParseDict, MessageToDict
 
@@ -23,7 +24,7 @@ from wecom.WGetWeChatsReq_pb2 import GetWeChatsReqMessage
 from wecom.WTriggerCustomerPushTask_pb2 import TriggerCustomerPushTaskMessage
 from wecom.WTriggerConversationPushTask_pb2 import TriggerConversationPushTaskMessage
 import xml.etree.ElementTree as ET
-
+from urllib.parse import urlparse
 from google.protobuf.any_pb2 import Any
 
 
@@ -113,6 +114,7 @@ class WorkPhoneChannel(ChatChannel):
 
 
     def startup(self):
+        # 测试 credential: bwkf:rQRwCSOmplX3TtLJ
         self.wsCli = WecomClient("ws://wecom.gkscrm.com:15088", "")
         self.wsCli.start()
         self.wsCli.ws.on_message = self.on_message
@@ -163,7 +165,19 @@ class WorkPhoneChannel(ChatChannel):
         wechat = self.wx_info[str(msg.WxId)]
         logger.info(f'当前处理的微信为: {wechat}')
 
-        workphone_msg = WorkPhoneMessage(msg,wechat)
+        voice_path = ''
+        if msg.ContentType == EnumContentType.Voice:
+            voice_path = self.download_voice(msg.Content)
+            if voice_path == '':
+                logger.error("音频文件过长，不处理")
+                return
+
+            # 以下内容是本地开发语音识别功能时的适配代码
+            # 需要从线上把语音文件（amr或mp3）文件挪到本地对应目录里
+            # voice_info = "{\"duration\":2,\"size\":4118,\"thumbSize\":0,\"url\":\"http://chat.gkscrm.com:14086/juliao/20250321/F01A0EDF3CE06A9D927F8236043266FD.mp3\"}"
+            # voice_path = self.download_voice(voice_info)
+
+        workphone_msg = WorkPhoneMessage(msg, wechat, voice_path)
 
         logger.debug("[wx_hook] wx_hook_msg message: {}".format(workphone_msg))
 
@@ -187,9 +201,9 @@ class WorkPhoneChannel(ChatChannel):
             logger.error("不是工作手机的账号")
             return
         # 黑白名单处理
-        if check_allow_or_block_list(context, wxinfo) is False:
-            logger.debug(f"[wx_hook] check_allow_or_block_list failed")
-            return self
+        # if check_allow_or_block_list(context, wxinfo) is False:
+        #     logger.debug(f"[wx_hook] check_allow_or_block_list failed")
+        #     return self
 
         if context:
             # 增加需要的context
@@ -213,6 +227,49 @@ class WorkPhoneChannel(ChatChannel):
             logger.info("[WX] receiveMsg={}, context={}".format(workphone_msg, context))
             self.produce(context)
 
+    # 获取文件路径
+    def download_voice(self, voice_info):
+        # 解析 URL
+        voice_info = json.loads(voice_info)
+        logger.info(f"voice_info: {voice_info}")
+        url = voice_info['url']
+
+        # 如果音频文件过长 直接不处理
+        if int(voice_info['duration']) > 60:
+            return ''
+
+        parsed_url = urlparse(url)
+
+        # 获取路径部分，并提取文件名
+        file_name_with_ext = os.path.basename(parsed_url.path)
+        file_name = os.path.splitext(file_name_with_ext)[0]
+        if isinstance(file_name, bytes):
+            file_name = file_name.decode("utf-8")
+
+        # 把amr文件重命名为silk文件
+        date = datetime.now().strftime("%Y%m%d")
+        amr_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.amr"
+        mp3_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.mp3"
+        silk_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.silk"
+        wav_path = f"/data/work-phone/filesjuliao/{date}/{file_name}.wav"
+
+        # 以下内容是本地开发语音识别功能时的适配代码
+        # amr_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.amr"
+        # mp3_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.mp3"
+        # silk_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.silk"
+        # wav_path = f"/var/data/work-phone/filesjuliao/{date}/{file_name}.wav"
+
+        if os.path.exists(amr_path):
+            os.rename(amr_path, silk_path)
+        elif os.path.exists(mp3_path):
+            os.rename(mp3_path, silk_path)
+        else:
+            return ''
+
+        # 把silk文件转wav文件
+        from voice.audio_convert import any_to_wav
+        any_to_wav(silk_path, wav_path)
+        return wav_path
 
 
     def on_message(self, ws, message):
