@@ -21,6 +21,14 @@ class WorkPhoneMessage(ChatMessage):
         if message.ContentType == EnumContentType.Text:
             self.ctype = ContextType.TEXT
             self.content = message.Content.decode('utf-8')
+        if message.ContentType == EnumContentType.QuoteMsg:
+            self.ctype = ContextType.TEXT
+            content = message.Content.decode('utf-8')
+            if not content.startswith('{'):
+                content = content.split(':', 1)[-1].strip()
+
+            content_json = json.loads(content)
+            self.content = content_json.get('title', "")
         elif message.ContentType == EnumContentType.Voice:
             self.ctype = ContextType.VOICE
             self.content = voice_path
