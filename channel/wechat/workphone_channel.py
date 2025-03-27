@@ -84,7 +84,7 @@ class WorkPhoneChannel(ChatChannel):
 
     def startup(self):
         # 测试 credential: bwkf:rQRwCSOmplX3TtLJ
-        self.wsCli = WebSocketClient("ws://chat.gkscrm.com:13088", "")
+        self.wsCli = WebSocketClient("ws://chat.gkscrm.com:13088", "debug:rQRwCSOmplX3TtLJ")
         self.wsCli.start()
         self.wsCli.ws.on_message = self.on_message
 
@@ -374,7 +374,8 @@ class WorkPhoneChannel(ChatChannel):
         """
         msg = ChatRoomMembersNoticeMessage()
         msg = ParseDict(msg_dict, msg)
-        logger.info(f'ChatRoomMembersNotice 收到的消息为: {msg}')
+        # logger.info(f'ChatRoomMembersNotice 收到的消息为: {msg}')
+        logger.info(f'ChatRoomMembersNotice 同步账号（详情暂不做记录）: {msg.WeChatId}')
 
         if msg_dict["WeChatId"] not in self.wx_info:
             logger.error('没有找到该微信，跳过')
