@@ -43,7 +43,7 @@ class WorkPhoneChannel(ChatChannel):
 
     def get_wx_info(self):
         logger.info(f"初始化账号数据")
-        url = "http://chat.gkscrm.com:13086/pc/GetWeChatsReq?id=13"
+        url = "http://chat.gkscrm.com:13086/pc/GetWeChatsReq?id=0"
         response = requests.request("POST", url)
 
         if response.status_code != 200:
