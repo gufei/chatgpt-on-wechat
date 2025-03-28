@@ -140,15 +140,14 @@ class WorkPhoneChannel(ChatChannel):
         voice_path = ''
         if msg.ContentType == EnumContentType.Voice:
             content = str(msg.Content)
-            result = content.split(':')
 
-            if len(result) == 4:
-                # 正常语音文件：http://chat.gkscrm.com:14086/juliao/20250320/1224CA2AE1976C14A5D93503BB7B0D1C.mp3?duration=2880
-                # 群语音文件：wxid_k7p37xnoig8y21:http://chat.gkscrm.com:14086/juliao/20250328/6C17CC337D83B347713054941384ADEB.mp3?duration=2140
-                # 如果发现是群语音文件，暂时不处理
-
+            if "chatroom" in msg.FriendId:
                 logger.error('个微-群语音消息暂时不处理')
                 return
+
+            # 正常语音文件：http://chat.gkscrm.com:14086/juliao/20250320/1224CA2AE1976C14A5D93503BB7B0D1C.mp3?duration=2880
+            # 群语音文件：wxid_k7p37xnoig8y21:http://chat.gkscrm.com:14086/juliao/20250328/6C17CC337D83B347713054941384ADEB.mp3?duration=2140
+            # 如果发现是群语音文件，暂时不处理
 
             voice_path = self.download_voice(msg.Content)
 
