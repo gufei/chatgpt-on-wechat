@@ -167,6 +167,12 @@ class WorkPhoneChannel(ChatChannel):
 
         voice_path = ''
         if msg.ContentType == EnumContentType.Voice:
+            # msg.ConvType == 1 代表是群聊
+            if msg.ConvType == 1:
+                # 语音群聊暂时不处理
+                logger.error("企微-群语音消息暂时不处理")
+                return
+
             voice_path = self.download_voice(msg.Content)
             if voice_path == '':
                 logger.error("音频文件过长，不处理")
