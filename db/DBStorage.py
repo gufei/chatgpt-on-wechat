@@ -3,6 +3,7 @@ import json
 import os
 import re
 from datetime import datetime, timezone
+from math import floor
 from typing import Optional
 
 import mysql.connector
@@ -474,16 +475,19 @@ class DBStorage:
                 cursor.execute(sql_query, record_tuple)
                 existing_record = cursor.fetchone()
 
+            rate = 10000
+            number = round(tokens/rate, 4)
+            # logger.error(f"number={number}")
             if existing_record:
                 before_number = existing_record['balance']
-                after_number = before_number - tokens
+                after_number = self.subtraction(float(before_number), number)
             else:
                 before_number = 0
-                after_number = 0 - tokens
+                after_number = 0 - number
 
             sql_insert_detail = "INSERT INTO credit_usage (number, before_number, after_number, ntype, nid, `table`, organization_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, 'usage_detail', %s, %s, %s)"
             sql_insert_tuple = (
-            tokens, before_number, after_number, 1, nid, organization_id, formatted_time, formatted_time)
+            number, before_number, after_number, 1, nid, organization_id, formatted_time, formatted_time)
 
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_insert_detail, sql_insert_tuple)
@@ -501,6 +505,11 @@ class DBStorage:
         except Error as e:
             print(f"Error while connecting to MySQL: {e}")
             conn.rollback()
+
+    def subtraction(self, n1:float, n2:float):
+        number1 = n1*10000
+        number2 = n2*10000
+        return floor(number1-number2)/10000
 
     def add_wp_chatroom(self, wx_wxid: str, chat_rooms: list[tuple]):
         conn = self._mysql.connection()
