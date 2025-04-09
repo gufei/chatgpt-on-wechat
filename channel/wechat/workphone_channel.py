@@ -201,13 +201,27 @@ class WorkPhoneChannel(ChatChannel):
                     context['open_ai_api_key'] = "sk-wwttAtdLcTfeF7F2Eb9d3592Bd4c487f8e8fA544D6C4BbA9"
             else:
                 agent_info = db_storage.get_agent_info(msg.WeChatId, "workphone")
-                if agent_info and agent_info.get("type") == 2:
-                    context['open_ai_api_base'] = agent_info.get("api_base", "http://new-api.gkscrm.com/v1") + "/chat/completions"
-                    context['open_ai_api_key'] = agent_info.get("api_key", "sk-ZQRNypQOC8ID5WbpCdF263C58dF44271842e86D408Bb3848")
-                    context['open_ai_model'] = agent_info.get("model")
-                else:
-                    context['open_ai_api_base'] = "http://new-api.gkscrm.com/v1"
-                    context['open_ai_api_key'] = "sk-wwttAtdLcTfeF7F2Eb9d3592Bd4c487f8e8fA544D6C4BbA9"
+                model = agent_info.get("model")
+                if model is None or model == "":
+                    model = "gpt-4o-mini"
+                api_base = agent_info.get("api_base")
+                if api_base is None or api_base == "":
+                    api_base = "http://new-api.gkscrm.com/v1"
+                api_base += "/chat/completions"
+                api_key = agent_info.get("api_key")
+                if api_key is None or api_key == "":
+                    api_key = "sk-ZQRNypQOC8ID5WbpCdF263C58dF44271842e86D408Bb3848"
+                context['open_ai_api_base'] = api_base
+                context['open_ai_api_key'] = api_key
+                context['open_ai_model'] = model
+                # if agent_info and agent_info.get("type") == 2:
+                #
+                #     context['open_ai_api_base'] = agent_info.get("api_base", "http://new-api.gkscrm.com/v1") + "/chat/completions"
+                #     context['open_ai_api_key'] = agent_info.get("api_key", "sk-ZQRNypQOC8ID5WbpCdF263C58dF44271842e86D408Bb3848")
+                #     context['open_ai_model'] = agent_info.get("model")
+                # else:
+                #     context['open_ai_api_base'] = "http://new-api.gkscrm.com/v1"
+                #     context['open_ai_api_key'] = "sk-wwttAtdLcTfeF7F2Eb9d3592Bd4c487f8e8fA544D6C4BbA9"
 
             # 不需要添加at
             context['no_need_at'] = True
