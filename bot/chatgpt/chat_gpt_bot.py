@@ -88,11 +88,18 @@ class ChatGPTBot(Bot, OpenAIImage):
 
             new_args['api_base'] = api_base
 
+
             if "fastgpt" in api_base or "fastgpt" in api_key:
                 new_args["chatId"] = session.session_id
                 new_args["detail"] = True
                 new_args["messages"] = [session.messages[-1]]
+                if context.get("open_ai_model"):
+                    new_args['variables'] = {
+                        "model": context.get("open_ai_model", "gpt-4o-mini")
+                    }
             else:
+                if context.get("open_ai_model"):
+                    new_args['model'] = context.get("open_ai_model", "gpt-4o-mini")
                 new_args["messages"] = session.messages
             reply_content = self.reply_text(session, api_key, args=new_args, context=context)
             logger.debug(

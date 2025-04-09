@@ -31,7 +31,7 @@ class WXAgent(Plugin):
                 logger.debug(f"[wxagent]加载配置文件{config_path}")
                 with open(config_path, "r", encoding="utf-8") as f:
                     conf = json.load(f)
-            self.bot = OpenaiBot(conf["open_ai_api_base"], conf["open_ai_api_key"])
+            # self.bot = OpenaiBot(conf["open_ai_api_base"], conf["open_ai_api_key"])
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
             self.continue_on_miss = conf["continue_on_miss"]
             logger.info("[wxagent] inited.")
@@ -58,9 +58,17 @@ class WXAgent(Plugin):
         agent_info = db_storage.get_agent_info(bot_wxid, channel_type)
 
         # 调用 chatgpt 接口
-        if agent_info:
+        if agent_info and agent_info.get("type") == 1:
+            model = agent_info.get("model", "gpt-4o-mini")
+            api_base = agent_info.get("api_base", "http://new-api.gkscrm.com/v1")
+            api_base += "/chat/completions"
+            api_key = agent_info.get("api_key", "sk-ZQRNypQOC8ID5WbpCdF263C58dF44271842e86D408Bb3848")
+
+            openai_bot = OpenaiBot(api_base, api_key, model)
+
             logger.info("[WXAgent] agent_info={}".format(agent_info))
             e_context.econtext['context']['organization_id'] = agent_info['organization_id']
+
             # 优化问题
             expand_system_prompt = f"""# 任务：
 请根据上下文信息，优化用户发送的最后一条消息，补齐消息中可能缺失的主语、谓语、宾语、定语、状语、补语句子成分。
@@ -69,7 +77,7 @@ class WXAgent(Plugin):
 
 # 回复要求
 1. 直接输出优化后的消息"""
-            expand_bot_reply = self.bot.reply_silent(e_context.econtext['context'], expand_system_prompt, 2, app_id=agent_info['id'])
+            expand_bot_reply = openai_bot.reply_silent(e_context.econtext['context'], expand_system_prompt, 2, app_id=agent_info['id'])
             logger.debug("[wxagent] expand_bot_reply: %s" % expand_bot_reply.content)
 
             answer = chat_service_openai_like(agent_info['dataset_id'], expand_bot_reply.content)
@@ -91,7 +99,7 @@ class WXAgent(Plugin):
 1. 直接以角色设定的角度回答问题，并以第一人称输出。
 2. 不要在回复前加角色、姓名。
 3. 回复要正式"""
-            bot_reply = self.bot.reply(content, e_context.econtext['context'], system_prompt, 3, app_id=agent_info['id'])
+            bot_reply = openai_bot.reply(content, e_context.econtext['context'], system_prompt, 3, app_id=agent_info['id'])
             logger.debug("[wxagent] reply: %s" % bot_reply)
 
             content = parse_markdown(bot_reply.content)
