@@ -59,10 +59,16 @@ class WXAgent(Plugin):
 
         # 调用 chatgpt 接口
         if agent_info and agent_info.get("type") == 1:
-            model = agent_info.get("model", "gpt-4o-mini")
-            api_base = agent_info.get("api_base", "http://new-api.gkscrm.com/v1")
+            model = agent_info.get("model")
+            if model is None or model == "":
+                model = "gpt-4o-mini"
+            api_base = agent_info.get("api_base")
+            if api_base is None or api_base == "":
+                api_base = "http://new-api.gkscrm.com/v1"
             api_base += "/chat/completions"
-            api_key = agent_info.get("api_key", "sk-ZQRNypQOC8ID5WbpCdF263C58dF44271842e86D408Bb3848")
+            api_key = agent_info.get("api_key")
+            if api_key is None or api_key == "":
+                api_key = "sk-ZQRNypQOC8ID5WbpCdF263C58dF44271842e86D408Bb3848"
 
             openai_bot = OpenaiBot(api_base, api_key, model)
 
