@@ -87,20 +87,47 @@ class ChatGPTBot(Bot, OpenAIImage):
             new_args = self.args.copy()
 
             new_args['api_base'] = api_base
-
-
+            sop_unmatched = context.get('sop_unmatched', None)
             if "fastgpt" in api_base or "fastgpt" in api_key:
                 new_args["chatId"] = session.session_id
                 new_args["detail"] = True
-                new_args["messages"] = [session.messages[-1]]
+                # new_args["messages"] = [session.messages[-1]]
                 if context.get("open_ai_model"):
                     new_args['variables'] = {
                         "model": context.get("open_ai_model", "gpt-4o-mini")
                     }
+                if sop_unmatched:
+                    if len(session.messages) > 0:
+                        messages = [{
+                            "role": "user",
+                            "content": f"""{session.messages[-1].get("content", "")}
+
+# 回复要求
+在回复内容的最后，需要引导用户回到指定话题：{sop_unmatched}""",
+                    }]
+                    else:
+                        messages = [{
+                            "role": "user",
+                            "content": f"""# 回复要求
+在回复内容的最后，需要引导用户回到指定话题：{sop_unmatched}"""
+                        }]
+                else:
+                    messages = session.messages[-1]
+                new_args["messages"] = messages
             else:
                 if context.get("open_ai_model"):
                     new_args['model'] = context.get("open_ai_model", "gpt-4o-mini")
-                new_args["messages"] = session.messages
+                # new_args["messages"] = session.messages
+                if len(session.messages) > 0:
+                    messages = session.messages
+                    messages.insert(0, {
+                        "role": "system",
+                        "content": f"""# 回复要求
+在回复内容的最后，需要引导用户回到指定话题：{sop_unmatched}"""
+                    })
+                else:
+                    messages = session.messages
+                new_args["messages"] = messages
             reply_content = self.reply_text(session, api_key, args=new_args, context=context)
             logger.debug(
                 "[CHATGPT] new_query={}, session_id={}, reply_cont={}, completion_tokens={}".format(

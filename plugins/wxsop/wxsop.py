@@ -268,6 +268,7 @@ class WXSop(Plugin):
 
                 e_context.action = EventAction.BREAK_PASS
             else:
+                e_context.econtext['context']['sop_unmatched'] = message_record["content"]
                 if tagging_label_add:
                     stages = db_storage.get_stage(organization_id)
                     contact_id = 0
