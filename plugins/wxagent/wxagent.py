@@ -71,10 +71,9 @@ class WXAgent(Plugin):
                 api_key = "sk-ZQRNypQOC8ID5WbpCdF263C58dF44271842e86D408Bb3848"
 
             openai_bot = OpenaiBot(api_base, api_key, model)
-
+            sop_unmatched = e_context.econtext['context'].get('sop_unmatched', None)
             logger.info("[WXAgent] agent_info={}".format(agent_info))
             e_context.econtext['context']['organization_id'] = agent_info['organization_id']
-
             # 优化问题
             expand_system_prompt = f"""# 任务：
 请根据上下文信息，优化用户发送的最后一条消息，补齐消息中可能缺失的主语、谓语、宾语、定语、状语、补语句子成分。
@@ -105,6 +104,8 @@ class WXAgent(Plugin):
 1. 直接以角色设定的角度回答问题，并以第一人称输出。
 2. 不要在回复前加角色、姓名。
 3. 回复要正式"""
+            if sop_unmatched:
+                system_prompt += f"""4. 在回复内容的最后，需要引导用户回到指定话题：{sop_unmatched}"""
             bot_reply = openai_bot.reply(content, e_context.econtext['context'], system_prompt, 3, app_id=agent_info['id'])
             logger.debug("[wxagent] reply: %s" % bot_reply)
 
