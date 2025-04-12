@@ -43,7 +43,7 @@ class WorkPhoneChannel(ChatChannel):
 
     def get_wx_info(self):
         logger.info(f"初始化账号数据")
-        url = "http://chat.gkscrm.com:13086/pc/GetWeChatsReq?id=11"
+        url = "http://chat.gkscrm.com:13086/pc/GetWeChatsReq?id=16"
         response = requests.request("POST", url)
 
         if response.status_code != 200:
@@ -84,7 +84,7 @@ class WorkPhoneChannel(ChatChannel):
 
     def startup(self):
         # 测试 credential: bwkf:rQRwCSOmplX3TtLJ
-        self.wsCli = WebSocketClient("ws://chat.gkscrm.com:13088", "bwkf:rQRwCSOmplX3TtLJ")
+        self.wsCli = WebSocketClient("ws://chat.gkscrm.com:13088", "debug:rQRwCSOmplX3TtLJ")
         self.wsCli.start()
         self.wsCli.ws.on_message = self.on_message
 
