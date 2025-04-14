@@ -72,8 +72,10 @@ class WorkPhoneChannel(ChatChannel):
         if not wx_wxid:
             return None
         for wx_info in wechats.get("Contacts"):
-            if not self.wx_info.get(wx_wxid):
-                return None
+
+            # if not self.wx_info.get(wx_wxid):
+            #     return None
+
             organization_id = wx_wxinfo.get("organization_id", 0)
             labelIds = ", ".join(wx_info.get('LabelIds', []))
             wxinfo = db_storage.get_contact_by_wxid(wx_info['RemoteId'], wx_wxid)
@@ -98,8 +100,10 @@ class WorkPhoneChannel(ChatChannel):
                 continue
             if Conver_info.get('Type', 0) != 1:
                 continue
-            if not self.wx_info.get(wx_wxid):
-                return None
+
+            # if not self.wx_info.get(wx_wxid):
+            #     return None
+
             organization_id = wx_wxinfo.get("organization_id", 0)
             # labelIds = ", ".join(Conver_info.get('LabelIds', []))
             wxinfo = db_storage.get_contact_by_wxid(Conver_info['RemoteId'], wx_wxid)
@@ -158,12 +162,17 @@ class WorkPhoneChannel(ChatChannel):
         msg = FriendTalkNoticeMessage()
         msg = ParseDict(msg_dict, msg)
         logger.info(f'FriendTalkNoticeMessage 收到的消息为: {msg}')
-        if str(msg.WxId) not in self.wx_info:
+        # if str(msg.WxId) not in self.wx_info:
+        #     logger.error('没有找到该微信，跳过')
+        #     return
+
+        # 获取wxinfo账号信息
+        wxinfo = db_storage.get_info_by_wxid(str(msg.WxId))
+        if wxinfo is None:
             logger.error('没有找到该微信，跳过')
             return
 
-        wechat = self.wx_info[str(msg.WxId)]
-        logger.info(f'当前处理的微信为: {wechat}')
+        logger.info(f'当前处理的微信为: {wxinfo}')
 
         voice_path = ''
         if msg.ContentType == EnumContentType.Voice:
@@ -183,7 +192,7 @@ class WorkPhoneChannel(ChatChannel):
             # voice_info = "{\"duration\":2,\"size\":4118,\"thumbSize\":0,\"url\":\"http://chat.gkscrm.com:14086/juliao/20250321/F01A0EDF3CE06A9D927F8236043266FD.mp3\"}"
             # voice_path = self.download_voice(voice_info)
 
-        workphone_msg = WorkPhoneMessage(msg, wechat, voice_path)
+        workphone_msg = WorkPhoneMessage(msg, wxinfo, voice_path)
 
         logger.debug("[wx_hook] wx_hook_msg message: {}".format(workphone_msg))
 
@@ -192,12 +201,6 @@ class WorkPhoneChannel(ChatChannel):
         if context is None:
             logger.error("无法识别的消息类型，跳过")
             return
-
-
-        # 获取wxinfo账号信息
-        wxinfo = db_storage.get_info_by_wxid(str(msg.WxId))
-
-        logger.debug(f"[wx_hook] 获取到的账号信息: wxinfo: {wxinfo}")
 
         if not wxinfo:
             logger.error("没有找到该账号，跳过")
@@ -213,11 +216,11 @@ class WorkPhoneChannel(ChatChannel):
 
         if context:
             # 增加需要的context
-            print(f"wechat: {wechat}")
-            print(f"wechat['wechatid']: {wechat['wxid']}")
+            # print(f"wechat: {wechat}")
+            print(f"wechat['wechatid']: {wxinfo['wxid']}")
             print(f"wxinfo['organization_id']: {wxinfo['organization_id']}")
-            context['wechat_account'] = wechat
-            context['wxid'] = wechat['wxid']
+            context['wechat_account'] = wxinfo
+            context['wxid'] = wxinfo['wxid']
             context['organization_id'] = wxinfo['organization_id']
             if wxinfo['agent_id'] == 0:
                 if wxinfo['api_base'] != '':

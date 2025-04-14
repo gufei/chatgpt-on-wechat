@@ -1,4 +1,5 @@
 import json
+from app import redis_conn, db_storage
 
 from app import redis_conn
 from bridge.context import ContextType
@@ -35,11 +36,18 @@ class WorkPhoneMessage(ChatMessage):
 
 
         if self.is_group:
-            group_json = redis_conn.hget("workphone_group_info_"+wechat['wechatid'], message.FriendId)
+            hkey = "workphone_group_info_"+wechat['wxid']
+            group_json = redis_conn.hget(hkey, message.FriendId)
             if group_json:
                 group = json.loads(group_json)
                 self.to_user_nickname = group['nickname']
                 self.other_user_nickname = group['nickname']
+            else:
+                group = db_storage.get_contact_by_wxwxid_wxid(wechat['wxid'], message.FriendId)
+                logger.info(f"group info is:{group} wx_wxid:{wechat['wxid']} wxid:{message.FriendId}")
+                self.to_user_nickname = group['nickname']
+                self.other_user_nickname = group['nickname']
+                redis_conn.hset(hkey, message.FriendId, json.dumps(group))
 
             self.content = message.Content.decode('utf-8')
             lines = self.content.split(':',1)
@@ -53,7 +61,7 @@ class WorkPhoneMessage(ChatMessage):
             self.actual_user_id = lines[0]
             # todo 实际发送者昵称，需要获取群成员信息后才能拿到
             self.actual_user_nickname = lines[0]
-            self.self_display_name = wechat['wechatnick']
+            self.self_display_name = wechat['nickname']
 
             self.is_at = False
             if message.Ext:
@@ -61,15 +69,15 @@ class WorkPhoneMessage(ChatMessage):
                 if message.WeChatId in at_list:
                     self.is_at = True
             else:
-                if "@" + wechat['wechatnick'] in self.content:
-                    self.content = self.content.replace("@" + wechat['wechatnick'], "")
+                if "@" + wechat['nickname'] in self.content:
+                    self.content = self.content.replace("@" + wechat['nickname'], "")
                     self.is_at = True
 
         else:
             self.from_user_id = message.FriendId
             self.from_user_nickname = message.NickName
             self.to_user_id = message.WeChatId
-            self.to_user_nickname = wechat['wechatnick']
+            self.to_user_nickname = wechat['nickname']
             self.other_user_id = message.FriendId
             self.other_user_nickname = message.NickName
             if message.ContentType == EnumContentType.Voice:

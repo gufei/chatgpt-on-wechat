@@ -9,7 +9,7 @@ from wecom.WTransport_pb2 import EnumContentType
 
 
 class WorkPhoneMessage(ChatMessage):
-    def __init__(self, message:FriendTalkNoticeMessage,wechat:dict,voice_path:str):
+    def __init__(self, message:FriendTalkNoticeMessage,wxinfo:dict,voice_path:str):
         super().__init__(message)
 
         self.msg_id = message.MsgId
@@ -49,7 +49,7 @@ class WorkPhoneMessage(ChatMessage):
             self.actual_user_id = message.SenderId
             # todo 实际发送者昵称，需要获取群成员信息后才能拿到
             self.actual_user_nickname = message.SenderName
-            self.self_display_name = wechat['name']
+            self.self_display_name = wxinfo['nickname']
             logger.info("[WX]self.self_display_name {}".format(self.self_display_name))
             self.is_at = False
             # if message.Ext:
@@ -59,14 +59,14 @@ class WorkPhoneMessage(ChatMessage):
             # else:
             #
             if message.AtMe:
-                self.content = self.content.replace("@" + wechat['name'], "")
+                self.content = self.content.replace("@" + wxinfo['nickname'], "")
                 self.is_at = True
 
         else:
             self.from_user_id = message.ConvId
             self.from_user_nickname = message.SenderName
             self.to_user_id = message.WxId
-            self.to_user_nickname = wechat['name']
+            self.to_user_nickname = wxinfo['nickname']
             self.other_user_id = message.ConvId
             self.other_user_nickname = message.SenderName
             if message.ContentType == EnumContentType.Text:

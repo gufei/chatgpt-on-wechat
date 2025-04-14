@@ -160,6 +160,26 @@ class DBStorage:
         finally:
             conn.close()
 
+    # 根据wx_wxid和wxid获取联系人信息
+    def get_contact_by_wxwxid_wxid(self, wx_wxid: str, wxid: str = None):
+        conn = self._mysql.connection()
+        try:
+            sql_query = "SELECT id,wx_wxid,wxid,nickname,markname,account FROM contact WHERE wx_wxid=%s AND wxid = %s LIMIT 1"
+            record_tuple = (wx_wxid, wxid)
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(sql_query, record_tuple)
+                wx_record = cursor.fetchone()
+            if wx_record:
+                return wx_record
+            else:
+                return None
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
+
     def get_label_tagging_by_orgid(self, orgid: int):
         label_tagging_info = self._redis.hget('label_tagging_info', str(orgid))
         if label_tagging_info:
