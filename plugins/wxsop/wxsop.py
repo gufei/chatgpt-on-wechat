@@ -79,6 +79,9 @@ class WXSop(Plugin):
         need_judge = False
         # 调用 chatgpt 接口
         if message_record and sop_nodes:
+            if contains_placeholder(message_record["content"]):
+                contactinfo = db_storage.get_contact_by_wxid(receiver, bot_wxid)
+                message_record["content"] = var_replace(message_record["content"], contactinfo)
             # organization_id = message_record["organization_id"]
             prompt = f"""# 任务
 请根据历史消息，判断用户回复的内容或深层意图，与哪个节点的意图相匹配。
