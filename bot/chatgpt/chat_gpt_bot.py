@@ -196,6 +196,11 @@ class ChatGPTBot(Bot, OpenAIImage):
                 bot_type = 4
             else:
                 bot_type = 1
+
+            usage_storage(bot_type, context["wxid"], context["session_id"], 1, 0, args, response_json,
+                          context["organization_id"])
+            content = parse_markdown(response_json["choices"][0]["message"]["content"])
+            logger.debug("[CHATGPT] content1={}".format(content))
             if "fastgpt" in api_base or "fastgpt" in api_key:
                 sop_unmatched = context.get('sop_unmatched', None)
                 if sop_unmatched:
@@ -205,20 +210,21 @@ class ChatGPTBot(Bot, OpenAIImage):
 在参考内容的基础上，需要引导用户回到指定话题：{sop_unmatched}
 
 # 参考内容
-{response_json["choices"][0]["message"]["content"]}
+{content}
 """}]
                     headers = {"Content-Type": "application/json", 'Authorization': 'Bearer sk-wwttAtdLcTfeF7F2Eb9d3592Bd4c487f8e8fA544D6C4BbA9'}
+                    args["messages"] = messages
+                    logger.debug("[CHATGPT] args={}".format(args))
                     response2 = requests.post("http://new-api.gkscrm.com/v1/chat/completions", headers=headers, json=args)
                     response_json2 = response2.json()
+                    content = parse_markdown(response_json["choices"][0]["message"]["content"])
+                    logger.debug("[CHATGPT] content={}".format(content))
                     total_tokens += response_json2["usage"]["total_tokens"]
                     completion_tokens += response_json2["usage"]["completion_tokens"]
                     usage_storage(bot_type, context["wxid"], context["session_id"], 1, 0, args, response_json2,
                                   context["organization_id"])
 
-            usage_storage(bot_type, context["wxid"], context["session_id"], 1, 0, args, response_json, context["organization_id"])
-            content = parse_markdown(response_json["choices"][0]["message"]["content"])
-
-            logger.info("[ChatGPT] reply={}, response_json={}".format(response_json["choices"][0]['message']['content'], response_json))
+            logger.info("[ChatGPT] reply={}, response_json={}".format(content, response_json))
             return {
                 "total_tokens": total_tokens,
                 "completion_tokens": completion_tokens,
