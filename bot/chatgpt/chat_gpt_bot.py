@@ -101,7 +101,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                     logger.debug("[CHATGPT] session.messages={}".format(session.messages))
                     if len(session.messages) > 0:
                         messages = [{
-                            "role": "user",
+                            "role": "system",
                             "content": f"""{session.messages[-1].get("content", "")}
 
 # 回复要求
@@ -109,7 +109,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                     }]
                     else:
                         messages = [{
-                            "role": "user",
+                            "role": "system",
                             "content": f"""# 回复要求
 在回复内容的最后，需要引导用户回到指定话题：{sop_unmatched}"""
                         }]
