@@ -3,6 +3,8 @@ import json
 import re
 import time
 import urllib.parse
+from pyexpat.errors import messages
+
 import openai
 import openai.error
 import requests
@@ -96,26 +98,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                     new_args['variables'] = {
                         "model": context.get("open_ai_model", "gpt-4o-mini")
                     }
-                logger.debug("[CHATGPT] sop_unmatched={}".format(sop_unmatched))
-                if sop_unmatched:
-                    logger.debug("[CHATGPT] session.messages={}".format(session.messages))
-                    if len(session.messages) > 0:
-                        messages = [{
-                            "role": "system",
-                            "content": f"""{session.messages[-1].get("content", "")}
-
-# 回复要求
-在回复内容的最后，需要引导用户回到指定话题：{sop_unmatched}""",
-                    }]
-                    else:
-                        messages = [{
-                            "role": "system",
-                            "content": f"""# 回复要求
-在回复内容的最后，需要引导用户回到指定话题：{sop_unmatched}"""
-                        }]
-                else:
-                    messages = [session.messages[-1]]
-                    logger.debug("[CHATGPT] messages={}".format(messages))
+                messages = [session.messages[-1]]
                 new_args["messages"] = messages
             else:
                 if context.get("open_ai_model"):
@@ -200,13 +183,12 @@ class ChatGPTBot(Bot, OpenAIImage):
                 del args["request_timeout"]
             if "timeout" in args:
                 del args["timeout"]
-            logger.debug("[CHATGPT] api_base={}".format(api_base))
-            logger.debug("[CHATGPT] api_key={}".format(api_key))
-            logger.debug("[CHATGPT] args={}".format(args))
             # logger.debug("[CHATGPT] jsondata={}".format(jsondata))
             response = requests.post(api_base + "/chat/completions", headers=headers, json=args)
-            logger.debug("[CHATGPT] response={}".format(response))
             response_json = response.json()
+
+            total_tokens = response_json["usage"]["total_tokens"]
+            completion_tokens = response_json["usage"]["completion_tokens"]
 
             if conf().get("channel_type", "wx_hook") == "whatsapp":
                 bot_type = 3
@@ -214,14 +196,32 @@ class ChatGPTBot(Bot, OpenAIImage):
                 bot_type = 4
             else:
                 bot_type = 1
-            usage_storage(bot_type, context["wxid"], context["session_id"], 1, 0, args, response_json, context["organization_id"])
+            if "fastgpt" in api_base or "fastgpt" in api_key:
+                sop_unmatched = context.get('sop_unmatched', None)
+                if sop_unmatched:
+                    messages = [{
+                        "role": "system",
+                        "content": f"""# 任务
+在参考内容的基础上，需要引导用户回到指定话题：{sop_unmatched}
 
+# 参考内容
+{response_json["choices"][0]["message"]["content"]}
+"""}]
+                    headers = {"Content-Type": "application/json", 'Authorization': 'Bearer sk-wwttAtdLcTfeF7F2Eb9d3592Bd4c487f8e8fA544D6C4BbA9'}
+                    response2 = requests.post("http://new-api.gkscrm.com/v1/chat/completions", headers=headers, json=args)
+                    response_json2 = response2.json()
+                    total_tokens += response_json2["usage"]["total_tokens"]
+                    completion_tokens += response_json2["usage"]["completion_tokens"]
+                    usage_storage(bot_type, context["wxid"], context["session_id"], 1, 0, args, response_json2,
+                                  context["organization_id"])
+
+            usage_storage(bot_type, context["wxid"], context["session_id"], 1, 0, args, response_json, context["organization_id"])
             content = parse_markdown(response_json["choices"][0]["message"]["content"])
 
             logger.info("[ChatGPT] reply={}, response_json={}".format(response_json["choices"][0]['message']['content'], response_json))
             return {
-                "total_tokens": response_json["usage"]["total_tokens"],
-                "completion_tokens": response_json["usage"]["completion_tokens"],
+                "total_tokens": total_tokens,
+                "completion_tokens": completion_tokens,
                 "content": content,
             }
         except Exception as e:
