@@ -212,8 +212,11 @@ class ChatGPTBot(Bot, OpenAIImage):
 # 参考内容
 {response_json["choices"][0]["message"]["content"]}
 
-# 需要被引导的指定话题
+# 需要被引导回的指定话题
 {sop_unmatched}
+
+# 注意
+不要只回复参考内容，请在结尾一定别忘记引导用户回到指定话题
 """}]
                     headers = {"Content-Type": "application/json", 'Authorization': 'Bearer sk-wwttAtdLcTfeF7F2Eb9d3592Bd4c487f8e8fA544D6C4BbA9'}
                     args["messages"] = messages
