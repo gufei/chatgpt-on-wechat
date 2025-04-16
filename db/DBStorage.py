@@ -3,6 +3,7 @@ import json
 import os
 import re
 from datetime import datetime, timezone
+from math import floor
 from typing import Optional
 
 import mysql.connector
@@ -158,6 +159,26 @@ class DBStorage:
             conn.rollback()
         finally:
             conn.close()
+
+    # 根据wx_wxid和wxid获取联系人信息
+    def get_contact_by_wxwxid_wxid(self, wx_wxid: str, wxid: str = None):
+        conn = self._mysql.connection()
+        try:
+            sql_query = "SELECT id,wx_wxid,wxid,nickname,markname,account FROM contact WHERE wx_wxid=%s AND wxid = %s LIMIT 1"
+            record_tuple = (wx_wxid, wxid)
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(sql_query, record_tuple)
+                wx_record = cursor.fetchone()
+            if wx_record:
+                return wx_record
+            else:
+                return None
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
 
     def get_label_tagging_by_orgid(self, orgid: int):
         label_tagging_info = self._redis.hget('label_tagging_info', str(orgid))
@@ -449,11 +470,66 @@ class DBStorage:
                     record_tuple = (bot_type, bot_id, total_tokens, 0, detail_record_id, organization_id, formatted_time, formatted_time)
                     cursor.execute(sql_insert_total, record_tuple)
             conn.commit()
+
+            # self.add_credit_usage(detail_record_id, total_tokens, organization_id)
         except Error as e:
             print(f"Error while connecting to MySQL: {e}")
             conn.rollback()
         finally:
             conn.close()
+
+
+    """ 这里记录积分消耗数到积分明细表里，同时在余额里扣减积分 """
+    def add_credit_usage(self, nid: int, tokens: int, organization_id: int):
+        conn = self._mysql.connection()
+
+        try:
+            current_utc_time = datetime.now(timezone.utc)
+            formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
+
+            # 先获取之前的积分余额
+            conn = self._mysql.connection()
+            sql_query = "SELECT id, balance,organization_id FROM credit_balance WHERE organization_id = %s AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 1"
+            record_tuple = (organization_id,)
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(sql_query, record_tuple)
+                existing_record = cursor.fetchone()
+
+            rate = 10000
+            number = round(tokens/rate, 4)
+            # logger.error(f"number={number}")
+            if existing_record:
+                before_number = existing_record['balance']
+                after_number = self.subtraction(float(before_number), number)
+            else:
+                before_number = 0
+                after_number = 0 - number
+
+            sql_insert_detail = "INSERT INTO credit_usage (number, before_number, after_number, ntype, nid, `table`, organization_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, 'usage_detail', %s, %s, %s)"
+            sql_insert_tuple = (
+            number, before_number, after_number, 1, nid, organization_id, formatted_time, formatted_time)
+
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(sql_insert_detail, sql_insert_tuple)
+
+                if existing_record:
+                    sql_update_total = "UPDATE `credit_balance` SET balance = %s, updated_at = %s WHERE organization_id = %s AND deleted_at IS NULL"
+                    record_tuple = (after_number, formatted_time, organization_id)
+                    cursor.execute(sql_update_total, record_tuple)
+                else:
+                    sql_update_total = "INSERT INTO `credit_balance` (balance, organization_id, created_at, updated_at) VALUES (%s, %s, %s, %s)"
+                    record_tuple = (after_number, organization_id, formatted_time, formatted_time)
+                    cursor.execute(sql_update_total, record_tuple)
+
+            conn.commit()
+        except Error as e:
+            print(f"Error while connecting to MySQL: {e}")
+            conn.rollback()
+
+    def subtraction(self, n1:float, n2:float):
+        number1 = n1*10000
+        number2 = n2*10000
+        return floor(number1-number2)/10000
 
     def add_wp_chatroom(self, wx_wxid: str, chat_rooms: list[tuple]):
         conn = self._mysql.connection()
