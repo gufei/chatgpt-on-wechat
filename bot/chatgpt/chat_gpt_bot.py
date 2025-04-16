@@ -199,6 +199,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                 del args["timeout"]
             logger.debug("[CHATGPT] api_base={}".format(api_base))
             logger.debug("[CHATGPT] api_key={}".format(api_key))
+            logger.debug("[CHATGPT] args={}".format(args))
             # logger.debug("[CHATGPT] jsondata={}".format(jsondata))
             response = requests.post(api_base + "/chat/completions", headers=headers, json=args)
             logger.debug("[CHATGPT] response={}".format(response))
