@@ -223,7 +223,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                     logger.debug("[CHATGPT] args={}".format(args))
                     response2 = requests.post("http://new-api.gkscrm.com/v1/chat/completions", headers=headers, json=args)
                     response_json2 = response2.json()
-                    content = parse_markdown(response_json["choices"][0]["message"]["content"])
+                    content = parse_markdown(response_json2["choices"][0]["message"]["content"])
                     logger.debug("[CHATGPT] content={}".format(content))
                     total_tokens += response_json2["usage"]["total_tokens"]
                     completion_tokens += response_json2["usage"]["completion_tokens"]
