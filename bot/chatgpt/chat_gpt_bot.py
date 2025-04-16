@@ -96,7 +96,9 @@ class ChatGPTBot(Bot, OpenAIImage):
                     new_args['variables'] = {
                         "model": context.get("open_ai_model", "gpt-4o-mini")
                     }
+                logger.debug("[CHATGPT] sop_unmatched={}".format(sop_unmatched))
                 if sop_unmatched:
+                    logger.debug("[CHATGPT] session.messages={}".format(session.messages))
                     if len(session.messages) > 0:
                         messages = [{
                             "role": "user",
@@ -112,7 +114,8 @@ class ChatGPTBot(Bot, OpenAIImage):
 在回复内容的最后，需要引导用户回到指定话题：{sop_unmatched}"""
                         }]
                 else:
-                    messages = session.messages[-1]
+                    messages = [session.messages[-1]]
+                    logger.debug("[CHATGPT] messages={}".format(messages))
                 new_args["messages"] = messages
             else:
                 if context.get("open_ai_model"):
