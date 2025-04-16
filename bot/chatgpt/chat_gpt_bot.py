@@ -128,6 +128,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                 else:
                     messages = session.messages
                 new_args["messages"] = messages
+
             reply_content = self.reply_text(session, api_key, args=new_args, context=context)
             logger.debug(
                 "[CHATGPT] new_query={}, session_id={}, reply_cont={}, completion_tokens={}".format(
@@ -196,7 +197,8 @@ class ChatGPTBot(Bot, OpenAIImage):
                 del args["request_timeout"]
             if "timeout" in args:
                 del args["timeout"]
-
+            logger.debug("[CHATGPT] api_base={}".format(api_base))
+            logger.debug("[CHATGPT] api_key={}".format(api_key))
             # logger.debug("[CHATGPT] jsondata={}".format(jsondata))
             response = requests.post(api_base + "/chat/completions", headers=headers, json=args)
             response_json = response.json()
