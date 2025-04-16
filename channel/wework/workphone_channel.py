@@ -227,7 +227,7 @@ class WorkPhoneChannel(ChatChannel):
                     context['open_ai_api_base'] = "http://new-api.gkscrm.com/v1"
                     context['open_ai_api_key'] = "sk-wwttAtdLcTfeF7F2Eb9d3592Bd4c487f8e8fA544D6C4BbA9"
             else:
-                agent_info = db_storage.get_agent_info(msg.WeChatId, "workphone_wecom")
+                agent_info = db_storage.get_agent_info(msg.WxId, "workphone_wecom")
                 model = agent_info.get("model")
                 if model is None or model == "":
                     model = "gpt-4o-mini"
