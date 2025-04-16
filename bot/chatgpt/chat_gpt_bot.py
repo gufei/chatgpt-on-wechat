@@ -128,6 +128,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                 else:
                     messages = session.messages
                 new_args["messages"] = messages
+            logger.debug("[CHATGPT] api_key={}".format(api_key))
             reply_content = self.reply_text(session, api_key, args=new_args, context=context)
             logger.debug(
                 "[CHATGPT] new_query={}, session_id={}, reply_cont={}, completion_tokens={}".format(
