@@ -237,7 +237,6 @@ class WorkPhoneChannel(ChatChannel):
                 api_base = agent_info.get("api_base")
                 if api_base is None or api_base == "":
                     api_base = "http://new-api.gkscrm.com/v1"
-                api_base += "/chat/completions"
                 api_key = agent_info.get("api_key")
                 if api_key is None or api_key == "":
                     api_key = "sk-ZQRNypQOC8ID5WbpCdF263C58dF44271842e86D408Bb3848"
