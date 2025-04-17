@@ -3,6 +3,8 @@ import json
 import re
 import time
 import urllib.parse
+from pyexpat.errors import messages
+
 import openai
 import openai.error
 import requests
@@ -96,23 +98,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                     new_args['variables'] = {
                         "model": context.get("open_ai_model", "gpt-4o-mini")
                     }
-                if sop_unmatched:
-                    if len(session.messages) > 0:
-                        messages = [{
-                            "role": "user",
-                            "content": f"""{session.messages[-1].get("content", "")}
-
-# 回复要求
-在回复内容的最后，需要引导用户回到指定话题：{sop_unmatched}""",
-                    }]
-                    else:
-                        messages = [{
-                            "role": "user",
-                            "content": f"""# 回复要求
-在回复内容的最后，需要引导用户回到指定话题：{sop_unmatched}"""
-                        }]
-                else:
-                    messages = session.messages[-1]
+                messages = [session.messages[-1]]
                 new_args["messages"] = messages
             else:
                 if context.get("open_ai_model"):
@@ -128,6 +114,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                 else:
                     messages = session.messages
                 new_args["messages"] = messages
+
             reply_content = self.reply_text(session, api_key, args=new_args, context=context)
             logger.debug(
                 "[CHATGPT] new_query={}, session_id={}, reply_cont={}, completion_tokens={}".format(
@@ -196,10 +183,12 @@ class ChatGPTBot(Bot, OpenAIImage):
                 del args["request_timeout"]
             if "timeout" in args:
                 del args["timeout"]
-
             # logger.debug("[CHATGPT] jsondata={}".format(jsondata))
             response = requests.post(api_base + "/chat/completions", headers=headers, json=args)
             response_json = response.json()
+
+            total_tokens = response_json["usage"]["total_tokens"]
+            completion_tokens = response_json["usage"]["completion_tokens"]
 
             if conf().get("channel_type", "wx_hook") == "whatsapp":
                 bot_type = 3
@@ -207,14 +196,44 @@ class ChatGPTBot(Bot, OpenAIImage):
                 bot_type = 4
             else:
                 bot_type = 1
-            usage_storage(bot_type, context["wxid"], context["session_id"], 1, 0, args, response_json, context["organization_id"])
 
+            usage_storage(bot_type, context["wxid"], context["session_id"], 1, 0, args, response_json,
+                          context["organization_id"])
             content = parse_markdown(response_json["choices"][0]["message"]["content"])
+            logger.debug("[CHATGPT] content1={}".format(content))
+            if "fastgpt" in api_base or "fastgpt" in api_key:
+                sop_unmatched = context.get('sop_unmatched', None)
+                if sop_unmatched:
+                    messages = [{
+                        "role": "system",
+                        "content": f"""# 任务
+回复参考资料的内容，但是在结尾需要引导用户回到指定话题：
 
-            logger.info("[ChatGPT] reply={}, response_json={}".format(response_json["choices"][0]['message']['content'], response_json))
+# 参考内容
+{response_json["choices"][0]["message"]["content"]}
+
+# 需要被引导回的指定话题
+{sop_unmatched}
+
+# 注意
+不要只回复参考内容，请在结尾一定别忘记引导用户回到指定话题
+"""}]
+                    headers = {"Content-Type": "application/json", 'Authorization': 'Bearer sk-wwttAtdLcTfeF7F2Eb9d3592Bd4c487f8e8fA544D6C4BbA9'}
+                    args["messages"] = messages
+                    logger.debug("[CHATGPT] args={}".format(args))
+                    response2 = requests.post("http://new-api.gkscrm.com/v1/chat/completions", headers=headers, json=args)
+                    response_json2 = response2.json()
+                    content = parse_markdown(response_json2["choices"][0]["message"]["content"])
+                    logger.debug("[CHATGPT] content={}".format(content))
+                    total_tokens += response_json2["usage"]["total_tokens"]
+                    completion_tokens += response_json2["usage"]["completion_tokens"]
+                    usage_storage(bot_type, context["wxid"], context["session_id"], 1, 0, args, response_json2,
+                                  context["organization_id"])
+
+            logger.info("[ChatGPT] reply={}, response_json={}".format(content, response_json))
             return {
-                "total_tokens": response_json["usage"]["total_tokens"],
-                "completion_tokens": response_json["usage"]["completion_tokens"],
+                "total_tokens": total_tokens,
+                "completion_tokens": completion_tokens,
                 "content": content,
             }
         except Exception as e:
