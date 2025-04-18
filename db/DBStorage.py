@@ -10,6 +10,7 @@ import mysql.connector
 import redis
 from mysql.connector import Error, errorcode
 from DBUtils.PooledDB import PooledDB
+from db.coin import Coin
 
 from common.log import logger
 from config import conf
@@ -471,7 +472,7 @@ class DBStorage:
                     cursor.execute(sql_insert_total, record_tuple)
             conn.commit()
 
-            # self.add_credit_usage(detail_record_id, total_tokens, organization_id)
+            self.add_credit_usage(detail_record_id, total_tokens, organization_id, response)
         except Error as e:
             print(f"Error while connecting to MySQL: {e}")
             conn.rollback()
@@ -480,9 +481,11 @@ class DBStorage:
 
 
     """ 这里记录积分消耗数到积分明细表里，同时在余额里扣减积分 """
-    def add_credit_usage(self, nid: int, tokens: int, organization_id: int):
+    def add_credit_usage(self, nid: int, tokens: int, organization_id: int, response:str):
         conn = self._mysql.connection()
 
+        res = json.loads(response)
+        coin_util = Coin()
         try:
             current_utc_time = datetime.now(timezone.utc)
             formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
@@ -495,9 +498,12 @@ class DBStorage:
                 cursor.execute(sql_query, record_tuple)
                 existing_record = cursor.fetchone()
 
-            rate = 10000
-            number = round(tokens/rate, 4)
-            # logger.error(f"number={number}")
+            number = coin_util.transfer(res.get("model", "gpt-4o-mini"), tokens)
+
+            logger.info("在AI返回的最后阶段 记录消耗token和积分情况")
+            logger.info("\n"*2)
+            logger.info(f"response={response}, number={number} model={res.get('model')}")
+
             if existing_record:
                 before_number = existing_record['balance']
                 after_number = self.subtraction(float(before_number), number)
