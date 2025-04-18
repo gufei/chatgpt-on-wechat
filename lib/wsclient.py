@@ -191,12 +191,12 @@ class WebSocketClient(threading.Thread):
     def on_open(self, ws):
         logger.info('进行认证...')
         device_auth = DeviceAuthReqMessage(
-            AuthType=DeviceAuthReqMessage.EnumAuthType.Username,
+            AuthType=DeviceAuthReqMessage.EnumAuthType.InternalCode,
             Credential=base64.b64encode(self.credential.encode('utf-8')).decode('utf-8')
         )
 
         device_map = {
-            "AuthType":2,
+            "AuthType":3,
             "Credential":base64.b64encode(self.credential.encode('utf-8')).decode('utf-8')
         }
 
