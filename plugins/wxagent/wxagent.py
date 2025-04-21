@@ -31,7 +31,7 @@ class WXAgent(Plugin):
                 logger.debug(f"[wxagent]加载配置文件{config_path}")
                 with open(config_path, "r", encoding="utf-8") as f:
                     conf = json.load(f)
-            # self.bot = OpenaiBot(conf["open_ai_api_base"], conf["open_ai_api_key"])
+            self.bot = OpenaiBot(conf["open_ai_api_base"], conf["open_ai_api_key"])
             self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
             self.continue_on_miss = conf["continue_on_miss"]
             logger.info("[wxagent] inited.")
@@ -70,7 +70,13 @@ class WXAgent(Plugin):
             if api_key is None or api_key == "":
                 api_key = "sk-ZQRNypQOC8ID5WbpCdF263C58dF44271842e86D408Bb3848"
 
-            openai_bot = OpenaiBot(api_base, api_key, model)
+            # openai_bot = OpenaiBot(api_base, api_key, model)
+            self.bot.open_ai_api_key = api_key
+            self.bot.open_ai_api_base = api_base
+            self.bot.args = {
+            "model": model,  # 对话模型的名称
+            "stream": False,  # 是否开启流模式
+        }
             sop_unmatched = e_context.econtext['context'].get('sop_unmatched', None)
             logger.info("[WXAgent] agent_info={}".format(agent_info))
             e_context.econtext['context']['organization_id'] = agent_info['organization_id']
@@ -82,7 +88,7 @@ class WXAgent(Plugin):
 
 # 回复要求
 1. 直接输出优化后的消息"""
-            expand_bot_reply = openai_bot.reply_silent(e_context.econtext['context'], expand_system_prompt, 2, app_id=agent_info['id'])
+            expand_bot_reply = self.bot.reply_silent(e_context.econtext['context'], expand_system_prompt, 2, app_id=agent_info['id'])
             logger.debug("[wxagent] expand_bot_reply: %s" % expand_bot_reply.content)
 
             answer = chat_service_openai_like(agent_info['dataset_id'], expand_bot_reply.content)
@@ -109,7 +115,7 @@ class WXAgent(Plugin):
 3. 回复要正式"""
             if sop_unmatched:
                 system_prompt += f"""4. 在回复内容的最后，需要引导用户回到指定话题：{sop_unmatched}"""
-            bot_reply = openai_bot.reply(content, e_context.econtext['context'], system_prompt, 3, app_id=agent_info['id'])
+            bot_reply = self.bot.reply(content, e_context.econtext['context'], system_prompt, 3, app_id=agent_info['id'])
             logger.debug("[wxagent] reply: %s" % bot_reply)
 
             content = parse_markdown(bot_reply.content)
