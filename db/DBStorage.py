@@ -484,6 +484,7 @@ class DBStorage:
     def add_credit_usage(self, nid: int, tokens: int, organization_id: int, response:str):
         conn = self._mysql.connection()
 
+        logger.info(f"response={response}")
         res = json.loads(response)
         coin_util = Coin()
         try:
