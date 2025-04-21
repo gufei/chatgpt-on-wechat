@@ -472,7 +472,7 @@ class DBStorage:
                     cursor.execute(sql_insert_total, record_tuple)
             conn.commit()
 
-            self.add_credit_usage(detail_record_id, total_tokens, organization_id, response)
+            self.add_credit_usage(detail_record_id, total_tokens, organization_id, original_data)
         except Error as e:
             print(f"Error while connecting to MySQL: {e}")
             conn.rollback()
@@ -481,11 +481,11 @@ class DBStorage:
 
 
     """ 这里记录积分消耗数到积分明细表里，同时在余额里扣减积分 """
-    def add_credit_usage(self, nid: int, tokens: int, organization_id: int, response:str):
+    def add_credit_usage(self, nid: int, tokens: int, organization_id: int, original_data):
         conn = self._mysql.connection()
 
-        logger.info(f"response={response}")
-        res = json.loads(response)
+        logger.info(f"original_data={original_data}")
+
         coin_util = Coin()
         try:
             current_utc_time = datetime.now(timezone.utc)
@@ -499,11 +499,12 @@ class DBStorage:
                 cursor.execute(sql_query, record_tuple)
                 existing_record = cursor.fetchone()
 
-            number = coin_util.transfer(res.get("model", "gpt-4o-mini"), tokens)
+            response_data = original_data.get('response_data')
+            number = coin_util.transfer(response_data.get("model", "gpt-4o-mini"), tokens)
 
             logger.info("在AI返回的最后阶段 记录消耗token和积分情况")
             logger.info("\n"*2)
-            logger.info(f"response={response}, number={number} model={res.get('model')}")
+            logger.info(f"response={response_data}, number={number} model={response_data.get('model')}")
 
             if existing_record:
                 before_number = existing_record['balance']
