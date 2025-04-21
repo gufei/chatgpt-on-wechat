@@ -49,6 +49,7 @@ class OpenaiBot(Bot, OpenAIImage):
             session_id = "chatId-{}".format(context["wxid"] + "_" + format(context["session_id"]))
             logger.info("[WXAgent] session_id={}".format(session_id))
             session = self.sessions.session_query(query, session_id)
+            logger.info("[CHATGPT] messages={}".format(session.messages))
             new_args = self.args.copy()
             if system_prompt is not None:
                 new_args["messages"] = [
