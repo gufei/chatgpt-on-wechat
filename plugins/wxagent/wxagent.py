@@ -87,6 +87,8 @@ class WXAgent(Plugin):
 
             answer = chat_service_openai_like(agent_info['dataset_id'], expand_bot_reply.content)
 
+
+
             system_prompt = f"""# 角色
 {agent_info['role']}
 
@@ -94,6 +96,7 @@ class WXAgent(Plugin):
 {agent_info['background']}
 """
             if answer is not None:
+                answer = answer[:5]
                 system_prompt += """# 相关知识：
 """
                 for data in answer:

@@ -66,8 +66,9 @@ class SessionManager(object):
         session.add_query(query)
         try:
             max_tokens = conf().get("conversation_max_tokens", 1000)
+            logger.info("[WXAgent] max_tokens={}".format(max_tokens))
             total_tokens = session.discard_exceeding(max_tokens, None)
-            logger.debug("prompt tokens used={}".format(total_tokens))
+            logger.debug("prompt tokens total_tokens={}".format(total_tokens))
         except Exception as e:
             logger.warning("Exception when counting tokens precisely for prompt: {}".format(str(e)))
         return session
