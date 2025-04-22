@@ -480,7 +480,7 @@ class DBStorage:
             conn.commit()
 
 
-            self.add_credit_usage(detail_record_id, total_tokens, organization_id, model_name, credits)
+            self.add_credit_usage(detail_record_id, total_tokens, organization_id, credits)
         except Error as e:
             print(f"Error while connecting to MySQL: {e}")
             conn.rollback()
