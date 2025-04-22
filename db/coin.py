@@ -40,10 +40,10 @@ class Coin:
             if self.modelArray[i] == model_name:
                 return self.priceArray[i]
 
-        return "gpt-4"
+        return 12.5
 
     # 根据模型价格和token数，计算token消耗的积分数
-    def transfer(self, model_name:str, tokens:int) :
+    def transfer(self, model_name:str, tokens) :
         price = self.get_model_price(model_name)
-        price_round = tokens * 1000000 / price
+        price_round = float(tokens) * 1000000 / float(price)
         return round(price_round / 1000000, 6)
