@@ -1,13 +1,15 @@
 import base64
 import json
+import random
 import threading
 import time
+import uuid
 
 import requests
 import websocket
 from google.protobuf.json_format import MessageToDict, ParseDict
 
-from app import redis_conn
+from app import redis_conn, db_storage
 from workphone.DeviceAuthReq_pb2 import DeviceAuthReqMessage
 from workphone.FriendTalkNotice_pb2 import FriendTalkNoticeMessage
 from workphone.HeartBeat_pb2 import HeartBeatMessage
@@ -145,12 +147,15 @@ class WebSocketClient(threading.Thread):
 
 
                     if at:
+                        msg_id = int(f"{int(time.time() * 1000)}{random.randint(1000, 9999)}")
+                        db_storage.set_msg_id_friend_id(msg_id, msg.FriendId)
                         send_msg = TalkToFriendTaskMessage(
                             WeChatId=msg.WeChatId,
                             FriendId=msg.FriendId,
                             ContentType=EnumContentType.Text,
                             Content="这是一个群里的自动回复，并加上了at".encode('utf-8'),
-                            Remark=from_wxid
+                            Remark=from_wxid,
+                            MsgId=msg_id
                         )
 
                         content = Any()
