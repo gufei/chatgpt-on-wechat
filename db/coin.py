@@ -18,24 +18,50 @@ from config import conf
 class Coin:
     def __init__(self):
         self.modelArray = [
+            "o1",
+            "gpt-4o",
+            "gpt-4.1",
+            "o3-mini",
+            "moonshot-v1-32k",
+            "deepseek-r1",
+            "moonshot-v1-8k",
+            "gpt-4.1-mini",
             "gpt-3.5-turbo",
-            "gpt-3.5-turbo-0301",
-            "gpt-3.5-turbo-0613",
-            "gpt-3.5-turbo-16k",
-            "gpt-3.5-turbo-16k-0613",
-            "gpt-4",
-            "embedding-2",
-            "deepseek-V3"
+            "qwen-max",
+            "doubao1.5-pro-256k",
+            "deepseek-v3",
+            "qwq-32b-preview",
+            "gpt-4o-mini",
+            "qwen2.5-14b-instruct-1m",
+            "gpt-4.1-nano",
+            "doubao1.5-pro",
+            "doubao1.5-pro-32k",
+            "chatglm3",
+            "qwen-turbo",
+            "doubao1.5-lite-32k",
         ]
         self.priceArray = [
-            12.5,
-            12.4,
-            12.3,
-            12.2,
-            12.1,
-            12.0,
-            11.9,
-            11.8
+            0.0001,
+            0.00001667,
+            0.00001333,
+            0.00000733,
+            0.00000548,
+            0.00000365,
+            0.00000274,
+            0.00000267,
+            0.0000025,
+            0.00000219,
+            0.00000205,
+            0.00000183,
+            0.00000137,
+            0.000001,
+            0.00000068,
+            0.00000067,
+            0.00000046,
+            0.00000046,
+            0.00000023,
+            0.00000014,
+            0.00000014,
         ]
 
 
@@ -73,11 +99,9 @@ class Coin:
 
     # 根据价格和tokens计算积分数
     def compute_price(self, price, tokens):
-        if float(price) == 0 or float(tokens) == 0:
-            return 0.0
+        result = price * tokens * 1000000
 
-        price_round = float(tokens) * 1000000 / float(price)
-        return round(price_round / 1000000, 6)
+        return round(result / 1000000, 6)
 
 
     # 精简小数
