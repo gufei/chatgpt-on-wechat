@@ -40,9 +40,9 @@ class Coin:
 
 
     # 根据模型价格和token数，计算token消耗的积分数
-    def get_model_price(self, response_data) :
-        logger.info(f"In coin.py response_data={response_data}")
-        logger.info(f"In coin.py response_data.responseData={response_data.get('responseData')}")
+    def get_model_price(self, response_data):
+        responseData = response_data.get('responseData')
+        logger.info(f"In coin.py responseData={responseData}")
 
         # 先获取所有本次响应里所有的model
         model_array = []
@@ -50,8 +50,8 @@ class Coin:
         if model is not None and model != '':
             model_array.append(model.lower())
 
-        if response_data.get('responseData') is not None:
-            for res in response_data.get('responseData'):
+        if responseData is not None:
+            for res in responseData:
                 model_name = res.get('model')
                 logger.info(f"model_name={model_name}")
                 if model_name is None or model_name == '':
@@ -59,15 +59,16 @@ class Coin:
                 else:
                     model_array.append(model_name.lower())
 
-        # logger.info(f"in responseData contain models={model_array}")
+        logger.info(f"In coin.py model_array={model_array} len={len(model_array)}")
+
 
         # 按价格从高到低检查响应里是否用到了，如果有则使用该价格
         if len(model_array) > 0:
             for i,model_name in enumerate(self.modelArray):
                 if model_name in model_array:
                     return model_name, self.priceArray[i]
-        else:
-            return self.modelArray[0], self.priceArray[0]
+
+        return self.modelArray[0], self.priceArray[0]
 
 
     # 根据价格和tokens计算积分数
@@ -77,6 +78,7 @@ class Coin:
 
         price_round = float(tokens) * 1000000 / float(price)
         return round(price_round / 1000000, 6)
+
 
     # 精简小数
     def subtraction(self, n1:float, n2:float):
