@@ -43,6 +43,8 @@ class Coin:
     def get_model_price(self, response_data) :
         logger.info(f"In coin.py response_data={response_data}")
         logger.info(f"In coin.py response_data.responseData={response_data.get('responseData')}")
+        if response_data.get('responseData') is None:
+            return '', 0
 
         # 先获取所有本次响应里所有的model
         model_array = []
