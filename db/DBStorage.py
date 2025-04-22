@@ -448,8 +448,14 @@ class DBStorage:
             formatted_time = current_utc_time.strftime('%Y-%m-%d %H:%M:%S')
             original_data_str = json.dumps(original_data)
 
-            sql_insert_detail = "INSERT INTO usage_detail (type, bot_id, receiver_id, app, session_id, request, response, original_data, total_tokens, prompt_tokens, completion_tokens, organization_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-            detail_record_tuple = (bot_type, bot_id, receiver_id, app, session_id, request, response, original_data_str, total_tokens, prompt_tokens, completion_tokens, organization_id, formatted_time, formatted_time)
+            # 获取计费使用的模型和价格
+            coin_util = Coin()
+            response_data = original_data.get('response_data')
+            model_name, price = coin_util.get_model_price(response_data)
+            logger.info(f"currently use model={model_name}, price={price}")
+
+            sql_insert_detail = "INSERT INTO usage_detail (type, bot_id, receiver_id, app, session_id, request, response, original_data, total_tokens, prompt_tokens, completion_tokens, organization_id, model, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            detail_record_tuple = (bot_type, bot_id, receiver_id, app, session_id, request, response, original_data_str, total_tokens, prompt_tokens, completion_tokens, organization_id, model_name, formatted_time, formatted_time)
 
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_insert_detail, detail_record_tuple)
@@ -472,7 +478,8 @@ class DBStorage:
                     cursor.execute(sql_insert_total, record_tuple)
             conn.commit()
 
-            self.add_credit_usage(detail_record_id, total_tokens, organization_id, original_data)
+
+            self.add_credit_usage(detail_record_id, total_tokens, organization_id, model_name, price)
         except Error as e:
             print(f"Error while connecting to MySQL: {e}")
             conn.rollback()
@@ -481,10 +488,8 @@ class DBStorage:
 
 
     """ 这里记录积分消耗数到积分明细表里，同时在余额里扣减积分 """
-    def add_credit_usage(self, nid: int, tokens: int, organization_id: int, original_data):
+    def add_credit_usage(self, nid: int, tokens: int, organization_id: int, model_name, price):
         conn = self._mysql.connection()
-
-        logger.info(f"original_data={original_data}")
 
         coin_util = Coin()
         try:
@@ -499,16 +504,14 @@ class DBStorage:
                 cursor.execute(sql_query, record_tuple)
                 existing_record = cursor.fetchone()
 
-            response_data = original_data.get('response_data')
-            number = coin_util.transfer(response_data.get("model", "gpt-4o-mini"), tokens)
+            number = coin_util.compute_price(price, tokens)
 
             logger.info("在AI返回的最后阶段 记录消耗token和积分情况")
-            logger.info("\n"*2)
-            logger.info(f"response={response_data}, number={number} model={response_data.get('model')}")
+            logger.info(f"number={number} ")
 
             if existing_record:
                 before_number = existing_record['balance']
-                after_number = self.subtraction(float(before_number), number)
+                after_number = coin_util.subtraction(float(before_number), number)
             else:
                 before_number = 0
                 after_number = 0 - number
@@ -534,10 +537,7 @@ class DBStorage:
             print(f"Error while connecting to MySQL: {e}")
             conn.rollback()
 
-    def subtraction(self, n1:float, n2:float):
-        number1 = n1*10000
-        number2 = n2*10000
-        return floor(number1-number2)/10000
+
 
     def add_wp_chatroom(self, wx_wxid: str, chat_rooms: list[tuple]):
         conn = self._mysql.connection()
