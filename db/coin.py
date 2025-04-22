@@ -41,7 +41,8 @@ class Coin:
 
     # 根据模型价格和token数，计算token消耗的积分数
     def get_model_price(self, response_data) :
-        logger.info(f"In coin.py responseData.responseData={response_data.get('responseData')}")
+        logger.info(f"In coin.py response_data={response_data}")
+        logger.info(f"In coin.py response_data.responseData={response_data.get('responseData')}")
 
         # 先获取所有本次响应里所有的model
         model_array = []
