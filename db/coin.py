@@ -71,7 +71,7 @@ class Coin:
 
     # 根据价格和tokens计算积分数
     def compute_price(self, price, tokens):
-        if float(price) == 0:
+        if float(price) == 0 or float(tokens) == 0:
             return 0.0
 
         price_round = float(tokens) * 1000000 / float(price)
