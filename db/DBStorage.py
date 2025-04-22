@@ -452,11 +452,11 @@ class DBStorage:
             coin_util = Coin()
             response_data = original_data.get('response_data')
             model_name, price = coin_util.get_model_price(response_data)
-            coins = coin_util.compute_price(price, total_tokens)
-            logger.info(f"currently use model={model_name}, price={price} total_tokens={total_tokens} coins={coins}")
+            credits = coin_util.compute_price(price, total_tokens)
+            logger.info(f"currently use model={model_name}, price={price} total_tokens={total_tokens} credits={credits}")
 
-            sql_insert_detail = "INSERT INTO usage_detail (type, bot_id, receiver_id, app, session_id, request, response, original_data, total_tokens, prompt_tokens, completion_tokens, organization_id, model, coins, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-            detail_record_tuple = (bot_type, bot_id, receiver_id, app, session_id, request, response, original_data_str, total_tokens, prompt_tokens, completion_tokens, organization_id, model_name, coins, formatted_time, formatted_time)
+            sql_insert_detail = "INSERT INTO usage_detail (type, bot_id, receiver_id, app, session_id, request, response, original_data, total_tokens, prompt_tokens, completion_tokens, organization_id, model, credits, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            detail_record_tuple = (bot_type, bot_id, receiver_id, app, session_id, request, response, original_data_str, total_tokens, prompt_tokens, completion_tokens, organization_id, model_name, credits, formatted_time, formatted_time)
 
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_insert_detail, detail_record_tuple)
@@ -480,7 +480,7 @@ class DBStorage:
             conn.commit()
 
 
-            self.add_credit_usage(detail_record_id, total_tokens, organization_id, model_name, coins)
+            self.add_credit_usage(detail_record_id, total_tokens, organization_id, model_name, credits)
         except Error as e:
             print(f"Error while connecting to MySQL: {e}")
             conn.rollback()
@@ -489,7 +489,7 @@ class DBStorage:
 
 
     """ 这里记录积分消耗数到积分明细表里，同时在余额里扣减积分 """
-    def add_credit_usage(self, nid: int, tokens: int, organization_id: int, coins):
+    def add_credit_usage(self, nid: int, tokens: int, organization_id: int, credits):
         conn = self._mysql.connection()
 
         coin_util = Coin()
@@ -507,14 +507,14 @@ class DBStorage:
 
             if existing_record:
                 before_number = existing_record['balance']
-                after_number = coin_util.subtraction(float(before_number), coins)
+                after_number = coin_util.subtraction(float(before_number), credits)
             else:
                 before_number = 0
-                after_number = 0 - coins
+                after_number = 0 - credits
 
             sql_insert_detail = "INSERT INTO credit_usage (number, before_number, after_number, ntype, nid, `table`, organization_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, 'usage_detail', %s, %s, %s)"
             sql_insert_tuple = (
-            coins, before_number, after_number, 1, nid, organization_id, formatted_time, formatted_time)
+            credits, before_number, after_number, 1, nid, organization_id, formatted_time, formatted_time)
 
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_insert_detail, sql_insert_tuple)
