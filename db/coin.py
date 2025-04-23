@@ -1,18 +1,7 @@
-import copy
-import json
-import os
 import re
-from datetime import datetime, timezone
 from math import floor
-from typing import Optional
-
-import mysql.connector
-import redis
-from mysql.connector import Error, errorcode
-from DBUtils.PooledDB import PooledDB
 
 from common.log import logger
-from config import conf
 
 #gpt-4o-mini-2024-07-18
 class Coin:
@@ -117,7 +106,7 @@ class Coin:
         return round(result / 1000000, 6)
 
 
-    # 精简小数
+    # 小数做减法
     def subtraction(self, n1:float, n2:float):
         number1 = n1*1000000
         number2 = n2*1000000
