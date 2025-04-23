@@ -14,7 +14,7 @@ from DBUtils.PooledDB import PooledDB
 from common.log import logger
 from config import conf
 
-
+#gpt-4o-mini-2024-07-18
 class Coin:
     def __init__(self):
         self.modelArray = [
@@ -85,7 +85,7 @@ class Coin:
                 else:
                     model_array.append(model_name.lower())
 
-        logger.info(f"In coin.py model_array={model_array} len={len(model_array)}")
+        # logger.info(f"In coin.py model_array={model_array} len={len(model_array)}")
 
 
         # 按价格从高到低检查响应里是否用到了，如果有则使用该价格
@@ -94,6 +94,19 @@ class Coin:
                 if model_name in model_array:
                     return model_name, self.priceArray[i]
 
+
+        # 如果模型里带日期，这时候要在筛选一次，比如 gpt-4.1-mini-2024-07-18 其实应该匹配到 gpt-4.1-mini
+        # 对模型名数组按名字长度排序，然后按长到短匹配
+        sorted_modelArray = sorted(self.modelArray, key=len, reverse=True)
+        # logger.info(f"sorted_modelArray={sorted_modelArray}")
+        for model in sorted_modelArray:
+            for model_name in model_array:
+                match = re.search(re.escape(model), model_name, flags=re.IGNORECASE)
+                if match:
+                    logger.info(f"In coin.py the given model_name: {model_name} match: {match.group()}")
+                    return model, self.getPriceByModel(model)
+
+        # 最后返回最高的价格
         return self.modelArray[0], self.priceArray[0]
 
 
@@ -109,3 +122,10 @@ class Coin:
         number1 = n1*1000000
         number2 = n2*1000000
         return floor(number1-number2)/1000000
+
+
+    # 根据模型名称获取价格
+    def getPriceByModel(self, model):
+        for i, model_name in enumerate(self.modelArray):
+            if model_name == model:
+                return self.priceArray[i]
