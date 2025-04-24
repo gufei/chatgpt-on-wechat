@@ -194,6 +194,8 @@ class ChatGPTBot(Bot, OpenAIImage):
                 bot_type = 3
             elif conf().get("channel_type", "wx_hook") == "wework_hook":
                 bot_type = 4
+            elif conf().get("channel_type", "wx_hook") == "workphone_wecom":
+                bot_type = 6
             else:
                 bot_type = 1
 
