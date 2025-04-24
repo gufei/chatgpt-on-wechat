@@ -649,3 +649,6 @@ class DBStorage:
             conn.rollback()
         finally:
             conn.close()
+
+    def set_msg_id_friend_id(self, msg_id: str, friend_id: str):
+        self._redis.set(f'MsgId_FriendId:{msg_id}', friend_id, ex=600)

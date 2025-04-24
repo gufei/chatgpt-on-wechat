@@ -1,6 +1,8 @@
 import json
+import random
 import threading
 import os
+import time
 from datetime import datetime
 import requests
 from google.protobuf.json_format import ParseDict, MessageToDict
@@ -383,12 +385,14 @@ class WorkPhoneChannel(ChatChannel):
                     content_type = EnumContentType.Video
                 else:
                     content_type = EnumContentType.File
-
+        msg_id = int(f"{int(time.time() * 1000)}{random.randint(1000, 9999)}")
+        db_storage.set_msg_id_friend_id(msg_id, receiver)
         send_msg = TalkToFriendTaskMessage(
             WxId=int(wx_account['wxid']),
             ConvId=receiver,
             ContentType=content_type,
             Content=content.encode('utf-8'),
+            TaskId=msg_id
         )
 
         if is_group and reply.type == ReplyType.TEXT:

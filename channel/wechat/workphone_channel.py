@@ -1,5 +1,6 @@
 import base64
 import json
+import random
 import threading
 import os
 import time
@@ -353,12 +354,14 @@ class WorkPhoneChannel(ChatChannel):
                 else:
                     content_type = EnumContentType.File
 
-
+        msg_id = int(f"{int(time.time() * 1000)}{random.randint(1000, 9999)}")
+        db_storage.set_msg_id_friend_id(msg_id, receiver)
         send_msg = TalkToFriendTaskMessage(
             WeChatId=wx_account['wxid'],
             FriendId=receiver,
             ContentType=content_type,
-            Content=content.encode('utf-8')
+            Content=content.encode('utf-8'),
+            MsgId=msg_id
         )
 
         if is_group and reply.type == ReplyType.TEXT:
