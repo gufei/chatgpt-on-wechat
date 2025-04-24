@@ -122,6 +122,10 @@ class OpenaiBot(Bot, OpenAIImage):
 
             if conf().get("channel_type", "wx_hook") == "whatsapp":
                 bot_type = 3
+            elif conf().get("channel_type", "wx_hook") == "wework_hook":
+                bot_type = 4
+            elif conf().get("channel_type", "wx_hook") == "workphone_wecom":
+                bot_type = 6
             else:
                 bot_type = 1
             usage_storage(bot_type, context["wxid"], context["session_id"], app, app_id, args, response_json, context["organization_id"])
