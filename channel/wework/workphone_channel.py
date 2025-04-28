@@ -121,7 +121,7 @@ class WorkPhoneChannel(ChatChannel):
 
     def startup(self):
         # 测试 credential: bwkf:rQRwCSOmplX3TtLJ
-        self.wsCli = WecomClient("ws://wecom.gkscrm.com:15088", "debug:rQRwCSOmplX3TtLJ")
+        self.wsCli = WecomClient("ws://wecom.gkscrm.com:15088", "")
         self.wsCli.start()
         self.wsCli.ws.on_message = self.on_message
         # self.get_wx_info()
@@ -212,9 +212,9 @@ class WorkPhoneChannel(ChatChannel):
             logger.error("不是工作手机的账号")
             return
         # 黑白名单处理
-        # if check_allow_or_block_list(context, wxinfo) is False:
-        #     logger.debug(f"[wx_hook] check_allow_or_block_list failed")
-        #     return self
+        if check_allow_or_block_list(context, wxinfo) is False:
+            logger.debug(f"[wx_hook] check_allow_or_block_list failed")
+            return self
 
         if context:
             # 增加需要的context
