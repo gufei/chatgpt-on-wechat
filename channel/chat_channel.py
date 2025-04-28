@@ -57,29 +57,29 @@ class ChatChannel(Channel):
             if context.get("isgroup", False):
                 group_name = cmsg.other_user_nickname
                 group_id = cmsg.other_user_id
-
-                group_name_white_list = config.get("group_name_white_list", [])
-                group_name_keyword_white_list = config.get("group_name_keyword_white_list", [])
-                if any(
-                    [
-                        group_name in group_name_white_list,
-                        "ALL_GROUP" in group_name_white_list,
-                        check_contain(group_name, group_name_keyword_white_list),
-                    ]
-                ):
-                    group_chat_in_one_session = conf().get("group_chat_in_one_session", [])
-                    session_id = cmsg.actual_user_id
-                    if any(
-                        [
-                            group_name in group_chat_in_one_session,
-                            "ALL_GROUP" in group_chat_in_one_session,
-                        ]
-                    ):
-                        session_id = group_id
-                else:
-                    logger.debug(f"No need reply, groupName not in whitelist, group_name={group_name}")
-                    return None
-                context["session_id"] = session_id
+                #
+                # group_name_white_list = config.get("group_name_white_list", [])
+                # group_name_keyword_white_list = config.get("group_name_keyword_white_list", [])
+                # if any(
+                #     [
+                #         group_name in group_name_white_list,
+                #         "ALL_GROUP" in group_name_white_list,
+                #         check_contain(group_name, group_name_keyword_white_list),
+                #     ]
+                # ):
+                #     group_chat_in_one_session = conf().get("group_chat_in_one_session", [])
+                #     session_id = cmsg.actual_user_id
+                #     if any(
+                #         [
+                #             group_name in group_chat_in_one_session,
+                #             "ALL_GROUP" in group_chat_in_one_session,
+                #         ]
+                #     ):
+                #         session_id = group_id
+                # else:
+                #     logger.debug(f"No need reply, groupName not in whitelist, group_name={group_name}")
+                #     return None
+                context["session_id"] = group_id
                 context["receiver"] = group_id
             else:
                 context["session_id"] = cmsg.other_user_id
