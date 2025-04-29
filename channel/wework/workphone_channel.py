@@ -216,6 +216,9 @@ class WorkPhoneChannel(ChatChannel):
             logger.debug(f"[wx_hook] check_allow_or_block_list failed")
             return self
 
+        if workphone_msg.is_group and workphone_msg.is_at:
+            context['session_id'] = msg.SenderId
+
         if context:
             # 增加需要的context
             # print(f"wechat: {wechat}")
