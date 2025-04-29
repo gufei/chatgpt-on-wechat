@@ -36,7 +36,7 @@ def check_allow_or_block_list(context, wxinfo):
         group_allow_list = json.loads(group_allow_list)
         if group_allow_list and len(group_allow_list) > 0:
             # 是否允许当前群
-            if "ALL" not in group_allow_list and context['receiver'] not in group_allow_list:
+            if "ALL" not in group_allow_list and str(context['receiver']) not in group_allow_list:
                 logger.debug(
                     f"[CHATGPT] --------------------群不在白名单-----------------")
                 return False
