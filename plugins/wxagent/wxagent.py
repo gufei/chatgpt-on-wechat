@@ -82,7 +82,7 @@ class WXAgent(Plugin):
             e_context.econtext['context']['organization_id'] = agent_info['organization_id']
             # 优化问题
             expand_system_prompt = f"""# 任务：
-请根据上下文信息，优化用户发送的最后一条消息，补齐消息中可能缺失的主语、谓语、宾语、定语、状语、补语句子成分。
+请根据上下文信息，优化用户发送的最后一条消息，补齐消息中可能缺失的主语、谓语、宾语、定语、状语、补语句子成分，或者其他上下文中的相关信息，以帮助进行知识库检索
 
 # 用户发送的最后一条消息：{content}
 
