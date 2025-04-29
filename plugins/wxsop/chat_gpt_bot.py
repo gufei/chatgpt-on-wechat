@@ -79,11 +79,11 @@ class OpenaiBot(Bot, OpenAIImage):
         else:
             reply = Reply(ReplyType.ERROR, "Bot不支持处理{}类型的消息".format(context.type))
             return reply
-    def reply_silent(self, context=None, system_prompt: str = None, app: int = 3, app_id: int = 0):
+    def reply_silent(self, query, context=None, system_prompt: str = None, app: int = 3, app_id: int = 0):
         # acquire reply content
         if context.type == ContextType.TEXT:
             session_id = "chatId-{}".format(context["wxid"] + "_" + format(context["session_id"]))
-            session = self.sessions.session_query(session_id)
+            session = self.sessions.session_query(query, session_id)
             new_args = self.args.copy()
             if system_prompt is not None:
                 new_args["messages"] = [
