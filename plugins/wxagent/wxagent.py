@@ -88,7 +88,7 @@ class WXAgent(Plugin):
 
 # 回复要求
 1. 直接输出优化后的消息"""
-            expand_bot_reply = self.bot.reply_silent(e_context.econtext['context'], expand_system_prompt, 2, app_id=agent_info['id'])
+            expand_bot_reply = self.bot.reply_silent(content, e_context.econtext['context'], expand_system_prompt, 2, app_id=agent_info['id'])
             logger.debug("[wxagent] expand_bot_reply: %s" % expand_bot_reply.content)
 
             answer = chat_service_openai_like(agent_info['dataset_id'], expand_bot_reply.content)
