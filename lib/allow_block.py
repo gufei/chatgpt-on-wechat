@@ -17,7 +17,9 @@ def check_allow_or_block_list(context, wxinfo):
         if group_block_list is None:
             group_block_list = '[]'
         group_block_list = json.loads(group_block_list)
-        if group_block_list and ("ALL" in group_block_list or context['receiver'] in group_block_list):
+        logger.info(f"[check_allow_or_block_list]isgroup={context['isgroup']}, group_block_list={group_block_list}")
+        logger.info(f"[check_allow_or_block_list]all_in_block_list={'ALL' in group_block_list}, group_in_block_list={str(context['receiver']) in group_block_list}")
+        if group_block_list and ("ALL" in group_block_list or str(context['receiver']) in group_block_list):
             logger.debug(
                 f"[CHATGPT] --------------------已禁用改群或所有群-----------------")
             return False
