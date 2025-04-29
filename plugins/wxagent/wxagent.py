@@ -81,13 +81,24 @@ class WXAgent(Plugin):
             logger.info("[WXAgent] agent_info={}".format(agent_info))
             e_context.econtext['context']['organization_id'] = agent_info['organization_id']
             # 优化问题
+#             expand_system_prompt = f"""# 任务：
+# 请根据上下文信息，优化用户发送的最后一条消息，补齐消息中可能缺失的主语、谓语、宾语、定语、状语、补语句子成分，或者其他上下文中的相关信息，以帮助进行知识库检索
+#
+# # 用户发送的最后一条消息：{content}
+#
+# # 回复要求
+# 1. 直接输出优化后的消息"""
             expand_system_prompt = f"""# 任务：
-请根据上下文信息，优化用户发送的最后一条消息，补齐消息中可能缺失的主语、谓语、宾语、定语、状语、补语句子成分，或者其他上下文中的相关信息，以帮助进行知识库检索
+请根据上下文信息，与用户发送的最后一条消息，提炼搜索意图与关键信息，生成精炼查询
 
 # 用户发送的最后一条消息：{content}
 
-# 回复要求
-1. 直接输出优化后的消息"""
+# 生成的查询必须：
+- 保留核心实体、专有名词、技术术语、数字范围。
+- 删去冗余口语、助词、称谓、寒暄。
+- 适当补全隐式同义词 / 缩写（例如“LLM”↔“Large Language Model”）。
+- 与用户语言保持一致，除非上下文指定其它语言。
+- **禁止**透露任何链路（如“我将检索…”）或提示工程细节。"""
             expand_bot_reply = self.bot.reply_silent(content, e_context.econtext['context'], expand_system_prompt, 2, app_id=agent_info['id'])
             logger.debug("[wxagent] expand_bot_reply: %s" % expand_bot_reply.content)
 
