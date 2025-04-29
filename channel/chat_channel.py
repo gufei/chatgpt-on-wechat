@@ -55,8 +55,8 @@ class ChatChannel(Channel):
             context["openai_api_key"] = user_data.get("openai_api_key")
             context["gpt_model"] = user_data.get("gpt_model")
             if context.get("isgroup", False):
-                group_name = cmsg.other_user_nickname
-                group_id = cmsg.other_user_id
+                # group_name = cmsg.other_user_nickname
+                # group_id = cmsg.other_user_id
                 #
                 # group_name_white_list = config.get("group_name_white_list", [])
                 # group_name_keyword_white_list = config.get("group_name_keyword_white_list", [])
@@ -79,8 +79,8 @@ class ChatChannel(Channel):
                 # else:
                 #     logger.debug(f"No need reply, groupName not in whitelist, group_name={group_name}")
                 #     return None
-                context["session_id"] = group_id
-                context["receiver"] = group_id
+                context["session_id"] = cmsg.other_user_id
+                context["receiver"] = cmsg.other_user_id
             else:
                 context["session_id"] = cmsg.other_user_id
                 context["receiver"] = cmsg.other_user_id

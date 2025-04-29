@@ -45,9 +45,13 @@ class WorkPhoneMessage(ChatMessage):
             else:
                 group = db_storage.get_contact_by_wxwxid_wxid(wechat['wxid'], message.FriendId)
                 logger.info(f"group info is:{group} wx_wxid:{wechat['wxid']} wxid:{message.FriendId}")
-                self.to_user_nickname = group['nickname']
-                self.other_user_nickname = group['nickname']
-                redis_conn.hset(hkey, message.FriendId, json.dumps(group))
+                if group is not None:
+                    self.to_user_nickname = group['nickname']
+                    self.other_user_nickname = group['nickname']
+                    redis_conn.hset(hkey, message.FriendId, json.dumps(group))
+                else:
+                    self.to_user_nickname = ''
+                    self.other_user_nickname = ''
 
             self.content = message.Content.decode('utf-8')
             lines = self.content.split(':',1)
