@@ -139,6 +139,10 @@ class WXAgent(Plugin):
 
             e_context.action = EventAction.BREAK_PASS
 
+        if not agent_info:
+            e_context.action = EventAction.BREAK_PASS
+
+
     def get_help_text(self, **kwargs):
         help_text = "AI 角色 回复"
         return help_text
