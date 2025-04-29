@@ -115,7 +115,7 @@ class WXSop(Plugin):
                     app = 4
                 else:
                     app = 5
-                reply = self.bot.reply_silent(e_context.econtext['context'], prompt, app=app, app_id=source_id)
+                reply = self.bot.reply_silent_contentless(e_context.econtext['context'], prompt, app=app, app_id=source_id)
             else:
                 reply = Reply()
                 reply.content = "None"
