@@ -514,7 +514,7 @@ class DBStorage:
 
             sql_insert_detail = "INSERT INTO credit_usage (number, before_number, after_number, ntype, nid, `table`, organization_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, 'usage_detail', %s, %s, %s)"
             sql_insert_tuple = (
-            credits, before_number, after_number, 1, nid, organization_id, formatted_time, formatted_time)
+            credits, 0, 0, 1, nid, organization_id, formatted_time, formatted_time)
 
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(sql_insert_detail, sql_insert_tuple)
