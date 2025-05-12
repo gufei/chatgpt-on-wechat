@@ -98,8 +98,8 @@ class ChatGPTBot(Bot, OpenAIImage):
                     new_args['variables'] = {
                         "model": context.get("open_ai_model", "gpt-4o-mini")
                     }
-                messages = [session.messages[-1]]
-                new_args["messages"] = messages
+                # messages = [session.messages[-1]]
+                new_args["messages"] = session.messages
             else:
                 if context.get("open_ai_model"):
                     new_args['model'] = context.get("open_ai_model", "gpt-4o-mini")
@@ -137,7 +137,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                             session_content += c.get("content", "") + "\n\n"
                 else:
                     session_content = reply_content["content"]
-                self.sessions.session_reply(session_content, session.session_id, reply_content["total_tokens"])
+                # self.sessions.session_reply(session_content, session.session_id, reply_content["total_tokens"])
                 reply = Reply(ReplyType.TEXT, reply_content["content"])
             else:
                 reply = Reply(ReplyType.ERROR, reply_content["content"])

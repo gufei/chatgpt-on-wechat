@@ -62,7 +62,7 @@ class OpenaiBot(Bot, OpenAIImage):
             reply_content = self.chat_service_openai_like(new_args, app, context, app_id)
 
             if reply_content is not None:
-                self.sessions.session_reply(reply_content, session_id)
+                # self.sessions.session_reply(reply_content, session_id)
                 reply = Reply(ReplyType.TEXT, reply_content)
                 return reply
             else:
