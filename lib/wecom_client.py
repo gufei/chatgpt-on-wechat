@@ -3,7 +3,7 @@ import json
 import threading
 import time
 
-import requests
+import traceback
 import websocket
 from google.protobuf.json_format import MessageToDict, ParseDict
 
@@ -175,6 +175,7 @@ class WecomClient(threading.Thread):
     def on_error(self, ws, error):
         logger.info('Received error...')
         logger.error(error)
+        logger.error(f"stack:{traceback.print_exc()}")
 
     def on_close(self, ws, close_status_code, close_msg):
         logger.info('Received close...')

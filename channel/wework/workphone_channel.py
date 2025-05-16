@@ -10,6 +10,9 @@ from google.protobuf.json_format import ParseDict, MessageToDict
 from app import redis_conn, db_storage
 from bridge.context import Context, ContextType
 from bridge.reply import Reply, ReplyType
+from bot.chatgpt.chat_gpt_session import ChatGPTSession
+from bot.session_manager import SessionManager
+from config import conf, load_config
 from channel.chat_channel import ChatChannel
 from channel.wework.workphone_message import WorkPhoneMessage
 from common.expired_dict import ExpiredDict
@@ -21,6 +24,7 @@ from lib.wecom_client import WecomClient
 from wecom.WDeviceAuthRsp_pb2 import DeviceAuthRspMessage
 from wecom.WFriendTalkNotice_pb2 import FriendTalkNoticeMessage
 from wecom.WTalkToFriendTask_pb2 import TalkToFriendTaskMessage
+from wecom.WTransport_pb2 import TalkToFriendNotice
 from wecom.WTransport_pb2 import EnumContentType, TransportMessage, EnumMsgType, EnumAccountType
 from wecom.WGetWeChatsReq_pb2 import GetWeChatsReqMessage
 from wecom.WTriggerCustomerPushTask_pb2 import TriggerCustomerPushTaskMessage
@@ -38,7 +42,7 @@ class WorkPhoneChannel(ChatChannel):
     def __init__(self):
         super().__init__()
         self.receivedMsgs = ExpiredDict(60 * 60)
-
+        self.session = SessionManager(ChatGPTSession, model=conf().get("model") or "gpt-4o")
 
     def on_get_wechats(self, wechats):
         for wx_info in wechats:
@@ -71,7 +75,7 @@ class WorkPhoneChannel(ChatChannel):
             return None
         wx_wxid = wechats.get("WxId")
         wx_wxinfo = db_storage.get_info_by_wxid(wx_wxid)
-        if not wx_wxid:
+        if not wx_wxid or not wx_wxinfo:
             return None
         for wx_info in wechats.get("Contacts"):
 
@@ -95,7 +99,7 @@ class WorkPhoneChannel(ChatChannel):
             return None
         wx_wxid = wechats.get("WxId")
         wx_wxinfo = db_storage.get_info_by_wxid(wx_wxid)
-        if not wx_wxid:
+        if not wx_wxid or not wx_wxinfo:
             return None
         for Conver_info in wechats.get("Convers"):
             if Conver_info.get('RemoteId', "") == wx_wxid:
@@ -219,6 +223,11 @@ class WorkPhoneChannel(ChatChannel):
         if workphone_msg.is_group and workphone_msg.is_at:
             context['session_id'] = msg.SenderId
 
+        # 记录聊天内容
+        session_id = "chatId-{}".format(str(msg.WxId) + "_" + str(msg.SenderId))
+        session = self.session.session_reply(str(msg.Content.decode('utf-8')), session_id)
+        logger.info("[FriendTalkNotice] session.messages={}".format(session.messages))
+
         if context:
             # 增加需要的context
             # print(f"wechat: {wechat}")
@@ -308,6 +317,24 @@ class WorkPhoneChannel(ChatChannel):
         any_to_wav(silk_path, wav_path)
         return wav_path
 
+    def on_talk_to_friend_notice(self, msg_dict):
+        """
+        处理好友聊天通知消息。
+
+        参数:
+        - ws: WebSocket连接对象，用于接收和发送消息。
+        - msg_dict: 字典类型的原始消息，包含好友聊天通知的所有信息。
+        """
+        msg = FriendTalkNoticeMessage()
+        msg = ParseDict(msg_dict, msg)
+        logger.info(f'[TalkToFriendNotice] 收到的消息为: {msg}')
+
+        # 记录聊天内容
+        session_id = "chatId-{}".format(str(msg.WxId) + "_" + str(msg.SenderId))
+        session = self.session.session_reply(str(msg.Content.decode('utf-8')), session_id)
+        logger.info("[TalkToFriendNotice] session.messages={}".format(session.messages))
+        return
+
 
     def on_message(self, ws, message):
         logger.info("接受到的消息原文为 : %s" % message)
@@ -339,6 +366,10 @@ class WorkPhoneChannel(ChatChannel):
         # if received_data['msgType'] == 'ChatRoomAddNotice':
         #     msg_dict = json.loads(received_data['message'])
         #     return self.on_chat_room_add_notice(msg_dict)
+
+        if received_data['msgType'] == 'TalkToFriendNotice':
+            msg_dict = json.loads(received_data['message'])
+            return self.on_talk_to_friend_notice(msg_dict)
 
         if received_data['msgType'] == 'ChatRoomMembersNotice':
             msg_dict = json.loads(received_data['message'])
