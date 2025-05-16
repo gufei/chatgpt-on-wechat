@@ -69,7 +69,7 @@ class WXSop(Plugin):
                 tagging_label_add = match_text_with_conditions(content, conditions_group)
         logger.debug("[wxsop] tagging_label_add: %s" % tagging_label_add)
         server = db_storage.get_server_by_id(wxinfo['server_id'])
-        message_record, sop_nodes, source_type, source_id = db_storage.get_next_answers(bot_wxid, contact_wxid, contact_type)
+        message_record, sop_nodes, source_type, source_id = db_storage.get_next_answers(bot_wxid, contact_wxid, contact_type, organization_id)
         organization_id = wxinfo.get("organization_id")
         logger.debug("[wxsop] on_handle_context. message_record: %s" % message_record)
         logger.debug("[wxsop] on_handle_context. sop_nodes: %s" % sop_nodes)

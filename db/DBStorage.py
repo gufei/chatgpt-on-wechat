@@ -219,7 +219,7 @@ class DBStorage:
 
 
     # 查询接下来带匹配的回答
-    def get_next_answers(self, bot_wxid: str, contact_wxid: str, contact_type: int):
+    def get_next_answers(self, bot_wxid: str, contact_wxid: str, contact_type: int, organization_id: int):
         conn = self._mysql.connection()
         try:
             # 在message_records表中，查询bot_wxid == selfwxid and contact_wxid == fromid contact_type == 1 source_type == 3 status == 1 的最新一条记录，按created_at字段排序
@@ -232,16 +232,47 @@ class DBStorage:
             if message_record:
                 # 在sop_node表中，查询 id == message_record['sub_source_id'] stage_id == message_record['source_id'] 的记录
                 if message_record['source_type'] == 3:
-                    sql_query = "SELECT * FROM sop_node WHERE deleted_at IS NULL AND parent_id = %s AND stage_id = %s"
-                    sop_node_tuple = (0, message_record['source_id'])
+                    # 在message_records表中，查询bot_wxid == selfwxid and contact_wxid == fromid contact_type == 1 source_type == 3 status == 1 的最新一条记录，按created_at字段排序
+                    stage_query = "SELECT * FROM sop_stage WHERE id = %s LIMIT 1"
+                    with conn.cursor(dictionary=True) as cursor:
+                        cursor.execute(stage_query, (message_record['source_id'], ))
+                        stage_record = cursor.fetchone()
+                    if stage_record:
+                        task_query = "SELECT * FROM sop_task WHERE id = %s AND status = 3 AND organization_id = %s LIMIT 1"
+                        with conn.cursor(dictionary=True) as cursor:
+                            cursor.execute(task_query, (stage_record['task_id'], organization_id))
+                            task_record = cursor.fetchone()
+                        if task_record:
+                            sql_query = "SELECT * FROM sop_node WHERE deleted_at IS NULL AND parent_id = %s AND stage_id = %s"
+                            sop_node_tuple = (0, message_record['source_id'])
+                            with conn.cursor(dictionary=True) as cursor:
+                                cursor.execute(sql_query, sop_node_tuple)
+                                sop_nodes = cursor.fetchall()
+                                return message_record, sop_nodes, message_record['source_type'], message_record[
+                                    'source_id']
                 else:
-                    sql_query = "SELECT * FROM sop_node WHERE deleted_at IS NULL AND parent_id = %s"
-                    sop_node_tuple = (message_record['source_id'],)
+                    node_query = "SELECT * FROM sop_node WHERE id = %s LIMIT 1"
+                    with conn.cursor(dictionary=True) as cursor:
+                        cursor.execute(node_query, (message_record['source_id'],))
+                        node_record = cursor.fetchone()
+                    if node_record:
+                        stage_query = "SELECT * FROM sop_stage WHERE id = %s LIMIT 1"
+                        with conn.cursor(dictionary=True) as cursor:
+                            cursor.execute(stage_query, (node_record['stage_id'],))
+                            stage_record = cursor.fetchone()
+                        if stage_record:
+                            task_query = "SELECT * FROM sop_task WHERE id = %s AND status = 3 AND organization_id = %s LIMIT 1"
+                            with conn.cursor(dictionary=True) as cursor:
+                                cursor.execute(task_query, (stage_record['task_id'], organization_id))
+                                task_record = cursor.fetchone()
+                            if task_record:
+                                sql_query = "SELECT * FROM sop_node WHERE deleted_at IS NULL AND parent_id = %s"
+                                sop_node_tuple = (message_record['source_id'],)
 
-                with conn.cursor(dictionary=True) as cursor:
-                    cursor.execute(sql_query, sop_node_tuple)
-                    sop_nodes = cursor.fetchall()
-                    return message_record, sop_nodes, message_record['source_type'], message_record['source_id']
+                                with conn.cursor(dictionary=True) as cursor:
+                                    cursor.execute(sql_query, sop_node_tuple)
+                                    sop_nodes = cursor.fetchall()
+                                    return message_record, sop_nodes, message_record['source_type'], message_record['source_id']
 
             return None, None, None, None
         except Error as e:
