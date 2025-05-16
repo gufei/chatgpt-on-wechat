@@ -176,6 +176,7 @@ class ChatGPTBot(Bot, OpenAIImage):
             # logger.debug("[CHATGPT] args={}".format(args))
             headers = {"Content-Type": "application/json", 'Authorization': 'Bearer ' + api_key}
             api_base = args['api_base']
+            logger.info(f"[CHATGPT => reply_text]headers={headers} api_base={api_base} context={context}")
             # 清理不能传的参数
             if "api_base" in args:
                 del args["api_base"]
@@ -185,6 +186,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                 del args["timeout"]
             # logger.debug("[CHATGPT] jsondata={}".format(jsondata))
             response = requests.post(api_base + "/chat/completions", headers=headers, json=args)
+            logger.warn(f"[CHATGPT => reply_text]response.content={response.content} response.status_code={response.status_code}")
             response_json = response.json()
 
             total_tokens = response_json["usage"]["total_tokens"]
