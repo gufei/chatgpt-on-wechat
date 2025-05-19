@@ -68,7 +68,7 @@ class ChatGPTBot(Bot, OpenAIImage):
             if reply:
                 return reply
             session = self.sessions.session_query(query, session_id)
-            logger.debug("[CHATGPT] session query={}".format(session.messages))
+            logger.debug("[CHATGPT] session_id={}, query={}".format(session_id, session.messages))
 
             if context.get("open_ai_api_key"):
                 api_key = context.get("open_ai_api_key")
