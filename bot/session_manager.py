@@ -73,6 +73,11 @@ class SessionManager(object):
             logger.warning("Exception when counting tokens precisely for prompt: {}".format(str(e)))
         return session
 
+    def add_query(self, query, session_id):
+        session = self.build_session(session_id)
+        session.add_query(query)
+        return session
+
     def session_reply(self, reply, session_id, total_tokens=None):
         session = self.build_session(session_id)
         session.add_reply(reply)
