@@ -229,6 +229,7 @@ class WorkPhoneChannel(ChatChannel):
         # 记录聊天内容
         session_id = "chatId-{}".format(str(msg.WxId) + "_" + str(msg.SenderId))
         session = self.session.session_reply(str(msg.Content.decode('utf-8')), session_id)
+        logger.warn(f"question:{msg.Content} session.messages:{session.messages}")
         logger.info("[FriendTalkNotice] session.messages={}".format(session.messages))
 
         if context:
@@ -335,6 +336,7 @@ class WorkPhoneChannel(ChatChannel):
         # 记录聊天内容
         session_id = "chatId-{}".format(str(msg.WxId) + "_" + str(msg.SenderId))
         session = self.session.session_reply(str(msg.Content.decode('utf-8')), session_id)
+        logger.warn(f"question:{msg.Content} session.messages:{session.messages}")
         logger.info("[TalkToFriendNotice] session.messages={}".format(session.messages))
         return
 
