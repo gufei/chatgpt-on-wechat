@@ -46,6 +46,9 @@ class WorkPhoneChannel(ChatChannel):
 
     def on_get_wechats(self, wechats):
         for wx_info in wechats:
+            logger.info(f"[on_get_chats]wx_info:{wx_info}")
+            if wx_info is None:
+                continue
             print(f"wx_info['wxid']: {wx_info['wxid']}")
             wxinfo = db_storage.get_info_by_wxid(wx_info['wxid'])
             print(f"wxinfo2: {wxinfo}")
