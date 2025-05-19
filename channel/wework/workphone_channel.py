@@ -47,7 +47,7 @@ class WorkPhoneChannel(ChatChannel):
     def on_get_wechats(self, wechats):
         for wx_info in wechats:
             logger.info(f"[on_get_chats]wx_info:{wx_info}")
-            if wx_info is None:
+            if 'wxid' not in wx_info :
                 continue
             print(f"wx_info['wxid']: {wx_info['wxid']}")
             wxinfo = db_storage.get_info_by_wxid(wx_info['wxid'])
@@ -226,12 +226,6 @@ class WorkPhoneChannel(ChatChannel):
         if workphone_msg.is_group and workphone_msg.is_at:
             context['session_id'] = msg.SenderId
 
-        # 记录聊天内容
-        session_id = "chatId-{}".format(str(msg.WxId) + "_" + str(msg.SenderId))
-        session = self.session.add_query(str(msg.Content.decode('utf-8')), session_id)
-        logger.warn(f"question:{msg.Content.decode('utf-8')} session.messages:{session.messages}")
-        logger.info("[FriendTalkNotice] session.messages={}".format(session.messages))
-
         if context:
             # 增加需要的context
             # print(f"wechat: {wechat}")
@@ -333,11 +327,16 @@ class WorkPhoneChannel(ChatChannel):
         msg = ParseDict(msg_dict, msg)
         logger.info(f'[TalkToFriendNotice] 收到的消息为: {msg}')
 
+        wxinfo = db_storage.get_info_by_wxid(str(msg.WxId))
+        if wxinfo is None:
+            logger.error('没有找到该微信，跳过')
+            return
+
         # 记录聊天内容
-        session_id = "chatId-{}".format(str(msg.WxId) + "_" + str(msg.SenderId))
-        session = self.session.add_query(str(msg.Content.decode('utf-8')), session_id)
-        logger.warn(f"question:{msg.Content.decode('utf-8')} session.messages:{session.messages}")
-        logger.info("[TalkToFriendNotice] session.messages={}".format(session.messages))
+        session_id = "chatId-{}".format(str(msg.WxId) + "_" + str(msg.ConvId))
+        logger.info(f"in channel/wework/workphone_channel.py [after] session_id:{session_id}")
+        session = self.session.session_reply(str(msg.Content.decode('utf-8')), session_id)
+        logger.info("[TalkToFriendNotice] session_id:{} session.messages={}".format(session_id, session.messages))
         return
 
 
